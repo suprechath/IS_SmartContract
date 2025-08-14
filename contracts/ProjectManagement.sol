@@ -12,12 +12,12 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
 
     // --- State Variables ---
     State public currentState;
-    IERC20 public usdcToken;
-    ProjectToken public projectToken;
+    IERC20 public immutable usdcToken;
+    ProjectToken public immutable projectToken;
     
-    address public creator;
-    uint256 public fundingGoal;
-    uint256 public deadline;
+    address public immutable creator;
+    uint256 public immutable fundingGoal;
+    uint256 public immutable deadline;
     uint256 public totalContributions;
     uint256 public mintedContributorCount = 0;
     uint256 public totalMintedToken = 0;
@@ -110,7 +110,8 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
 
         mintedContributorCount = end;
 
-        if (mintedContributorCount == totalContributors && totalMintedToken == totalContributions) {
+        if (mintedContributorCount == totalContributors) {
+            require(totalMintedToken == totalContributions, "Mint mismatch"); 
             areTokensMinted = true;
             currentState = State.Active; // This unlocks the withdrawFunds() function.
             emit TokensMinted(totalMintedToken);
