@@ -151,7 +151,9 @@ describe("ProjectToken", function () {
             60 * 60 * 24 * 7, // 7 day duration
             projectToken.target,
             usdc.target,
-            addrs[0].address // platformOwner
+            addrs[0].address, // platformOwner
+            1000, // 10% platform fee
+            500   // 5% reward fee
         );
 
         // Link contracts
@@ -210,9 +212,9 @@ describe("ProjectToken", function () {
         console.log("2nd Reward deposited:", ethers.formatEther(rewardAmount));
 
         // Now both add1 and add2 should have new earned rewards, proportional to their new balances.
-        expect(await projectManagement.earned(add1.address)).to.equal(17500000000000000000n);
+        expect(await projectManagement.earned(add1.address)).to.equal(ethers.parseEther("16.625"));
         console.log("2nd Add1 Earned after transfer:", ethers.formatEther(await projectManagement.earned(add1.address)));
-        expect(await projectManagement.earned(add2.address)).to.equal(2500000000000000000n);
+        expect(await projectManagement.earned(add2.address)).to.equal(ethers.parseEther("2.375"));
         console.log("2nd Add2 Earned after transfer:", ethers.formatEther(await projectManagement.earned(add2.address)));
     });
   });

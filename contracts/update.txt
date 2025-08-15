@@ -1,0 +1,15 @@
+business model
+- Platform Success Fee: A one-time percentage fee is taken from the total funds raised when a project is successfully funded.
+- Reward Distribution Fee: A recurring percentage fee is taken from each reward amount the Project Creator deposits for their investors.
+- fee percentages immutable
+
+Comparison 
+Direct USDC Fee Transfer
+- When the Project Creator deposits 1,000 USDC for rewards, the contract immediately calculates the fee (e.g., 2.5% = 25 USDC), 
+- sends that 25 USDC directly to the platform owner's wallet, and makes the remaining 975 USDC available for investors to claim.
+- Pros: Simple & Direct, Gas Efficient, Transparent, Immediate Revenue
+- Cons: No Shared Risk/Reward
+Minting Fee Tokens to Platform Owner
+- If the fee is 2.5%, the platform would be minted 2.5% of the new tokens or be treated as if they own 2.5% of the total supply for that reward calculation.
+- Pros: Strong Alignment, Potential Upside
+- Cons: Much Higher Gas Costs, More Complex Logic, Delayed Revenue

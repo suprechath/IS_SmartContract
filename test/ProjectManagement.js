@@ -7,6 +7,8 @@ describe("ProjectManagement", function () {
     
     const fundingGoal = ethers.parseUnits("100",18);//ethers.parseEther("100");
     const fundingDuration = 60 * 60 * 24 * 7; // 7 days
+    const platformFeePercentage = 1000; // 10%
+    const rewardFeePercentage = 500; // 5%
 
     beforeEach(async function () {
         [owner, creator, investor1, investor2, platformOwner] = await ethers.getSigners();
@@ -27,7 +29,9 @@ describe("ProjectManagement", function () {
             fundingDuration,
             projectToken.target,
             usdc.target,
-            platformOwner.address
+            platformOwner.address,
+            platformFeePercentage,
+            rewardFeePercentage
         );
 
         // --- Setup ---
@@ -116,7 +120,10 @@ describe("ProjectManagement", function () {
 
         it("Should only be callable in the 'Succeeded' state", async function () {
             // Create a new instance that is still in Funding state
-            const newPM = await (await ethers.getContractFactory("ProjectManagement")).deploy(creator.address, fundingGoal, fundingDuration, projectToken.target, usdc.target, platformOwner.address);
+            const newPM = await (await ethers.getContractFactory("ProjectManagement")).deploy(
+                creator.address, fundingGoal, fundingDuration, projectToken.target, 
+                usdc.target, platformOwner.address, platformFeePercentage, rewardFeePercentage
+            );
             await expect(newPM.connect(creator).mintTokens(1)).to.be.revertedWith("Invalid state");
         });
 
@@ -159,14 +166,19 @@ describe("ProjectManagement", function () {
         it("Should allow creator to withdraw all contributed funds", async function () {
             const contractBalance = await usdc.balanceOf(projectManagement.target);
             const creatorInitialBalance = await usdc.balanceOf(creator.address);
+            const platformOwnerInitialBalance = await usdc.balanceOf(platformOwner.address);
             expect(contractBalance).to.equal(fundingGoal);
+
+            const platformFee = (fundingGoal * BigInt(platformFeePercentage)) / 10000n;
+            const creatorAmount = fundingGoal - platformFee;
 
             await expect(projectManagement.connect(creator).withdrawFunds())
                 .to.emit(projectManagement, "FundsWithdrawn")
-                .withArgs(fundingGoal);
+                .withArgs(creatorAmount, platformFee);
             
             expect(await usdc.balanceOf(projectManagement.target)).to.equal(0);
-            expect(await usdc.balanceOf(creator.address)).to.equal(creatorInitialBalance + fundingGoal);
+            expect(await usdc.balanceOf(creator.address)).to.equal(creatorInitialBalance + creatorAmount);
+            expect(await usdc.balanceOf(platformOwner.address)).to.equal(platformOwnerInitialBalance + platformFee);
         });
 
         it("Should prevent non-creators from withdrawing funds", async function () {
@@ -176,12 +188,14 @@ describe("ProjectManagement", function () {
         it("Should allow creator to deposit rewards", async function () {
             const rewardAmount = ethers.parseEther("10");
             await usdc.connect(creator).approve(projectManagement.target, rewardAmount);
+            const platformFee = (rewardAmount * BigInt(rewardFeePercentage)) / 10000n;
+            const netRewardAmount = rewardAmount - platformFee;
             
             await expect(projectManagement.connect(creator).depositReward(rewardAmount))
                 .to.emit(projectManagement, "RewardDeposited")
-                .withArgs(rewardAmount);
+                .withArgs(netRewardAmount, platformFee);
             
-            const expectedRewardPerToken = (rewardAmount * BigInt(1e18)) / fundingGoal;
+            const expectedRewardPerToken = (netRewardAmount * BigInt(1e18)) / fundingGoal;
             expect(await projectManagement.rewardPerTokenStored()).to.equal(expectedRewardPerToken);
         });
 
