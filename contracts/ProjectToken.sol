@@ -18,11 +18,11 @@ contract ProjectToken is ERC20, Ownable, ERC20Capped {
         string memory name,
         string memory symbol,
         uint256 cap,
-        address initialOwner
+        address platformOwner
     ) 
         ERC20(name, symbol) 
         ERC20Capped(cap) 
-        Ownable(initialOwner) 
+        Ownable(platformOwner) 
     {
     }
 

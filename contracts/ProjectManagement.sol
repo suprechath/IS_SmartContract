@@ -22,6 +22,9 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
     uint256 public mintedContributorCount = 0;
     uint256 public totalMintedToken = 0;
 
+    uint256 public immutable platformFeePercentage; // Fee on successful funding
+    uint256 public immutable rewardFeePercentage; // Fee on each reward distribution
+
     mapping(address => uint256) public contributions;
     address[] public contributors;
     
@@ -34,8 +37,8 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
     // --- Events ---
     event Invested(address indexed investor, uint256 amount);
     event TokensMinted(uint256 totalAmount);
-    event FundsWithdrawn(uint256 amount);
-    event RewardDeposited(uint256 totalAmount);
+    event FundsWithdrawn(uint256 creatorAmount, uint256 platformFee); //event FundsWithdrawn(uint256 amount);
+    event RewardDeposited(uint256 totalAmount, uint256 platformFee); //event RewardDeposited(uint256 totalAmount);
     event RewardClaimed(address indexed investor, uint256 amount);
     event Refunded(address indexed investor, uint256 amount);
 
@@ -45,7 +48,9 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
         uint256 _fundingDuration,
         address _projectTokenAddress,
         address _usdcTokenAddress,
-        address _platformOwner
+        address _platformOwner,
+        uint256 _platformFee, // NEW: Initial platform fee
+        uint256 _rewardFee    // NEW: Initial reward fee
     ) 
         Ownable(_platformOwner)
     {
@@ -55,6 +60,11 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
         projectToken = ProjectToken(_projectTokenAddress);
         usdcToken = IERC20(_usdcTokenAddress);
         currentState = State.Funding;
+
+        require(_platformFee <= 10000, "Platform fee cannot exceed 100%");
+        require(_rewardFee <= 10000, "Reward fee cannot exceed 100%");
+        platformFeePercentage = _platformFee; // NEW: Set initial fees
+        rewardFeePercentage = _rewardFee; // NEW: Set initial fees
     }
     
     // --- Modifiers ---
@@ -121,17 +131,35 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
     function withdrawFunds() public onlyCreator inState(State.Active) nonReentrant {
         uint256 amount = usdcToken.balanceOf(address(this));
         require(amount > 0, "No funds to withdraw");
+
+        uint256 platformFee = (amount * platformFeePercentage) / 10000;
+        uint256 creatorAmount = amount - platformFee;
+
+        if (platformFee > 0) {
+            usdcToken.transfer(owner(), platformFee);
+        }
         
-        usdcToken.transfer(creator, amount);
-        emit FundsWithdrawn(amount);
+        usdcToken.transfer(creator, creatorAmount);
+        emit FundsWithdrawn(creatorAmount, platformFee);
     }
 
     function depositReward(uint256 usdcAmount) public onlyCreator inState(State.Active) {
         uint256 totalSupply = projectToken.totalSupply();
         require(totalSupply > 0, "Cannot deposit with zero supply");
         usdcToken.transferFrom(msg.sender, address(this), usdcAmount);
-        rewardPerTokenStored += (usdcAmount * 1e18) / totalSupply;
-        emit RewardDeposited(usdcAmount);
+
+        uint256 platformFee = (usdcAmount * rewardFeePercentage) / 10000;
+        uint256 netRewardAmount = usdcAmount - platformFee;
+
+        if (platformFee > 0) {
+            usdcToken.transfer(owner(), platformFee);
+        }
+
+        if (netRewardAmount > 0) {
+            rewardPerTokenStored += (netRewardAmount * 1e18) / totalSupply;
+        }
+        
+        emit RewardDeposited(netRewardAmount, platformFee);
     }
     
     function earned(address _account) public view returns (uint256) {
