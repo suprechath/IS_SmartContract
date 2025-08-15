@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -10,9 +11,15 @@
   "description": "",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "hardhat": "^2.26.3"
+    "hardhat": "^2.26.3",
+    "nodemon": "^3.1.10"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "joi": "^18.0.0",
+    "pg": "^8.16.3"
   }
 }
