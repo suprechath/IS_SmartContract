@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres-db
+    environment:
+      - POSTGRES_PASSWORD=#Sweetword86
+      - POSTGRES_DB=express-crud
+    ports:
+      - "5432:5432"
+    # Ensures the container restarts if it fails
+    restart: always
+
+# docker rm -f postgres-db
+# docker-compose up -d --build
+# docker-compose up -d
+
