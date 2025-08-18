@@ -1,5 +1,6 @@
 node_modules
 .env
+/Learning_src
 
 # Hardhat files
 /cache

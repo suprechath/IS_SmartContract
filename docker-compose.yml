@@ -1,14 +1,20 @@
 services:
-  postgres:
+  Database:
     image: postgres
-    container_name: postgres-db
+    container_name: commefficient_db
     environment:
-      - POSTGRES_PASSWORD=#Sweetword86
-      - POSTGRES_DB=express-crud
+      - POSTGRES_USER=commefficient_user
+      - POSTGRES_PASSWORD=#CommeffPassword # Change this to a strong password
+      - POSTGRES_DB=commefficient_dev
     ports:
       - "5432:5432"
     # Ensures the container restarts if it fails
     restart: always
+
+# volumes:
+#   postgres_data:
+#     driver: local
+
 
 # docker rm -f postgres-db
 # docker-compose up -d --build

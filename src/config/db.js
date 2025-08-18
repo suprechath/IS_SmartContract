@@ -1,17 +1,6 @@
-// const pkg = require("pg");
-// const { Pool } = pkg;
-import pkg from 'pg';
-import dotenv from 'dotenv';
+const { Pool } = require('pg');
+const dotenv = require('dotenv');
 dotenv.config();
-const { Pool } = pkg;
-
-// console.log('DB ENV:', {
-//     user: process.env.DB_USER,
-//     host: process.env.DB_HOST,
-//     database: process.env.DB_DATABASE,
-//     password: process.env.DB_PASSWORD,
-//     port: process.env.DB_DBPORT
-// });
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -22,7 +11,14 @@ const pool = new Pool({
 });
 
 pool.on('connect', () => {
-    console.log('Connection pool established with the database');
+    console.log('xxxConnection pool established with the database');
 });
 
-export default pool;
+//can only press a button to get
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
+
+// having the key to the entire machine
+// export default pool;
+
