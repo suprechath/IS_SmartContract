@@ -59,7 +59,7 @@ const getUserNonce = async (wallet_address) => {
 const pushUserNonce = async (wallet_address, nonce) => {
   const query = `
     UPDATE users 
-    SET nonce = $1 
+    SET nonce = $1, updated_at = NOW()
     WHERE wallet_address = $2
   `;
   await pool.query(query, [nonce, wallet_address]);
