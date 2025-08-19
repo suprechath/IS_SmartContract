@@ -29,3 +29,6 @@ API folder tree
 ├── .gitignore
 ├── package.json
 └── README.md
+
+using https://etherscan.io/verifiedsignatures# for testing signing nonce
+ 

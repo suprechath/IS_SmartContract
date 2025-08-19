@@ -1,10 +1,10 @@
 services:
-  Database:
+  DB:
     image: postgres
     container_name: commefficient_db
     restart: always
     environment:
-      POSTGRES_USER: commefficient_user
+      POSTGRES_USER: user
       POSTGRES_PASSWORD: "#Comeff86"
       POSTGRES_DB: commefficient_dev
     ports:
@@ -22,7 +22,7 @@ services:
     ports:
       - "8080:8080"  # Access Adminer on http://localhost:8080
     depends_on:
-      - Database
+      - DB
     networks:
       - postgres_network
 

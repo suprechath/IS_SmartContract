@@ -1,24 +1,10 @@
 import userModel from '../models/userModel.js';
-
-const handleResponse = (res, statusCode, message, data = null) => {
-    res.status(statusCode).json({
-        status: statusCode,
-        message: message,
-        data: data
-    });
-};
+import { handleResponse } from '../utils/responseHandler.js';
 
 // @desc    Register a new user as Investor or Project Creator
 // @route   POST /api/users/register
 export const registerUser = async (req, res, next) => {
   const { wallet_address, name, email, nonce, role } = req.body;
-
-  if (!wallet_address || !name || !email || !nonce || !role) {
-    return handleResponse(res, 400, 'Please provide all required fields.');
-  } 
-  else if (role !== 'Investor' && role !== 'Project Creator') {
-    return handleResponse(res, 400, 'Role must be either "Investor" or "Project Creator".');
-  }
   try {
     const newUser = await userModel.registerUserServices(wallet_address, name, email, nonce, role);
     handleResponse(res, 201, 'User registered successfully', newUser);
