@@ -38,7 +38,6 @@ export const verifySignature = async (req, res) => {
         if (signerAddress.toLowerCase() !== wallet_address.toLowerCase()) {
             return handleResponse(res, 401, 'Signature verification failed. Invalid signature.');
         }
-        console.log('Signature verified successfully for user:', user.id);
 
         //Invalidate the nonce after use to prevent replay attacks
         const newNonce = "comm-efficient-login";
@@ -50,6 +49,7 @@ export const verifySignature = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
+        console.log(`JWT created for ${user.wallet_address}: ${token}`);
         handleResponse(res, 200, 'Login successful!', {
             token: token,
             user: {

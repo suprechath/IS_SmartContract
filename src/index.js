@@ -5,6 +5,8 @@ dotenv.config();
 import initializeDatabase from './models/dbSetup.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+
 
 // Ensure database connection is established
 import pool from './config/db.js';
@@ -25,6 +27,7 @@ app.get('/', async (req, res) => {
 });
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Start the server
 app.listen(port, () => {
