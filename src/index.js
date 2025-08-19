@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import initializeDatabase from './models/dbSetup.js';
 import pool from './config/db.js';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -13,20 +14,14 @@ app.use(express.json()); // To parse JSON request bodies
 app.use(cors());
 
 // Routes
-
-
-//Create user table if it doesn't exist
 await initializeDatabase();
 app.get('/', async (req, res) => {
   const result = await pool.query('SELECT current_database()');
   res.send(`Connected to database: ${result.rows[0].current_database}`);
 });
+app.use('/api/users', userRoutes);
 
-// A simple test route to confirm the server is running
-// app.get('/', (req, res) => {
-//   res.send('CommEfficient Backend is running!');
-// });
-
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running on http:localhost:${port}`);
 });
