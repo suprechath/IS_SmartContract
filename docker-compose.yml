@@ -2,19 +2,38 @@ services:
   Database:
     image: postgres
     container_name: commefficient_db
+    restart: always
     environment:
-      - POSTGRES_USER=commefficient_user
-      - POSTGRES_PASSWORD=#CommeffPassword # Change this to a strong password
-      - POSTGRES_DB=commefficient_dev
+      POSTGRES_USER: commefficient_user
+      POSTGRES_PASSWORD: "#Comeff86"
+      POSTGRES_DB: commefficient_dev
     ports:
       - "5432:5432"
     # Ensures the container restarts if it fails
+    # volumes:
+    #   - db_data:/var/lib/postgresql/data 
+    networks:
+      - postgres_network
+
+  adminer:
+    image: adminer
+    container_name: my_adminer
     restart: always
+    ports:
+      - "8080:8080"  # Access Adminer on http://localhost:8080
+    depends_on:
+      - Database
+    networks:
+      - postgres_network
+
+# Define the network for services to communicate
+networks:
+  postgres_network:
+    driver: bridge
 
 # volumes:
-#   postgres_data:
-#     driver: local
-
+#   db_data:
+#   pgadmin_data:
 
 # docker rm -f postgres-db
 # docker-compose up -d --build
