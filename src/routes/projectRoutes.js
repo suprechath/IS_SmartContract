@@ -1,8 +1,8 @@
 import express from 'express';
-import { createProject, getProjects, getProjectById, getMyProjects, updateProject} from '../controllers/projectController.js';
+import { createProject, getProjects, getProjectById, getMyProjects, updateProject, prepareProjectTokenDeployment, prepareProjectMgmtDeployment, onboard} from '../controllers/projectController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validator.js';
-import { createProjectSchema, updateProjectSchema } from '../middlewares/projectSchema.js';
+import { createProjectSchema, updateProjectSchema, deployProjectTokenSchema, deployProjectMgmtSchema, onboardSchema } from '../middlewares/projectSchema.js';
 
 const router = express.Router();
 
@@ -11,5 +11,8 @@ router.get('/', getProjects); //GET /api/projects?status=Funding&status=Active
 router.get('/my', protect('Project Creator'), getMyProjects); //GET /api/projects/my
 router.get('/id/:projectId', protect(), getProjectById); //GET /api/projects/id/:projectId
 router.patch('/id/:projectId', protect('Project Creator'), validate(updateProjectSchema), updateProject); //PATCH /api/projects/id/:projectId
+router.get('/deploy/projectTokenPrep', protect('Project Creator'), validate(deployProjectTokenSchema), prepareProjectTokenDeployment); //GET /api/projects/deploy/projectTokenPrep
+router.get('/deploy/projectMgmtPrep', protect('Project Creator'), validate(deployProjectMgmtSchema), prepareProjectMgmtDeployment); //GET /api/projects/deploy/projectMgmtPrep
+router.get('/deploy/onboard', protect('Project Creator'), validate(onboardSchema), onboard); // get /api/projects/deploy/onboard
 
 export default router;

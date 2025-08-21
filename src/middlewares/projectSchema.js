@@ -30,3 +30,36 @@ export const updateProjectSchema = Joi.object({
     projected_payback_period_months: Joi.number().positive().optional(),
     project_plan_url: Joi.string().uri().optional()
 });
+
+export const deployProjectTokenSchema = Joi.object({
+    projectId: Joi.string().uuid().required()
+});
+
+export const deployProjectMgmtSchema = Joi.object({
+    projectId: Joi.string().uuid().required(),
+    tokenContractAddress: Joi.string()
+        .pattern(/^0x[a-fA-F0-9]{40}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Token contract address must be a valid Ethereum address.',
+            'any.required': 'Token contract address is required.',
+        }),
+});
+
+export const onboardSchema = Joi.object({
+    projectId: Joi.string().uuid().required(),
+    tokenContractAddress: Joi.string()
+        .pattern(/^0x[a-fA-F0-9]{40}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Token contract address must be a valid Ethereum address.',
+            'any.required': 'Token contract address is required.',
+        }),
+    managementContractAddress: Joi.string()
+        .pattern(/^0x[a-fA-F0-9]{40}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Management contract address must be a valid Ethereum address.',
+            'any.required': 'Management contract address is required.',
+        }),
+});

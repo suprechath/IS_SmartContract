@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Contract Deployer</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .container { text-align: center; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        button { padding: 12px 25px; font-size: 16px; color: white; background-color: #1a73e8; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s, transform 0.1s; }
+        button:hover { background-color: #185abc; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #status { margin-top: 20px; font-size: 14px; color: #333; white-space: pre-wrap; word-break: break-all; max-width: 500px; text-align: left; background: #eee; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Deploy Contract via API</h1>
+        <p>Click the button to send a request to the server to deploy the contract.</p>
+        <button id="deployButton">Deploy from Server</button>
+        <div id="status">Awaiting deployment request...</div>
+    </div>
+
+    <script>
+        const deployButton = document.getElementById('deployButton');
+        const statusDiv = document.getElementById('status');
+
+        // Function to call the API endpoint
+        async function callDeployAPI() {
+            // Disable button and show loading status
+            deployButton.disabled = true;
+            statusDiv.textContent = 'Sending request to server... Please wait.';
+
+            try {
+                // The URL of your local server's endpoint
+                const apiEndpoint = 'http://localhost:5001/api/projects/deploy2';
+
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST', // We created a POST endpoint
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                    // No body is needed for this specific endpoint
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // If the server returned an error (e.g., status 500)
+                    throw new Error(result.message || 'An unknown error occurred.');
+                }
+
+                // Display success message and data
+                statusDiv.textContent = `✅ Success!\n\n` +
+                                        `Deployer: ${result.data.deployerAddress}\n` +
+                                        `Network: ${result.data.network}\n` +
+                                        `Contract Address: ${result.data.contractAddress}`;
+
+            } catch (error) {
+                console.error('API call failed:', error);
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                // Re-enable the button whether it succeeded or failed
+                deployButton.disabled = false;
+            }
+        }
+
+        // Attach the function to the button's click event
+        deployButton.addEventListener('click', callDeployAPI);
+    </script>
+
+</body>
+</html>

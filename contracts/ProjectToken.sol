@@ -17,12 +17,11 @@ contract ProjectToken is ERC20, Ownable, ERC20Capped {
     constructor(
         string memory name,
         string memory symbol,
-        uint256 cap,
-        address platformOwner
+        uint256 cap
     ) 
         ERC20(name, symbol) 
         ERC20Capped(cap) 
-        Ownable(platformOwner) 
+        Ownable(msg.sender) 
     {
     }
 

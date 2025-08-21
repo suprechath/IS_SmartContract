@@ -1,5 +1,22 @@
 import projectModel from '../models/projectModel.js';
+import userModel from '../models/userModel.js';
 import { handleResponse } from '../utils/responseHandler.js';
+import { ethers } from 'ethers';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectTokenArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectToken.sol/ProjectToken.json');
+const projectManagementArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const ProjectToken = JSON.parse(fs.readFileSync(projectTokenArtifactPath, 'utf8'));
+const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
+
+
+
 
 // @desc    Create a new project
 // @route   POST /api/projects
@@ -98,5 +115,127 @@ export const updateProject = async (req, res) => {
     } catch (error) {
         console.error('Update Project Error:', error);
         handleResponse(res, 500, 'Server error during project update.', error.message);
+    }
+};
+
+// GET /api/projects/deploy/projectTokenPrep
+export const prepareProjectTokenDeployment  = async (req, res) => {
+    const { projectId } = req.body;
+    try {
+        const project = await projectModel.getProjectById(projectId);
+
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+        if (project.creator_id !== req.user.id) {
+            return handleResponse(res, 403, 'Not authorized to deploy this project.');
+        }
+        if (project.status !== 'Approved') {
+            return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
+        }
+        if (project.management_contract_address || project.token_contract_address) {
+            return handleResponse(res, 400, 'Project contracts have already been deployed.');
+        }
+
+        const tokenFactory = new ethers.ContractFactory(ProjectToken.abi, ProjectToken.bytecode);
+        const tokenUnsignedTx = await tokenFactory.getDeployTransaction(
+            project.title,
+            project.title.substring(0, 3).toUpperCase(),// can get from payload
+            project.funding_goal,
+        );
+
+        handleResponse(res, 200, 'Deployment transaction prepared successfully.', {
+            tokenDeployment: tokenUnsignedTx
+        });
+
+    } catch (error) {
+        console.error('Project Deployment Preparation Error:', error);
+        handleResponse(res, 500, 'Server error during deployment preparation.', error.message);
+    }
+/**
+Use ethers.js to send this transaction:
+const provider = new ethers.BrowserProvider(window.ethereum);
+const signer = await provider.getSigner();
+const tx = await signer.sendTransaction(response.data.tokenDeployment);
+const receipt = await tx.wait();
+const tokenContractAddress = receipt.contractAddress;
+*/
+};
+
+//GET /api/projects/deploy/projectMgmtPrep
+export const prepareProjectMgmtDeployment = async (req, res) => {
+    const { projectId } = req.body;
+    const { tokenContractAddress } = req.body;
+
+    try {
+        const project = await projectModel.getProjectById(projectId);
+        const creator = await userModel.getUserById(project.creator_id);
+
+        if (!project || !creator) {
+            return handleResponse(res, 404, 'Project or creator not found.');
+        }
+        if (project.creator_id !== req.user.id) {
+            return handleResponse(res, 403, 'You are not the creator of this project.');
+        }
+        if (project.status !== 'Approved') {
+            return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
+        }
+
+        const platformOwner = env.process.platformOperatorAddress;
+        
+        const managementFactory = new ethers.ContractFactory(ProjectManagement.abi, ProjectManagement.bytecode);
+        const managementUnsignedTx = await managementFactory.getDeployTransaction(
+            creator.wallet_address,
+            project.funding_goal,
+            project.funding_duration*24*60, //day to seconds
+            tokenContractAddress,
+            process.env.USDC_CONTRACT_ADDRESS, // Make sure this is in your .env file
+            platformOwner,
+            project.platform_fee_percentage,
+            project.reward_fee_percentage
+        );
+
+        handleResponse(res, 200, 'Management contract deployment prepared successfully.', {
+            managementDeployment: managementUnsignedTx
+        });
+
+    } catch (error) {
+        console.error('Prepare Management Deployment Error:', error);
+        handleResponse(res, 500, 'Server error during management deployment preparation.', error.message);
+    }
+};
+
+//GET /api/projects/deploy/onboard
+export const onboard = async (req, res) => {
+    const { projectId } = req.body;
+    const { tokenContractAddress, managementContractAddress } = req.body;
+
+    try {
+        const project = await projectModel.getProjectById(projectId);
+
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+        if (project.creator_id !== req.user.id) {
+            return handleResponse(res, 403, 'You are not the creator of this project.');
+        }
+        if (project.status !== 'Approved') {
+            return handleResponse(res, 400, `Project must be in 'Approved' status to be finalized.`);
+        }
+        if (project.management_contract_address || project.token_contract_address) {
+            return handleResponse(res, 400, 'Project contracts have already been recorded.');
+        }
+
+        const updatedProject = await projectModel.updateProject(projectId, {
+            token_contract_address: tokenContractAddress,
+            management_contract_address: managementContractAddress,
+            status: 'Funding'
+        });
+
+        handleResponse(res, 200, 'Project deployment finalized and status updated to Funding.', updatedProject);
+
+    } catch (error) {
+        console.error('Finalize Deployment Error:', error);
+        handleResponse(res, 500, 'Server error during deployment finalization.', error.message);
     }
 };
