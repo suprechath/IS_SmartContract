@@ -11,10 +11,10 @@ export async function deployContracts(project) {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
 
-    console.log(`Deploying contracts with the account: ${signer}`);
+    console.log(`Deploying contracts with the account: ${signer.address}`);
 
     // Deploy ProjectToken
-    const tokenFactory = new ethers.ContractFactory(ProjectToken.abi, ProjectToken.bytecode, wallet);
+    const tokenFactory = new ethers.ContractFactory(ProjectToken.abi, ProjectToken.bytecode, signer);
     const tokenContract = await tokenFactory.deploy(
         project.title,
         project.title.substring(0, 3).toUpperCase(),
