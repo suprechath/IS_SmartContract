@@ -36,7 +36,7 @@ const setupQueries = `
   CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_id UUID NOT NULL REFERENCES users(id),
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(255) UNIQUE NOT NULL,
     description TEXT,
     funding_goal NUMERIC(78, 0) NOT NULL,
     funding_duration BIGINT NOT NULL,
@@ -46,8 +46,8 @@ const setupQueries = `
     status project_status NOT NULL DEFAULT 'Pending',
     management_contract_address VARCHAR(42),
     token_contract_address VARCHAR(42),
-    platform_fee_percentage NUMERIC(5, 0),
-    reward_fee_percentage NUMERIC(5, 0),
+    platform_fee_percentage NUMERIC(5, 0) DEFAULT 5,
+    reward_fee_percentage NUMERIC(5, 0) DEFAULT 3,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );

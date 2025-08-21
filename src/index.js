@@ -7,6 +7,7 @@ import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import sanctionRoutes from './routes/sanctionRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
 
 
 // Ensure database connection is established
@@ -30,6 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sanctions', sanctionRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Start the server
 app.listen(port, () => {
