@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import { handleResponse } from '../utils/responseHandler.js';
 
 export const nonceSchema = Joi.object({
     walletAddress: Joi.string()
@@ -25,13 +24,3 @@ export const verifySchema = Joi.object({
             'any.required': 'Signature is required.',
         }),
 });
-
-export const validateAuth = (schema) => (req, res, next) => {
-    const dataToValidate = { ...req.params, ...req.body };
-    const { error } = schema.validate(dataToValidate);
-
-    if (error) {
-        return handleResponse(res, 400, error.details[0].message, error.details[0]);
-    }
-    next();
-};

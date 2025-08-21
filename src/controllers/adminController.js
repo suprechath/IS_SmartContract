@@ -3,25 +3,25 @@ import { handleResponse } from '../utils/responseHandler.js';
 
 // @route   POST /api/admin/verify-user
 export const verifyUser = async (req, res) => {
-    const { userId, status } = req.body; // status should be 'Verified' or 'Rejected'
+    const { id, kyc_status } = req.body; // status should be 'Verified' or 'Rejected'
 
-    if (!userId || !status) {
+    if (!id || !kyc_status) {
         return handleResponse(res, 400, 'User ID and status are required.');
     }
 
     try {
-        const user = await userModel.getUserById(userId);
+        const user = await userModel.getUserById(id);
         if (!user) {
             return handleResponse(res, 404, 'User not found.');
         }
 
-        const updatedUser = await userModel.updateKycStatus(userId, status);
+        const updatedUser = await userModel.updateKycStatus(id, kyc_status);
 
         // This is where you would trigger a "hook" in a real system
         // For now, we just return a success message.
         console.log(`Hook simulation: User ${updatedUser.wallet_address} status updated to ${updatedUser.kyc_status}`);
         
-        handleResponse(res, 200, `User status successfully updated to ${status}`, updatedUser);
+        handleResponse(res, 200, `User status successfully updated to ${kyc_status}`, updatedUser);
 
     } catch (error) {
         console.error('Verification Error:', error);

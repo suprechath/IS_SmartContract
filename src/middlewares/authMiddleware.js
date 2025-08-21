@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { handleResponse } from '../utils/responseHandler.js';
 import userModel from '../models/userModel.js';
 
-export const protect = async (req, res, next) => {
+export const protect = (requiredRole = null) => async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
@@ -11,11 +11,18 @@ export const protect = async (req, res, next) => {
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             // Get user from the token
-            req.user = await userModel.getUserById(decoded.id);
-            console.log('User from token:', req.user.id);
-            if (!req.user) {
+            const user = await userModel.getUserById(decoded.id);
+            
+            if (!user) {
                 return handleResponse(res, 401, 'Not authorized, user not found.');
             }
+
+            if (requiredRole && user.role !== requiredRole) {
+                return handleResponse(res, 403, `Not authorized. ${requiredRole} role required.`);
+            }
+
+            req.user = user;
+            console.log('User from token:', req.user.id);
             next();
         } catch (error) {
             console.error(error);

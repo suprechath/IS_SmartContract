@@ -69,6 +69,16 @@ const setupQueries = `
     transaction_hash VARCHAR(66) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
+
+  INSERT INTO users (wallet_address, name, email, nonce, role, kyc_status)
+  VALUES (
+    '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+    'HH0',
+    'HH0@example.com',
+    'comm-efficient-login',
+    'Platform Operator',
+    'Verified'
+  ) ON CONFLICT (wallet_address) DO NOTHING;
 `;
 
 // An async function to run the setup queries
