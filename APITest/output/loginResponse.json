@@ -1,11 +1,11 @@
 {
   "message": "Login successful",
-  "timestamp": "2025-08-21T08:18:22.313Z",
-  "walletAddress": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "timestamp": "2025-08-21T10:41:41.369Z",
+  "walletAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "user": {
-    "id": "adf9990c-630b-4e2a-b2e6-a3a794f5b728",
-    "role": "Project Creator",
-    "wallet_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+    "id": "621de466-6317-43cf-9e9f-dc7d8270a8d1",
+    "role": "Platform Operator",
+    "wallet_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
   },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkZjk5OTBjLTYzMGItNGUyYS1iMmU2LWEzYTc5NGY1YjcyOCIsInJvbGUiOiJQcm9qZWN0IENyZWF0b3IiLCJpYXQiOjE3NTU3NjQzMDIsImV4cCI6MTc1NTc2NzkwMn0.bQv6rLqmr6JqnzfTcyJbFBuzv1XtigPJcF4cvav6dt8"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyMWRlNDY2LTYzMTctNDNjZi05ZTlmLWRjN2Q4MjcwYThkMSIsInJvbGUiOiJQbGF0Zm9ybSBPcGVyYXRvciIsImlhdCI6MTc1NTc3MjkwMSwiZXhwIjoxNzU1Nzc2NTAxfQ.VfeuXdTdf50b5J3Gzl0RoGCAVExhAiaLLwM7-6MBX68"
 }
