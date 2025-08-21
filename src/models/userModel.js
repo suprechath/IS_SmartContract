@@ -65,11 +65,23 @@ const pushUserNonce = async (wallet_address, nonce) => {
   await pool.query(query, [nonce, wallet_address]);
 }
 
+const updateUser = async (id, { name, email }) => {
+  const query = `
+    UPDATE users
+    SET name = $1, email = $2, updated_at = NOW()
+    WHERE id = $3
+    RETURNING id, wallet_address, name, email, role, kyc_status;
+  `;
+  const result = await pool.query(query, [name, email, id]);
+  return result.rows[0];
+};
+
 export default {
   registerUserServices,
   getUserByWalletAddress,
   getUserById,
   updateKycStatus,
   getUserNonce,
-  pushUserNonce
+  pushUserNonce,
+  updateUser
 };

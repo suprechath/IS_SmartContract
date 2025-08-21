@@ -1,0 +1,11 @@
+{
+  "message": "Login successful",
+  "timestamp": "2025-08-21T06:26:54.422Z",
+  "walletAddress": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "user": {
+    "id": "adf9990c-630b-4e2a-b2e6-a3a794f5b728",
+    "role": "Project Creator",
+    "wallet_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkZjk5OTBjLTYzMGItNGUyYS1iMmU2LWEzYTc5NGY1YjcyOCIsInJvbGUiOiJQcm9qZWN0IENyZWF0b3IiLCJpYXQiOjE3NTU3NTc2MTQsImV4cCI6MTc1NTc2MTIxNH0.fkrDv4zneuRc6ZCM1kOdZQqiKTmtFwPj5TH_2PsBCCk"
+}

@@ -1,12 +1,15 @@
 import express from 'express';
-import { registerUser } from '../controllers/userController.js';
+import { registerUser, getUserProfile, updateUserProfile} from '../controllers/userController.js';
 import { validate } from '../middlewares/validator.js';
-import { registerSchema } from '../middlewares/userSchema.js';
+import { registerSchema, updateUserSchema } from '../middlewares/userSchema.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 
 const router = express.Router();
 
-// This sets up the endpoint: POST http://localhost:3001/api/users/register
-router.post('/register', validate(registerSchema), registerUser);
+router.post('/register', validate(registerSchema), registerUser); //POST http://localhost:5001/api/users/register
+router.get('/me', protect(), getUserProfile); //GET http://localhost:5001/api/users/me
+router.put('/me', protect(), validate(updateUserSchema), updateUserProfile); //PUT http://localhost:5001/api/users/me
+
 
 export default router;
