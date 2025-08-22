@@ -49,9 +49,11 @@ export const verifySignature = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
+        const expiresAt = jwt.decode(token).exp * 1000;
         console.log(`JWT created for ${user.wallet_address}: ${token}`);
         handleResponse(res, 200, 'Login successful!', {
             token: token,
+            expiresAt: new Date(expiresAt).toISOString(),
             user: {
                 id: user.id,
                 role: user.role,

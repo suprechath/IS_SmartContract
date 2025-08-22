@@ -140,7 +140,7 @@ export const prepareProjectTokenDeployment  = async (req, res) => {
         const tokenFactory = new ethers.ContractFactory(ProjectToken.abi, ProjectToken.bytecode);
         const tokenUnsignedTx = await tokenFactory.getDeployTransaction(
             project.title,
-            project.title.substring(0, 3).toUpperCase(),// can get from payload
+            project.id.substring(0, 4).toUpperCase(),// can get from payload
             project.funding_goal,
         );
 
@@ -181,7 +181,7 @@ export const prepareProjectMgmtDeployment = async (req, res) => {
             return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
         }
 
-        const platformOwner = env.process.platformOperatorAddress;
+        const platformOwner = process.env.platformOperatorAddress;
         
         const managementFactory = new ethers.ContractFactory(ProjectManagement.abi, ProjectManagement.bytecode);
         const managementUnsignedTx = await managementFactory.getDeployTransaction(

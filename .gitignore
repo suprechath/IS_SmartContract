@@ -1,8 +1,6 @@
 node_modules
 .env
-apiTest
-test.html
-test.js
+# apiTest
 
 # Hardhat files
 /cache
