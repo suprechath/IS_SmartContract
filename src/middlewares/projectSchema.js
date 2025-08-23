@@ -63,3 +63,8 @@ export const onboardSchema = Joi.object({
             'any.required': 'Management contract address is required.',
         }),
 });
+
+export const prepareInvestmentSchema = Joi.object({
+    projectId: Joi.string().uuid().required(),
+    amount: Joi.number().positive().required()
+});

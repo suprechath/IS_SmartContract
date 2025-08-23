@@ -239,3 +239,44 @@ export const onboard = async (req, res) => {
         handleResponse(res, 500, 'Server error during deployment finalization.', error.message);
     }
 };
+
+// @desc    Prepare for an investment
+// @route   POST /api/projects/prepareInvestment
+export const prepareInvestment = async (req, res) => {
+    try {
+        const { projectId, amount } = req.body;
+        const project = await projectModel.getProjectById(projectId);
+
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+        if (project.status !== 'Funding') {
+            return handleResponse(res, 400, `Project is not in Funding state.`);
+        }
+
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
+        const managementContract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+        const totalContributions = await managementContract.totalContributions();
+        const fundingGoal = await managementContract.fundingGoal();
+        const deadline = await managementContract.deadline();
+
+        if (BigInt(amount) + totalContributions > fundingGoal) {
+            return handleResponse(res, 400, 'Investment exceeds funding goal.');
+        }
+
+        if (Math.floor(Date.now() / 1000) > deadline) {
+            return handleResponse(res, 400, 'Investment deadline has passed.');
+        }
+
+        handleResponse(res, 200, 'Investment is valid.', {
+            management_contract_address: project.management_contract_address,
+            usdc_contract_address: await managementContract.usdcToken(),
+            amount_to_approve: amount.toString()
+        });
+
+    } catch (error) {
+        console.error('Prepare Investment Error:', error);
+        handleResponse(res, 500, 'Server error during investment preparation.', error.message);
+    }
+};
+
