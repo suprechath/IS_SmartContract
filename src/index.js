@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import sanctionRoutes from './routes/sanctionRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import investmentRoutes from './routes/investmentRoutes.js';
 
 
 // Ensure database connection is established

@@ -9,7 +9,7 @@ contract ProjectFactory {
 
     event ProjectDeployed(
         address indexed creator,
-        bytes32 indexed projectId, // Use a bytes32 version of your UUID
+        bytes32 indexed projectId,
         address tokenContract,
         address managementContract
     );
@@ -51,8 +51,9 @@ contract ProjectFactory {
         address managementContractAddress = address(management);
 
         // Step 3 & 4: Link the contracts by transferring ownership and setting minter
+        token.setProjectManagement(managementContractAddress);
+        token.setMinter(managementContractAddress);
         token.transferOwnership(managementContractAddress);
-        management.setTokenMinter(); // We need to add this new function to ProjectManagement
 
         emit ProjectDeployed(
             creator,

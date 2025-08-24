@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Deployment</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f7f9;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        /* Style for disabled buttons */
+        button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
+        #logoutButton {
+            background-color: #dc3545; /* Red color for logout */
+        }
+        #logoutButton:hover:not(:disabled) {
+            background-color: #c82333;
+        }
+        #deployButton {
+            background-color: #28a745; /* Green color for deploy */
+        }
+        #status {
+            margin-top: 20px;
+            font-family: "Courier New", Courier, monospace;
+            text-align: left;
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 100px;
+            max-width: 750px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>One-time deploy</h1>
+        <button id="factoryButton" onclick="factoryContractDeployment()"> Deploy Factory contract</button>
+        <button id="usdcButton" onclick="usdcContractDeployment()"> Deploy USDC contract</button>
+        <h1>Deploy Project Contracts</h1>
+        <button id="loginButton" onclick="login()">Login with MetaMask</button>
+        <button id="logoutButton" onclick="logout()" disabled>Logout</button>
+        <p>Click the button below to start the deployment process.</p>
+
+        <input type="text" id="onchainProjectIdInput" placeholder="Enter Project ID" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button>
+        <!-- <hr>
+        <input type="text" id="projectIdInput" placeholder="Enter Project ID" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <button id="deployButton" onclick="deployContracts()" disabled>Deploy contract (3 step)</button> -->
+        <!-- <button id="deployButton" onclick="deployManagementAndFinalize()">🚀 Deploy Now</button> -->
+        <div id="status">Deployment status will appear here...</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module" src="contractsDeployment.js"></script>
+    <script type="module" src="logIn.js"></script>
+    <script type="module" src="oneTimeDeployment.js"></script>
+    <!-- <script type="module" src="apiClient.js"></script> -->
+    <script>
+        const statusDiv = document.getElementById('status');
+        function updateStatus(message) {
+            console.log(message);
+            statusDiv.textContent += `\n> ${message}`;
+        }
+    </script>
+</body>
+</html>

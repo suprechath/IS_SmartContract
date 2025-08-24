@@ -2,7 +2,14 @@ import { handleResponse } from '../utils/responseHandler.js';
 import projectModel from '../models/projectModel.js';
 import investmentModel from '../models/investmentModel.js';
 import { ethers } from 'ethers';
-import ProjectManagement from '../../../IS_SmartContract-cfb1447989257827e137bcf9c0e3f1952b02b8d6/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json' assert { type: "json" };
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectManagementArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
 
 // @desc    Prepare an investment by validating it against the smart contract
 // @route   POST /api/investments/prepare

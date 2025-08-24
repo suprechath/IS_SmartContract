@@ -14,9 +14,8 @@ const projectTokenArtifactPath = path.resolve(__dirname, '../../artifacts/contra
 const projectManagementArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectToken = JSON.parse(fs.readFileSync(projectTokenArtifactPath, 'utf8'));
 const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
-
-
-
+const projectFactoryArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
+const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'utf8'));
 
 // @desc    Create a new project
 // @route   POST /api/projects
@@ -232,3 +231,47 @@ export const onboard = async (req, res) => {
     }
 };
 
+// @desc    Prepare a createProject transaction
+// @route   POST /api/projects/deploy/onchain
+export const prepareCreateProject = async (req, res) => {
+    const { projectId } = req.body;
+    const creatorId = req.user.id;
+
+    try {
+        const project = await projectModel.getProjectById(projectId);
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+        if (project.creator_id !== creatorId) {
+            return handleResponse(res, 403, 'Not authorized to prepare this project.');
+        }
+        if (project.status !== 'Approved') {
+            return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
+        }
+        if (project.management_contract_address || project.token_contract_address) {
+            return handleResponse(res, 400, 'Project contracts have already been deployed.');
+        }
+
+        const creator = await userModel.getUserById(project.creator_id);
+        const creatorWallet = creator.wallet_address;
+
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
+        const factoryContract = new ethers.Contract(process.env.PROJECT_FACTORY_ADDRESS, ProjectFactory.abi, provider);
+        const unsignedTx = await factoryContract.createProject.populateTransaction(
+            ethers.encodeBytes32String(project.id.substring(0, 31)),
+            creator.wallet_address,
+            project.title,
+            project.id.substring(0, 4).toUpperCase(),
+            project.funding_goal,
+            project.funding_duration,
+            process.env.USDC_CONTRACT_ADDRESS,
+            project.platform_fee_percentage,
+            project.reward_fee_percentage
+        );
+        handleResponse(res, 200, 'Create project transaction prepared successfully.', { unsignedTx });
+
+    } catch (error) {
+        console.error('Prepare Create Project Error:', error);
+        handleResponse(res, 500, 'Server error during transaction preparation.', error.message);
+    }
+};
