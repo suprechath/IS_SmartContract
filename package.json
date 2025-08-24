@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon ./src/index.js",
+    "dev:listener": "nodemon ./src/services/eventListener.js",
+    "start:listener": "node ./src/services/eventListener.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

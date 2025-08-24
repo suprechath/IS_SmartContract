@@ -32,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sanctions', sanctionRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/investments', investmentRoutes);
 
 // Start the server
 app.listen(port, () => {

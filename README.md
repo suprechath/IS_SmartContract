@@ -33,3 +33,7 @@ API folder tree
 
 using https://etherscan.io/verifiedsignatures# for testing signing nonce
  
+Running
+- terminal1 : Docker database
+- terminal2: npm run dev
+- terminal3: npm run dev:listener //or// npm run start:listener
