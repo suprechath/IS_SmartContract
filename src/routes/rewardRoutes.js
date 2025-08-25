@@ -6,7 +6,7 @@ import { getClaimSchema, recordClaimSchema } from '../middlewares/rewardSchema.j
 
 const router = express.Router();
 
-router.get('/', protect('Investor'), validate(getClaimSchema), getRewards);
-router.post('/record', protect('Investor'), validate(recordClaimSchema), recordRewards);
+router.get('/', protect('Investor'), validate(getClaimSchema), getRewards); //http://localhost:5001/api/rewards/?projectId=<YOUR_PROJECT_ID>
+router.post('/record', protect('Investor'), validate(recordClaimSchema), recordRewards); //http://localhost:5001/api/rewards/record
 
 export default router;

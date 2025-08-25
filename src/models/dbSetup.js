@@ -70,6 +70,16 @@ const setupQueries = `
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
+  CREATE TABLE IF NOT EXISTS withdrawals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id),
+    creator_id UUID NOT NULL REFERENCES users(id),
+    amount_withdrawn NUMERIC(78, 0) NOT NULL,
+    platform_fee NUMERIC(78, 0) NOT NULL,
+    transaction_hash VARCHAR(66) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
   INSERT INTO users (wallet_address, name, email, nonce, role, kyc_status)
   VALUES (
     '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
