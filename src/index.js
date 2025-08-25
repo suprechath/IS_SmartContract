@@ -9,6 +9,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import sanctionRoutes from './routes/sanctionRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import investmentRoutes from './routes/investmentRoutes.js';
+import rewardRoutes from './routes/rewardRoutes.js';
 
 
 // Ensure database connection is established
@@ -34,6 +35,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/sanctions', sanctionRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/investments', investmentRoutes);
+app.use('/api/rewards', rewardRoutes);
 
 // Start the server
 app.listen(port, () => {

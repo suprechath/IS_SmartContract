@@ -204,10 +204,4 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
         emit Refunded(msg.sender, refundAmount);
     }
     
-    function setTokenMinter() public {
-        // Only the factory, which is the platformOwner of this contract, can call this
-        require(msg.sender == creator, "Only creator can set minter");
-        projectToken.setMinter(address(this));
-        projectToken.setProjectManagement(address(this));
-    }
 }
