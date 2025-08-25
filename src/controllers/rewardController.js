@@ -1,6 +1,6 @@
 import { handleResponse } from '../utils/responseHandler.js';
 import projectModel from '../models/projectModel.js';
-import rewardsModel from '../models/rewardsModel.js';
+import rewardModel from '../models/rewardModel.js';
 import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
@@ -51,11 +51,11 @@ export const recordRewards = async (req, res) => {
     const investorId = req.user.id;
 
     try {
-        const existingClaim = await rewardsModel.getRewardsByTxHash(transactionHash);
+        const existingClaim = await rewardModel.getRewardsByTxHash(transactionHash);
         if (existingClaim) {
             return handleResponse(res, 409, 'This transaction has already been recorded.');
         }
-        const newClaim = await rewardsModel.createRewardClaim({
+        const newClaim = await rewardModel.createRewardClaim({
             investor_id: investorId,
             project_id: projectId,
             amount,

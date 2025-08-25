@@ -10,6 +10,7 @@ import sanctionRoutes from './routes/sanctionRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import investmentRoutes from './routes/investmentRoutes.js';
 import rewardRoutes from './routes/rewardRoutes.js';
+import refundRoutes from './routes/refundRoutes.js';
 
 
 // Ensure database connection is established
@@ -36,6 +37,7 @@ app.use('/api/sanctions', sanctionRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/investments', investmentRoutes);
 app.use('/api/rewards', rewardRoutes);
+app.use('/api/refunds', refundRoutes);
 
 // Start the server
 app.listen(port, () => {
