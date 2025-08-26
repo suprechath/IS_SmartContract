@@ -53,14 +53,13 @@ const setupQueries = `
     user_offchain_id UUID NOT NULL REFERENCES users_offchain(id),
     wallet_address VARCHAR(42) UNIQUE NOT NULL,
     role user_role NOT NULL,
-    nonce VARCHAR(255),
     sanction_status sanction_status NOT NULL DEFAULT 'Pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   );
 
   CREATE TABLE IF NOT EXISTS project_offchain (
-    id UUID PRIMARY KEY REFERENCES project_onchain(id),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     title VARCHAR(255) UNIQUE NOT NULL,
     project_overview TEXT,
@@ -85,6 +84,7 @@ const setupQueries = `
   CREATE TABLE IF NOT EXISTS project_onchain (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_onchain_id UUID NOT NULL REFERENCES users_onchain(id),
+    project_offchain_id UUID NOT NULL REFERENCES project_offchain(id),
 
     funding_USDC_goal NUMERIC(78, 0) NOT NULL,
     funding_duration_second BIGINT NOT NULL,
@@ -129,12 +129,12 @@ const setupQueries = `
       '2000-01-01',
       'Admin',
       '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-      'admin@commeff.com',
+      'admin@buildingyield.com',
       'Verified'
     )
     ON CONFLICT (email) DO NOTHING;
 
-    SELECT id INTO offchain_user_id FROM users_offchain WHERE email = 'admin@commeff.com';
+    SELECT id INTO offchain_user_id FROM users_offchain WHERE email = 'admin@buildingyield.com';
 
     IF offchain_user_id IS NOT NULL THEN
       INSERT INTO users_onchain (user_offchain_id, wallet_address, role, nonce, sanction_status)

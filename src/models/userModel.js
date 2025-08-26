@@ -1,78 +1,119 @@
 import pool from '../config/db.js';
 
-const registerUserServices = async (wallet_address, name, email, nonce, role) => {
-  const newUser = await pool.query(`
-    INSERT INTO users (wallet_address, name, email, nonce, role) 
-    VALUES ($1, $2, $3, $4, $5) 
-    RETURNING *
-  `,[wallet_address, name, email, nonce, role]
-  );
-  return newUser.rows[0];
+const registerUserServices = async (
+  full_name,
+  date_of_birth,
+  address,
+  identification_number,
+  email,
+  wallet_address,
+  role
+) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    let offchainResult = await client.query(
+      `SELECT id FROM users_offchain WHERE identification_number = $1 OR email = $2`,
+      [identification_number, email]
+    );
+    let offchainUserId;
+    if (offchainResult.rows.length > 0) {
+      offchainUserId = offchainResult.rows[0].id;
+      console.log(`Found existing off-chain user: ${offchainUserId}`);
+    } else {
+      const newOffchainQuery = `
+        INSERT INTO users_offchain (
+          full_name, date_of_birth, address, identification_number, email
+        )
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id;
+      `;
+      const newOffchainValues = [full_name, date_of_birth, address, identification_number, email];
+      const newOffchainResult = await client.query(newOffchainQuery, newOffchainValues);
+      offchainUserId = newOffchainResult.rows[0].id;
+      console.log(`Created new off-chain user: ${offchainUserId}`);
+    }
+
+    const onchainQuery = `
+      INSERT INTO users_onchain (user_offchain_id, wallet_address, role)
+      VALUES ($1, $2, $3)
+      RETURNING id, wallet_address, role;
+    `;
+    const onchainValues = [offchainUserId, wallet_address, role];
+    const onchainResult = await client.query(onchainQuery, onchainValues);
+
+    await client.query('COMMIT');
+    return onchainResult.rows[0];
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 const getUserByWalletAddress = async (wallet_address) => {
   const query = `
-    SELECT * 
-    FROM users 
-    WHERE wallet_address = $1
+    SELECT
+      id,
+      wallet_address,
+      role
+    FROM users_onchain
+    WHERE wallet_address = $1;
   `;
   const result = await pool.query(query, [wallet_address]);
   return result.rows[0];
-}
+};
 
 const getUserById = async (id) => {
   const query = `
-    SELECT * 
-    FROM users 
-    WHERE id = $1
+    SELECT
+      id,
+      wallet_address,
+      role
+    FROM users_onchain
+    WHERE id = $1;
   `;
   const result = await pool.query(query, [id]);
   return result.rows[0];
 };
 
-const updateKycStatus = async (id, status) => {
+const updateSanctionStatus = async (id, status) => {
   const allowedStatuses = ['Pending', 'Verified', 'Rejected'];
   if (!allowedStatuses.includes(status)) {
-    throw new Error('Invalid KYC status');
+    throw new Error('Invalid sanction status');
   }
   const query = `
-    UPDATE users 
-    SET kyc_status = $1, updated_at = NOW()
+    UPDATE users_onchain
+    SET sanction_status = $1, updated_at = NOW()
     WHERE id = $2
-    RETURNING id, wallet_address, kyc_status;
+    RETURNING id, kyc_status;
   `;
   const result = await pool.query(query, [status, id]);
   return result.rows[0];
 };
 
-
-const getUserNonce = async (wallet_address) => {
+const updateUser = async (onchainId, offchainData) => {
+  const validFields = Object.keys(offchainData).filter(key => offchainData[key] != null);
+  if (validFields.length === 0) {
+    throw new Error("No valid fields provided for update.");
+  }
+  const setClause = validFields
+    .map((key, index) => `"${key}" = $${index + 1}`)
+    .join(', ');
+  const finalSetClause = `${setClause}, updated_at = NOW()`;
   const query = `
-    SELECT nonce 
-    FROM users 
-    WHERE wallet_address = $1
+    UPDATE users_offchain
+    SET ${finalSetClause}
+    WHERE id = (SELECT user_offchain_id FROM users_onchain WHERE id = $${onchainId})
+    RETURNING *;
   `;
-  const result = await pool.query(query, [wallet_address]);
-  return result.rows[0];
-};
-
-const pushUserNonce = async (wallet_address, nonce) => {
-  const query = `
-    UPDATE users 
-    SET nonce = $1, updated_at = NOW()
-    WHERE wallet_address = $2
-  `;
-  await pool.query(query, [nonce, wallet_address]);
-}
-
-const updateUser = async (id, { name, email }) => {
-  const query = `
-    UPDATE users
-    SET name = $1, email = $2, updated_at = NOW()
-    WHERE id = $3
-    RETURNING id, wallet_address, name, email, role, kyc_status;
-  `;
-  const result = await pool.query(query, [name, email, id]);
+  const values = [
+    ...validFields.map(key => offchainData[key]),
+    onchainId
+  ];
+  const result = await pool.query(query, values);
   return result.rows[0];
 };
 
@@ -80,8 +121,6 @@ export default {
   registerUserServices,
   getUserByWalletAddress,
   getUserById,
-  updateKycStatus,
-  getUserNonce,
-  pushUserNonce,
+  updateSanctionStatus,
   updateUser
 };

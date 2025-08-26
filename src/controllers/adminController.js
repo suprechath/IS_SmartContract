@@ -17,7 +17,7 @@ export const verifyUser = async (req, res) => {
             return handleResponse(res, 404, 'User not found.');
         }
 
-        const updatedUser = await userModel.updateKycStatus(id, kyc_status);
+        const updatedUser = await userModel.updateSanctionStatus(id, kyc_status);
 
         // This is where you would trigger a "hook" in a real system
         // For now, we just return a success message.

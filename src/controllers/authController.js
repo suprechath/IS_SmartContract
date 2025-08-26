@@ -5,62 +5,70 @@ import { ethers } from 'ethers';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 
+const NONCE_JWT_SECRET = process.env.JWT_SECRET
+
 // @desc    Get a nonce for a user to sign
 // @route   GET /api/auth/nonce/:walletAddress
 export const getNonce = async (req, res) => {
     const { walletAddress } = req.params;
     try {
-        const getUserNonce = await userModel.getUserNonce(walletAddress);
-        const nonce = `comm-efficient-login-${crypto.randomBytes(16).toString('hex')}`;
-        if (!getUserNonce) {
+        const user = await userModel.getUserByWalletAddress(walletAddress);
+        if (!user) {
             return handleResponse(res, 404, 'User with this wallet address not found. Please register first.');
-        }else {
-            await userModel.pushUserNonce(walletAddress, nonce);
-            console.log('Nonce pushed to database for wallet address:', walletAddress);
-            handleResponse(res, 200, 'Nonce successfully generated.', { nonce });
         }
+
+        const nonce = `comm-efficient-login-${crypto.randomBytes(16).toString('hex')}`;
+        const nonceToken = jwt.sign(
+            { nonce, walletAddress },
+            NONCE_JWT_SECRET,
+            { expiresIn: '5m' } // Nonce is valid for 5 minutes
+        );
+        handleResponse(res, 200, 'Nonce token successfully generated.', { nonceToken });
     } catch (error) {
         console.error('Get Nonce Error:', error);
-        handleResponse(res, 500, 'Server error while generating nonce', error.message);
+        handleResponse(res, 500, 'Server error while generating nonce token', error.message);
     }
 };
 
 // @desc    Verify the signature and log the user in
 // @route   POST /api/auth/verify
 export const verifySignature = async (req, res) => {
-    const { wallet_address, signature } = req.body;
+    const { nonceToken, signature } = req.body;
     try {
-        const user = await userModel.getUserByWalletAddress(wallet_address);
-        if (!user || !user.nonce) {
-            return handleResponse(res, 404, 'User not found or no nonce available. Please request a nonce first.');
-        }
-        const signerAddress = ethers.verifyMessage(user.nonce, signature);
-        if (signerAddress.toLowerCase() !== wallet_address.toLowerCase()) {
+        const decodedNonceToken = jwt.verify(nonceToken, NONCE_JWT_SECRET);
+        const { nonce, walletAddress } = decodedNonceToken;
+
+        const signerAddress = ethers.verifyMessage(nonce, signature);
+        if (signerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
             return handleResponse(res, 401, 'Signature verification failed. Invalid signature.');
         }
+        
+        const user = await userModel.getUserByWalletAddress(walletAddress);
+        if (!user) {
+            return handleResponse(res, 404, 'User not found.');
+        }
 
-        //Invalidate the nonce after use to prevent replay attacks
-        const newNonce = "comm-efficient-login";
-        await userModel.pushUserNonce(user.wallet_address, newNonce);
-
-        //Create a JWT
-        const token = jwt.sign(
+        const loginToken = jwt.sign(
             { id: user.id, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '1h' } // Real login token is valid for 1 hour
         );
-        const expiresAt = jwt.decode(token).exp * 1000;
-        console.log(`JWT created for ${user.wallet_address}: ${token}`);
+        const expiresAt = jwt.decode(loginToken).exp * 1000;
+        console.log(`JWT created for ${user.wallet_address}: ${loginToken}`); //This must be deleted in production
+        
         handleResponse(res, 200, 'Login successful!', {
-            token: token,
+            token: loginToken,
             expiresAt: new Date(expiresAt).toISOString(),
             user: {
                 id: user.id,
                 role: user.role,
-                wallet_address: wallet_address
+                wallet_address: walletAddress
             }
         });
     } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            return handleResponse(res, 401, 'The signing request has expired. Please try again.');
+        }
         console.error('Verify Signature Error:', error);
         handleResponse(res, 500, 'Server error during verification', error.message);
     }

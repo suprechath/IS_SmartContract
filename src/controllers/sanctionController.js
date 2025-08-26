@@ -20,9 +20,9 @@ export const checkSanction = async (req, res) => {
         });
         console.log('Sanction Check Response:', response.data);
         if (response.data.isSanctioned) {
-            await userModel.updateKycStatus(req.user.id, 'Rejected');
+            await userModel.updateSanctionStatus(req.user.id, 'Rejected');
         } else {
-            await userModel.updateKycStatus(req.user.id, 'Verified');
+            await userModel.updateSanctionStatus(req.user.id, 'Verified');
         }
         handleResponse(res, 200, 'Sanction status retrieved successfully.', response.data);
     } catch (error) {
