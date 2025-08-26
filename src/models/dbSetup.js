@@ -30,8 +30,7 @@ const setupQueries = `
           'Withdrawal',
           'RewardDeposit',
           'RewardClaim',
-          'Refund',
-          'PlatformFee'
+          'Refund'
         );
       END IF;
   END$$;

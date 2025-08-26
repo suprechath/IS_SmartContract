@@ -8,10 +8,12 @@ import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import sanctionRoutes from './routes/sanctionRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js';
 import investmentRoutes from './routes/investmentRoutes.js';
-import rewardRoutes from './routes/rewardRoutes.js';
-import refundRoutes from './routes/refundRoutes.js';
-import withdrawalRoutes from './routes/withdrawalRoutes.js';
+
+// import rewardRoutes from './routes/rewardRoutes.js';
+// import refundRoutes from './routes/refundRoutes.js';
+// import withdrawalRoutes from './routes/withdrawalRoutes.js';
 
 
 // Ensure database connection is established
@@ -36,10 +38,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sanctions', sanctionRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/transactions', transactionRoutes);
 app.use('/api/investments', investmentRoutes);
-app.use('/api/rewards', rewardRoutes);
-app.use('/api/refunds', refundRoutes);
-app.use('/api/withdrawals', withdrawalRoutes);
+// app.use('/api/rewards', rewardRoutes);
+// app.use('/api/refunds', refundRoutes);
+// app.use('/api/withdrawals', withdrawalRoutes);
+
 
 // Start the server
 app.listen(port, () => {
