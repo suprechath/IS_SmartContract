@@ -1,39 +1,81 @@
 import pool from '../config/db.js';
 
-const createProject = async (projectData, creator_id) => {
-    const {
-        title,
-        description,
-        funding_goal,
-        funding_duration,
-        projected_roi,
-        projected_payback_period_months,
-        project_plan_url
-    } = projectData;
+const createProject = async (onchainData, offchainData, userOnchainId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const offchainQuery = `
+            INSERT INTO project_offchain (
+                title, project_overview, proposed_solution, location, 
+                cover_image_url, tags, co2_reduction, projected_roi, 
+                projected_payback_period_months, project_plan_url, 
+                technical_specifications_urls, third_party_verification_urls
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING id;
+        `;
+        const offchainValues = [
+            offchainData.title,
+            offchainData.project_overview,
+            offchainData.proposed_solution,
+            offchainData.location,
+            offchainData.cover_image_url,
+            offchainData.tags,
+            offchainData.co2_reduction,
+            offchainData.projected_roi,
+            offchainData.projected_payback_period_months,
+            offchainData.project_plan_url,
+            offchainData.technical_specifications_urls,
+            offchainData.third_party_verification_urls
+        ];
+        const offchainResult = await client.query(offchainQuery, offchainValues);
+        const projectOffchainId = offchainResult.rows[0].id;
 
-    const newProject = await pool.query(`
-        INSERT INTO projects (
-            creator_id,
-            title,
-            description,
-            funding_goal,
-            funding_duration,
-            projected_roi,
-            projected_payback_period_months,
-            project_plan_url
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *
-    `, [creator_id, title, description, funding_goal, funding_duration, projected_roi, projected_payback_period_months, project_plan_url]);
+        const onchainQuery = `
+            INSERT INTO project_onchain (
+                user_onchain_id, project_offchain_id, funding_usdc_goal, funding_duration_second, 
+                usdc_contract_address, platform_fee_percentage, reward_fee_percentage
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *;
+        `;
+        const onchainValues = [
+            userOnchainId,
+            projectOffchainId,
+            onchainData.funding_usdc_goal,
+            onchainData.funding_duration_second,
+            onchainData.usdc_contract_address,
+            onchainData.platform_fee_percentage,
+            onchainData.reward_fee_percentage
+        ];
+        const onchainResult = await client.query(onchainQuery, onchainValues);
 
-    return newProject.rows[0];
+        await client.query('COMMIT');
+        return onchainResult.rows[0];
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 };
 
-const getProjectsByStatus = async (statuses) => {
+const getOffchainProjectsByStatus = async (statuses) => {
+    const query = `
+        SELECT poff.*
+        FROM project_onchain pon
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        WHERE pon.project_status = ANY($1::project_status[])
+    `;
+    const result = await pool.query(query, [statuses]);
+    return result.rows;
+};
+
+const getOnchainProjectsByStatus = async (statuses) => {
     const query = `
         SELECT *
-        FROM projects
-        WHERE status = ANY($1::project_status[])
+        FROM project_onchain
+        WHERE project_status = ANY($1::project_status[])
     `;
     const result = await pool.query(query, [statuses]);
     return result.rows;
@@ -41,8 +83,21 @@ const getProjectsByStatus = async (statuses) => {
 
 const getProjectById = async (projectId) => {
     const query = `
-        SELECT *
-        FROM projects
+        SELECT pon.*, poff.*
+        FROM project_onchain pon
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        WHERE pon.id = $1
+    `;
+    const result = await pool.query(query, [projectId]);
+    return result.rows[0];
+};
+
+const getOnchainProjectById = async (projectId) => {
+    const query = `
+        SELECT user_onchain_id, funding_usdc_goal, funding_duration_second, 
+        management_contract_address, token_contract_address, usdc_contract_address, 
+        platform_fee_percentage, reward_fee_percentage, project_status
+        FROM project_onchain
         WHERE id = $1
     `;
     const result = await pool.query(query, [projectId]);
@@ -51,34 +106,70 @@ const getProjectById = async (projectId) => {
 
 const getProjectsByCreatorId = async (creatorId) => {
     const query = `
-        SELECT *
-        FROM projects
-        WHERE creator_id = $1
+        SELECT pon.*, poff.title
+        FROM project_onchain pon
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        WHERE pon.user_onchain_id = $1
     `;
     const result = await pool.query(query, [creatorId]);
     return result.rows;
 };
 
-const updateProject = async (projectId, fieldToUpdate) => {
-    const setClause = Object.keys(fieldToUpdate)
-        .map((key, index) => `${key} = $${index + 1}`)
-        .join(', ');
-    const finalSetClause = `${setClause}, updated_at = NOW()`;
-    const query = `
-        UPDATE projects
-        SET ${finalSetClause}
-        WHERE id = $${Object.keys(fieldToUpdate).length + 1}
-        RETURNING *
-    `;
-    const values = [...Object.values(fieldToUpdate), projectId];
-    const result = await pool.query(query, values);
-    return result.rows[0];
+const updateProject = async (projectId, onchainData, offchainData) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const getOffchainQuery = 'SELECT project_offchain_id FROM project_onchain WHERE id = $1';
+        const offchainResult = await client.query(getOffchainQuery, [projectId]);
+        const projectOffchainId = offchainResult.rows[0].project_offchain_id;
+
+        if (offchainData && Object.keys(offchainData).length > 0) {
+            const offchainSetClause = Object.keys(offchainData).map((key, index) => `${key} = $${index + 1}`).join(', ');
+            const offchainQuery = `
+                UPDATE project_offchain
+                SET ${offchainSetClause}, updated_at = NOW()
+                WHERE id = $${Object.keys(offchainData).length + 1}
+            `;
+            const offchainValues = [...Object.values(offchainData), projectOffchainId];
+            await client.query(offchainQuery, offchainValues);
+        }
+
+        if (onchainData && Object.keys(onchainData).length > 0) {
+            const onchainSetClause = Object.keys(onchainData).map((key, index) => `${key} = $${index + 1}`).join(', ');
+            const onchainQuery = `
+                UPDATE project_onchain
+                SET ${onchainSetClause}, updated_at = NOW()
+                WHERE id = $${Object.keys(onchainData).length + 1}
+            `;
+            const onchainValues = [...Object.values(onchainData), projectId];
+            await client.query(onchainQuery, onchainValues);
+        }
+
+        await client.query('COMMIT');
+
+        const query = `
+        SELECT pon.*, poff.*
+        FROM project_onchain pon
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        WHERE pon.id = $1
+        `;
+        const result = await pool.query(query, [projectId]);
+        return result.rows[0];
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 };
 
 export default {
     createProject,
-    getProjectsByStatus,
+    getOffchainProjectsByStatus,
+    getOnchainProjectsByStatus,
     getProjectById,
+    getOnchainProjectById,
     getProjectsByCreatorId,
     updateProject
 };

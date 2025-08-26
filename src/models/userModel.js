@@ -88,7 +88,7 @@ const updateSanctionStatus = async (id, status) => {
     UPDATE users_onchain
     SET sanction_status = $1, updated_at = NOW()
     WHERE id = $2
-    RETURNING id, kyc_status;
+    RETURNING id, sanction_status, wallet_address;
   `;
   const result = await pool.query(query, [status, id]);
   return result.rows[0];

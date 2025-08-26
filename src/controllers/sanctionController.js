@@ -6,7 +6,6 @@ dotenv.config();
 
 // @route   GET /api/sanctions/check
 export const checkSanction = async (req, res) => {
-    // Get wallet address from the authenticated user attached by the 'protect' middleware
     const { wallet_address } = req.user;
     if (!wallet_address) {
         return handleResponse(res, 400, 'User has no wallet address to check.');
