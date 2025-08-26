@@ -1,5 +1,4 @@
 import { handleResponse } from '../utils/responseHandler.js';
-import pool from '../config/db.js';
 import crypto from 'crypto';
 import { ethers } from 'ethers';
 import jwt from 'jsonwebtoken';
