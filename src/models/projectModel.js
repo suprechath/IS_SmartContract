@@ -60,22 +60,12 @@ const createProject = async (onchainData, offchainData, userOnchainId) => {
     }
 };
 
-const getOffchainProjectsByStatus = async (statuses) => {
+const getProjectsByStatus = async (statuses) => {
     const query = `
-        SELECT poff.*
+        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
         WHERE pon.project_status = ANY($1::project_status[])
-    `;
-    const result = await pool.query(query, [statuses]);
-    return result.rows;
-};
-
-const getOnchainProjectsByStatus = async (statuses) => {
-    const query = `
-        SELECT *
-        FROM project_onchain
-        WHERE project_status = ANY($1::project_status[])
     `;
     const result = await pool.query(query, [statuses]);
     return result.rows;
@@ -94,11 +84,13 @@ const getProjectById = async (projectId) => {
 
 const getOnchainProjectById = async (projectId) => {
     const query = `
-        SELECT user_onchain_id, funding_usdc_goal, funding_duration_second, 
-        management_contract_address, token_contract_address, usdc_contract_address, 
-        platform_fee_percentage, reward_fee_percentage, project_status
-        FROM project_onchain
-        WHERE id = $1
+        SELECT poff.title, pon.id, pon.user_onchain_id, pon.funding_usdc_goal, pon.funding_duration_second, 
+        pon.management_contract_address, pon.token_contract_address, pon.usdc_contract_address, 
+        pon.platform_fee_percentage, pon.reward_fee_percentage, pon.project_status
+        SELECT pon.*, poff.*
+        FROM project_onchain pon
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        WHERE pon.id = $1
     `;
     const result = await pool.query(query, [projectId]);
     return result.rows[0];
@@ -106,7 +98,7 @@ const getOnchainProjectById = async (projectId) => {
 
 const getProjectsByCreatorId = async (creatorId) => {
     const query = `
-        SELECT pon.*, poff.title
+        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
         WHERE pon.user_onchain_id = $1

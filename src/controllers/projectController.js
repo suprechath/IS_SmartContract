@@ -21,7 +21,38 @@ const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'u
 // @route   POST /api/projects
 export const createProject = async (req, res) => {
     try {
-        const newProject = await projectModel.createProject(req.body, req.user.id);
+        const onchainKeys = [
+            'funding_USDC_goal', 
+            'funding_duration_second', 
+            'usdc_contract_address', 
+            'platform_fee_percentage', 
+            'reward_fee_percentage'
+        ];
+        const offchainKeys = [
+            'title', 
+            'project_overview', 
+            'proposed_solution', 
+            'location', 
+            'cover_image_url', 
+            'tags', 
+            'CO2_reduction', 
+            'projected_roi', 
+            'projected_payback_period_months', 
+            'project_plan_url', 
+            'technical_specifications_urls', 
+            'third_party_verification_urls'
+        ];
+        const onchainData = {};
+        const offchainData = {};
+        for (const key in req.body) {
+            if (onchainKeys.includes(key)) {
+                onchainData[key] = req.body[key];
+            } else if (offchainKeys.includes(key)) {
+                offchainData[key] = req.body[key];
+            }
+        }
+
+        const newProject = await projectModel.createProjectOnoffchain(onchainData, offchainData, req.user.id);
         handleResponse(res, 201, 'Project created successfully', newProject);
     } catch (error) {
         console.error('Create Project Error:', error);
@@ -33,7 +64,8 @@ export const createProject = async (req, res) => {
 // @route   GET /api/projects
 export const getProjects = async (req, res) => {
     const publicStatuses = ['Pending', 'Approved', 'Rejected', 'Funding', 'Succeeded', 'Failed', 'Active'];
-    let requestedStatuses = req.query.status; //http://localhost:5001/api/projects?status=Succeeded || http://localhost:5001/api/projects?status=Funding&status=Active
+    let requestedStatuses = req.query.status; 
+    //http://localhost:5001/api/projects?status=Succeeded || http://localhost:5001/api/projects?status=Funding&status=Active
     let statusesToQuery = [];
 
     if (requestedStatuses) {
@@ -46,14 +78,11 @@ export const getProjects = async (req, res) => {
         // Default to 'Funding' and 'Active' if no status is provided
         statusesToQuery = ['Funding', 'Active'];
     }
-
     if (statusesToQuery.length === 0) {
         return handleResponse(res, 200, 'No projects found with the specified valid statuses.', []);
     }
-
     try {
         const projects = await projectModel.getProjectsByStatus(statusesToQuery);
-        // Here you would add the logic to fetch on-chain data and combine it
         handleResponse(res, 200, 'Projects retrieved successfully', projects);
     } catch (error) {
         console.error('Get Projects Error:', error);
@@ -62,14 +91,13 @@ export const getProjects = async (req, res) => {
 };
 
 // @desc    Get a single project by ID
-// @route   GET /api/projects/:projectId
+// @route   GET /api/projects/id/:projectId
 export const getProjectById = async (req, res) => {
     try {
         const project = await projectModel.getProjectById(req.params.projectId);
         if (!project) {
             return handleResponse(res, 404, 'Project not found.');
         }
-        // Here you would also add on-chain data fetching
         handleResponse(res, 200, 'Project retrieved successfully', project);
     } catch (error) {
         console.error('Get Project By ID Error:', error);
@@ -78,7 +106,7 @@ export const getProjectById = async (req, res) => {
 };
 
 // @desc    Get projects for the logged-in user
-// @route   GET /api/users/me/projects
+// @route   GET /api/projects/my
 export const getMyProjects = async (req, res) => {
     try {
         const projects = await projectModel.getProjectsByCreatorId(req.user.id);
@@ -90,7 +118,7 @@ export const getMyProjects = async (req, res) => {
 };
 
 // @desc    Update a project
-// @route   PATCH /api/projects/:projectId
+// @route   PATCH /api/projects/id/:projectId
 export const updateProject = async (req, res) => {
     try {
         const { projectId } = req.params;
@@ -99,37 +127,112 @@ export const updateProject = async (req, res) => {
         if (!project) {
             return handleResponse(res, 404, 'Project not found.');
         }
-
-        if (project.creator_id !== req.user.id) {
+        if (project.user_onchain_id !== req.user.id) {
             return handleResponse(res, 403, 'Not authorized to update this project.');
         }
-
-        if (project.status !== 'Pending') {
-            return handleResponse(res, 400, `Project cannot be updated. It is in '${project.status}' status.`);
+        if (project.project_status !== 'Pending') {
+            return handleResponse(res, 400, `Project cannot be updated. It is in '${project.project_status}' status.`);
         }
         
-        const updatedProject = await projectModel.updateProject(projectId, req.body);
-        handleResponse(res, 200, 'Project updated successfully', updatedProject);
+        const onchainKeys = [
+            'funding_USDC_goal', 
+            'funding_duration_second', 
+            'usdc_contract_address', 
+            'platform_fee_percentage', 
+            'reward_fee_percentage'
+        ];
+        
+        const offchainKeys = [
+            'title', 
+            'project_overview', 
+            'proposed_solution', 
+            'location', 
+            'cover_image_url', 
+            'tags', 
+            'CO2_reduction', 
+            'projected_roi', 
+            'projected_payback_period_months', 
+            'project_plan_url', 
+            'technical_specifications_urls', 
+            'third_party_verification_urls'
+        ];
 
+        const onchainData = {};
+        const offchainData = {};
+        for (const key in req.body) {
+            if (onchainKeys.includes(key)) {
+                onchainData[key] = req.body[key];
+            } else if (offchainKeys.includes(key)) {
+                offchainData[key] = req.body[key];
+            }
+        }
+        const updatedProject = await projectModel.updateProject(projectId, onchainData, offchainData);
+        handleResponse(res, 200, 'Project updated successfully', updatedProject);
     } catch (error) {
         console.error('Update Project Error:', error);
         handleResponse(res, 500, 'Server error during project update.', error.message);
     }
 };
 
+// @desc    Prepare a createProject transaction
+// @route   POST /api/projects/deploy/onchain
+export const prepareCreateProject = async (req, res) => {
+    const { projectId } = req.body;
+    const creatorId = req.user.id;
+
+    try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+        if (project.user_onchain_id !== creatorId) {
+            return handleResponse(res, 403, 'Not authorized to prepare this project.');
+        }
+        if (project.project_status !== 'Approved') {
+            return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
+        }
+        if (project.management_contract_address || project.token_contract_address) {
+            return handleResponse(res, 400, 'Project contracts have already been deployed.');
+        }
+
+        const creator = await userModel.getUserById(project.user_onchain_id);
+        const creatorWallet = creator.wallet_address;
+
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
+        const factoryContract = new ethers.Contract(process.env.PROJECT_FACTORY_ADDRESS, ProjectFactory.abi, provider);
+        const unsignedTx = await factoryContract.createProject.populateTransaction(
+            ethers.encodeBytes32String(project.id.substring(0, 31)),
+            creator.wallet_address,
+            project.title,
+            project.id.substring(0, 4).toUpperCase(),
+            project.funding_usdc_goal,
+            project.funding_duration_second,
+            process.env.USDC_CONTRACT_ADDRESS,
+            project.platform_fee_percentage,
+            project.reward_fee_percentage
+        );
+        handleResponse(res, 200, 'Create project transaction prepared successfully.', { unsignedTx });
+
+    } catch (error) {
+        console.error('Prepare Create Project Error:', error);
+        handleResponse(res, 500, 'Server error during transaction preparation.', error.message);
+    }
+};
+
+/**
 // GET /api/projects/deploy/projectTokenPrep
 export const prepareProjectTokenDeployment  = async (req, res) => {
     const { projectId } = req.body;
     try {
-        const project = await projectModel.getProjectById(projectId);
+        const project = await projectModel.getOnchainProjectById(projectId);
 
         if (!project) {
             return handleResponse(res, 404, 'Project not found.');
         }
-        if (project.creator_id !== req.user.id) {
+        if (project.user_onchain_id !== req.user.id) {
             return handleResponse(res, 403, 'Not authorized to deploy this project.');
         }
-        if (project.status !== 'Approved') {
+        if (project.project_status !== 'Approved') {
             return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
         }
         if (project.management_contract_address || project.token_contract_address) {
@@ -152,23 +255,22 @@ export const prepareProjectTokenDeployment  = async (req, res) => {
         handleResponse(res, 500, 'Server error during deployment preparation.', error.message);
     }
 };
-
 //GET /api/projects/deploy/projectMgmtPrep
 export const prepareProjectMgmtDeployment = async (req, res) => {
     const { projectId } = req.body;
     const { tokenContractAddress } = req.body;
 
     try {
-        const project = await projectModel.getProjectById(projectId);
+        const project = await projectModel.getOnchainProjectById(projectId);
         const creator = await userModel.getUserById(project.creator_id);
 
         if (!project || !creator) {
             return handleResponse(res, 404, 'Project or creator not found.');
         }
-        if (project.creator_id !== req.user.id) {
+        if (project.user_onchain_id !== req.user.id) {
             return handleResponse(res, 403, 'You are not the creator of this project.');
         }
-        if (project.status !== 'Approved') {
+        if (project.project_status !== 'Approved') {
             return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
         }
 
@@ -195,7 +297,6 @@ export const prepareProjectMgmtDeployment = async (req, res) => {
         handleResponse(res, 500, 'Server error during management deployment preparation.', error.message);
     }
 };
-
 //GET /api/projects/deploy/onboard
 export const onboard = async (req, res) => {
     const { projectId } = req.body;
@@ -230,48 +331,4 @@ export const onboard = async (req, res) => {
         handleResponse(res, 500, 'Server error during deployment finalization.', error.message);
     }
 };
-
-// @desc    Prepare a createProject transaction
-// @route   POST /api/projects/deploy/onchain
-export const prepareCreateProject = async (req, res) => {
-    const { projectId } = req.body;
-    const creatorId = req.user.id;
-
-    try {
-        const project = await projectModel.getProjectById(projectId);
-        if (!project) {
-            return handleResponse(res, 404, 'Project not found.');
-        }
-        if (project.creator_id !== creatorId) {
-            return handleResponse(res, 403, 'Not authorized to prepare this project.');
-        }
-        if (project.status !== 'Approved') {
-            return handleResponse(res, 400, `Project must be in 'Approved' status to be deployed.`);
-        }
-        if (project.management_contract_address || project.token_contract_address) {
-            return handleResponse(res, 400, 'Project contracts have already been deployed.');
-        }
-
-        const creator = await userModel.getUserById(project.creator_id);
-        const creatorWallet = creator.wallet_address;
-
-        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
-        const factoryContract = new ethers.Contract(process.env.PROJECT_FACTORY_ADDRESS, ProjectFactory.abi, provider);
-        const unsignedTx = await factoryContract.createProject.populateTransaction(
-            ethers.encodeBytes32String(project.id.substring(0, 31)),
-            creator.wallet_address,
-            project.title,
-            project.id.substring(0, 4).toUpperCase(),
-            project.funding_goal,
-            project.funding_duration,
-            process.env.USDC_CONTRACT_ADDRESS,
-            project.platform_fee_percentage,
-            project.reward_fee_percentage
-        );
-        handleResponse(res, 200, 'Create project transaction prepared successfully.', { unsignedTx });
-
-    } catch (error) {
-        console.error('Prepare Create Project Error:', error);
-        handleResponse(res, 500, 'Server error during transaction preparation.', error.message);
-    }
-};
+*/
