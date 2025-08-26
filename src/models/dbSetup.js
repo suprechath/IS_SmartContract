@@ -1,6 +1,4 @@
 import pool from '../config/db.js';
-// All your CREATE TYPE and CREATE TABLE queries go here
-// Using a single multi-statement query is efficient
 const setupQueries = `
   DO $$
     BEGIN
@@ -15,92 +13,144 @@ const setupQueries = `
         CREATE TYPE kyc_status AS ENUM ('Pending', 'Verified', 'Rejected');
       END IF;
       IF NOT EXISTS (
+        SELECT 1 FROM pg_type WHERE typname = 'sanction_status'
+      ) THEN
+        CREATE TYPE kyc_status AS ENUM ('Pending', 'Verified', 'Rejected');
+      END IF;
+      IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'project_status'
       ) THEN
         CREATE TYPE project_status AS ENUM ('Pending', 'Approved', 'Rejected', 'Funding', 'Succeeded', 'Failed', 'Active');
       END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type WHERE typname = 'transaction_type'
+      ) THEN
+        CREATE TYPE transaction_type AS ENUM (
+          'Investment',
+          'Withdrawal',
+          'RewardDeposit',
+          'RewardClaim',
+          'Refund',
+          'PlatformFee'
+        );
+      END IF;
   END$$;
 
-  CREATE TABLE IF NOT EXISTS users (
+  CREATE TABLE IF NOT EXISTS users_offchain (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    wallet_address VARCHAR(42) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255) UNIQUE NOT NULL,
+    date_of_birth DATE NOT NULL,
+    address TEXT,
+    identification_number VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    nonce VARCHAR(255) NOT NULL,
-    role user_role NOT NULL,
     kyc_status kyc_status NOT NULL DEFAULT 'Pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
-  CREATE TABLE IF NOT EXISTS projects (
+  CREATE TABLE IF NOT EXISTS users_onchain (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_id UUID NOT NULL REFERENCES users(id),
+    user_offchain_id UUID NOT NULL REFERENCES users_offchain(id),
+    wallet_address VARCHAR(42) UNIQUE NOT NULL,
+    role user_role NOT NULL,
+    nonce VARCHAR(255),
+    sanction_status sanction_status NOT NULL DEFAULT 'Pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  );
+
+  CREATE TABLE IF NOT EXISTS project_offchain (
+    id UUID PRIMARY KEY REFERENCES project_onchain(id),
+
     title VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT,
-    funding_goal NUMERIC(78, 0) NOT NULL,
-    funding_duration BIGINT NOT NULL,
+    project_overview TEXT,
+    proposed_solution TEXT,
+    location TEXT,
+
+    cover_image_url TEXT,
+    tags VARCHAR(50)[],
+
+    CO2_reduction DECIMAL,
     projected_roi DECIMAL,
     projected_payback_period_months DECIMAL,
+
     project_plan_url TEXT,
-    status project_status NOT NULL DEFAULT 'Pending',
-    management_contract_address VARCHAR(42),
-    token_contract_address VARCHAR(42),
-    platform_fee_percentage NUMERIC(5, 0) DEFAULT 5,
-    reward_fee_percentage NUMERIC(5, 0) DEFAULT 3,
+    technical_specifications_urls TEXT[],
+    third_party_verification_urls TEXT[],
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
-  CREATE TABLE IF NOT EXISTS investments (
+  CREATE TABLE IF NOT EXISTS project_onchain (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    investor_id UUID NOT NULL REFERENCES users(id),
-    project_id UUID NOT NULL REFERENCES projects(id),
-    amount NUMERIC(78, 0) NOT NULL,
+    user_onchain_id UUID NOT NULL REFERENCES users_onchain(id),
+
+    funding_USDC_goal NUMERIC(78, 0) NOT NULL,
+    funding_duration_second BIGINT NOT NULL,
+    management_contract_address VARCHAR(42),
+    token_contract_address VARCHAR(42),
+    usdc_contract_address VARCHAR(42),
+    platform_fee_percentage NUMERIC(5, 0) NOT NULL DEFAULT 500,
+    reward_fee_percentage NUMERIC(5, 0) NOT NULL DEFAULT 300,
+    project_status project_status NOT NULL DEFAULT 'Pending',
+
+    total_contributions NUMERIC(78, 0) DEFAULT 0,
+    token_total_supply NUMERIC(78, 0) DEFAULT 0,
+    tokens_minted BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE TABLE IF NOT EXISTS transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_onchain_id UUID NOT NULL REFERENCES users_onchain(id),
+    project_onchain_id UUID NOT NULL REFERENCES project_onchain(id),
+    USDC_amount NUMERIC(78, 0) NOT NULL,
+    transaction_type transaction_type NOT NULL,
     transaction_hash VARCHAR(66) UNIQUE NOT NULL,
+    related_transaction_hash VARCHAR(66),
+    platform_fee NUMERIC(78, 0) DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
-  CREATE TABLE IF NOT EXISTS reward_claims (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    investor_id UUID NOT NULL REFERENCES users(id),
-    project_id UUID NOT NULL REFERENCES projects(id),
-    amount NUMERIC(78, 0) NOT NULL,
-    transaction_hash VARCHAR(66) UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  );
+  CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_onchain_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_project_id ON transactions(project_onchain_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type);
 
-  CREATE TABLE IF NOT EXISTS withdrawals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID NOT NULL REFERENCES projects(id),
-    creator_id UUID NOT NULL REFERENCES users(id),
-    amount_withdrawn NUMERIC(78, 0) NOT NULL,
-    platform_fee NUMERIC(78, 0) NOT NULL,
-    transaction_hash VARCHAR(66) UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  );
+  DO $$
+  DECLARE
+    offchain_user_id UUID;
+  BEGIN
+    INSERT INTO users_offchain (full_name, date_of_birth, address, identification_number, email, kyc_status)
+    VALUES (
+      'HH0',
+      '2000-01-01',
+      'Admin',
+      '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      'admin@commeff.com',
+      'Verified'
+    )
+    ON CONFLICT (email) DO NOTHING;
 
-  CREATE TABLE IF NOT EXISTS reward_deposits (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_id UUID NOT NULL REFERENCES users(id),
-    project_id UUID NOT NULL REFERENCES projects(id),
-    amount NUMERIC(78, 0) NOT NULL,
-    transaction_hash VARCHAR(66) UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  );
+    SELECT id INTO offchain_user_id FROM users_offchain WHERE email = 'admin@commeff.com';
 
-  INSERT INTO users (wallet_address, name, email, nonce, role, kyc_status)
-  VALUES (
-    '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    'HH0',
-    'HH0@example.com',
-    'comm-efficient-login',
-    'Platform Operator',
-    'Verified'
-  ) ON CONFLICT (wallet_address) DO NOTHING;
+    IF offchain_user_id IS NOT NULL THEN
+      INSERT INTO users_onchain (user_offchain_id, wallet_address, role, nonce, sanction_status)
+      VALUES (
+        offchain_user_id,
+        '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+        'Platform Operator',
+        'comm-efficient-login',
+        'Verified'
+      )
+      ON CONFLICT (wallet_address) DO NOTHING;
+    END IF;
+  END $$;
+
 `;
 
-// An async function to run the setup queries
 const initializeDatabase = async () => {
   try {
     const client = await pool.connect();
