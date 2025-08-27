@@ -1,6 +1,6 @@
 import pool from '../config/db.js';
 
-const createProject = async (onchainData, offchainData, userOnchainId) => {
+const createProjectOnoffchain = async (onchainData, offchainData, userOnchainId) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -42,7 +42,7 @@ const createProject = async (onchainData, offchainData, userOnchainId) => {
         const onchainValues = [
             userOnchainId,
             projectOffchainId,
-            onchainData.funding_usdc_goal,
+            onchainData.funding_USDC_goal,
             onchainData.funding_duration_second,
             onchainData.usdc_contract_address,
             onchainData.platform_fee_percentage,
@@ -84,9 +84,6 @@ const getProjectById = async (projectId) => {
 
 const getOnchainProjectById = async (projectId) => {
     const query = `
-        SELECT poff.title, pon.id, pon.user_onchain_id, pon.funding_usdc_goal, pon.funding_duration_second, 
-        pon.management_contract_address, pon.token_contract_address, pon.usdc_contract_address, 
-        pon.platform_fee_percentage, pon.reward_fee_percentage, pon.project_status
         SELECT pon.*, poff.*
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
@@ -157,9 +154,8 @@ const updateProject = async (projectId, onchainData, offchainData) => {
 };
 
 export default {
-    createProject,
-    getOffchainProjectsByStatus,
-    getOnchainProjectsByStatus,
+    createProjectOnoffchain,
+    getProjectsByStatus,
     getProjectById,
     getOnchainProjectById,
     getProjectsByCreatorId,

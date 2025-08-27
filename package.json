@@ -7,15 +7,19 @@
     "dev": "nodemon ./src/index.js",
     "dev:listener": "nodemon ./src/services/eventListener.js",
     "start:listener": "node ./src/services/eventListener.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:e2e": "sudo docker compose up -d DB && sleep 5 && npx hardhat compile && cross-env JWT_SECRET='testsecret' DB_USER='user' DB_PASSWORD='#Comeff86' DB_DATABASE='commefficient_dev' DB_HOST='localhost' DB_DBPORT='5432' npm test && sudo docker compose stop DB"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "cross-env": "^10.0.0",
     "hardhat": "^2.26.3",
-    "nodemon": "^3.1.10"
+    "jest": "^30.1.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",

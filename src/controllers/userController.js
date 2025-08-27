@@ -30,6 +30,7 @@ export const registerUser = async (req, res, next) => {
       return handleResponse(res, 409, 'A user with this email, wallet address, or identification number already exists.');
     }
     console.error('Registration Error:', error);
+    handleResponse(res, 500, 'Server error during registration.', error.message);
   }
 };
 

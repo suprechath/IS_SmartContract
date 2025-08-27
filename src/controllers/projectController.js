@@ -1,6 +1,7 @@
 import projectModel from '../models/projectModel.js';
 import userModel from '../models/userModel.js';
 import { handleResponse } from '../utils/responseHandler.js';
+import { separateProjectData } from '../utils/projectUtils.js';
 import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -21,37 +22,7 @@ const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'u
 // @route   POST /api/projects
 export const createProject = async (req, res) => {
     try {
-        const onchainKeys = [
-            'funding_USDC_goal', 
-            'funding_duration_second', 
-            'usdc_contract_address', 
-            'platform_fee_percentage', 
-            'reward_fee_percentage'
-        ];
-        const offchainKeys = [
-            'title', 
-            'project_overview', 
-            'proposed_solution', 
-            'location', 
-            'cover_image_url', 
-            'tags', 
-            'CO2_reduction', 
-            'projected_roi', 
-            'projected_payback_period_months', 
-            'project_plan_url', 
-            'technical_specifications_urls', 
-            'third_party_verification_urls'
-        ];
-        const onchainData = {};
-        const offchainData = {};
-        for (const key in req.body) {
-            if (onchainKeys.includes(key)) {
-                onchainData[key] = req.body[key];
-            } else if (offchainKeys.includes(key)) {
-                offchainData[key] = req.body[key];
-            }
-        }
-
+        const { onchainData, offchainData } = separateProjectData(req.body);
         const newProject = await projectModel.createProjectOnoffchain(onchainData, offchainData, req.user.id);
         handleResponse(res, 201, 'Project created successfully', newProject);
     } catch (error) {
@@ -134,38 +105,7 @@ export const updateProject = async (req, res) => {
             return handleResponse(res, 400, `Project cannot be updated. It is in '${project.project_status}' status.`);
         }
         
-        const onchainKeys = [
-            'funding_USDC_goal', 
-            'funding_duration_second', 
-            'usdc_contract_address', 
-            'platform_fee_percentage', 
-            'reward_fee_percentage'
-        ];
-        
-        const offchainKeys = [
-            'title', 
-            'project_overview', 
-            'proposed_solution', 
-            'location', 
-            'cover_image_url', 
-            'tags', 
-            'CO2_reduction', 
-            'projected_roi', 
-            'projected_payback_period_months', 
-            'project_plan_url', 
-            'technical_specifications_urls', 
-            'third_party_verification_urls'
-        ];
-
-        const onchainData = {};
-        const offchainData = {};
-        for (const key in req.body) {
-            if (onchainKeys.includes(key)) {
-                onchainData[key] = req.body[key];
-            } else if (offchainKeys.includes(key)) {
-                offchainData[key] = req.body[key];
-            }
-        }
+        const { onchainData, offchainData } = separateProjectData(req.body);
         const updatedProject = await projectModel.updateProject(projectId, onchainData, offchainData);
         handleResponse(res, 200, 'Project updated successfully', updatedProject);
     } catch (error) {

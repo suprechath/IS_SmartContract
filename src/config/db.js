@@ -15,11 +15,4 @@ pool.on('connect', () => {
     console.log('Connection pool established with the database');
 });
 
-//can only press a button to get
-// module.exports = {
-//   query: (text, params) => pool.query(text, params),
-// };
-
-// having the key to the entire machine
 export default pool;
-

@@ -15,7 +15,7 @@ const setupQueries = `
       IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'sanction_status'
       ) THEN
-        CREATE TYPE kyc_status AS ENUM ('Pending', 'Verified', 'Rejected');
+        CREATE TYPE sanction_status AS ENUM ('Pending', 'Clear', 'Sanctioned');
       END IF;
       IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'project_status'
@@ -52,9 +52,10 @@ const setupQueries = `
     user_offchain_id UUID NOT NULL REFERENCES users_offchain(id),
     wallet_address VARCHAR(42) UNIQUE NOT NULL,
     role user_role NOT NULL,
+    nonce TEXT,
     sanction_status sanction_status NOT NULL DEFAULT 'Pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   CREATE TABLE IF NOT EXISTS project_offchain (
@@ -142,7 +143,7 @@ const setupQueries = `
         '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
         'Platform Operator',
         'comm-efficient-login',
-        'Verified'
+        'Clear'
       )
       ON CONFLICT (wallet_address) DO NOTHING;
     END IF;
