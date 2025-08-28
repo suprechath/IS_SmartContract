@@ -54,7 +54,7 @@ const setupQueries = `
     role user_role NOT NULL,
     sanction_status sanction_status NOT NULL DEFAULT 'Pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   CREATE TABLE IF NOT EXISTS project_offchain (

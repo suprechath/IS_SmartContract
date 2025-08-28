@@ -44,7 +44,6 @@ app.use('/api/investments', investmentRoutes);
 // app.use('/api/refunds', refundRoutes);
 // app.use('/api/withdrawals', withdrawalRoutes);
 
-
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http:localhost:${port}`);

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Verification Process</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .kyc-progress-bar {
+            height: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .document-upload-box {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        
+        .document-upload-box:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        
+        .kyc-status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+        
+        .kyc-approved {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+        
+        .kyc-pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .kyc-rejected {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .kyc-not-started {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .kyc-success-checkmark {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .kyc-success-checkmark i {
+            font-size: 48px;
+        }
+        
+        .floating-label {
+            position: absolute;
+            pointer-events: none;
+            left: 12px;
+            top: 11px;
+            transition: 0.2s ease all;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        input:focus ~ .floating-label,
+        input:not(:placeholder-shown) ~ .floating-label {
+            top: -8px;
+            left: 10px;
+            font-size: 11px;
+            background-color: white;
+            padding: 0 4px;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Profile Header with KYC Status Badge -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-user text-blue-600"></i>
+                </div>
+                <h1 class="text-lg font-medium text-gray-900">John Doe</h1>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="relative group">
+                    <button class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <i class="fas fa-bell text-xl"></i>
+                    </button>
+                    <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                </div>
+                <div id="kycStatusBadge" class="kyc-status-badge kyc-not-started">
+                    <i class="fas fa-id-card mr-1"></i> KYC Not Started
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <!-- KYC Prompt Modal (shown when trying to invest without KYC) -->
+        <div id="kycPromptModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-md">
+                <div class="bg-blue-600 px-6 py-4">
+                    <h3 class="text-lg font-medium text-white">KYC Verification Required</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <p class="text-gray-700 mb-4">To proceed with your investment, we need to verify your identity through our KYC (Know Your Customer) process. This is a one-time requirement for regulatory compliance.</p>
+                    <div class="flex justify-between mt-6">
+                        <button id="cancelKycBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none">
+                            Maybe Later
+                        </button>
+                        <button id="startKycBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
+                            Start Verification
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KYC Process Container -->
+        <div id="kycContainer" class="bg-white shadow rounded-lg overflow-hidden">
+            <!-- KYC Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-white">Identity Verification (KYC)</h2>
+                    <button id="closeKycBtn" class="text-blue-100 hover:text-white focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="text-blue-100 mt-1 text-sm">Complete this one-time verification to access all platform features</p>
+            </div>
+            
+            <!-- KYC Progress Steps -->
+            <div class="px-6 pt-6 pb-2">
+                <div class="flex justify-between relative">
+                    <div class="step-item flex flex-col items-center w-1/4 relative" data-step="1">
+                        <div class="step-number w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium relative z-10">
+                            1
+                        </div>
+                        <div class="step-label mt-2 text-xs font-medium text-blue-600 text-center">Personal Info</div>
+                    </div>
+                    <div class="step-item flex flex-col items-center w-1/4 relative" data-step="2">
+                        <div class="step-number w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium relative z-10">
+                            2
+                        </div>
+                        <div class="step-label mt-2 text-xs font-medium text-gray-500 text-center">Document Upload</div>
+                    </div>
+                    <div class="step-item flex flex-col items-center w-1/4 relative" data-step="3">
+                        <div class="step-number w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium relative z-10">
+                            3
+                        </div>
+                        <div class="step-label mt-2 text-xs font-medium text-gray-500 text-center">Verification</div>
+                    </div>
+                    <div class="step-item flex flex-col items-center w-1/4 relative" data-step="4">
+                        <div class="step-number w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium relative z-10">
+                            4
+                        </div>
+                        <div class="step-label mt-2 text-xs font-medium text-gray-500 text-center">Completion</div>
+                    </div>
+                    <div class="absolute top-5 left-0 right-0 h-1 bg-gray-200 mx-10">
+                        <div id="kycProgressBar" class="kyc-progress-bar bg-blue-600 w-1/4"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KYC Steps Content -->
+            <div class="px-6 py-6">
+                <!-- Step 1: Personal Information -->
+                <div id="step1" class="kyc-step">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+                    <p class="text-gray-600 mb-6">Please provide your personal details as they appear on your official documents.</p>
+                    
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="relative">
+                                <input type="text" id="firstName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                                <label for="firstName" class="floating-label">First Name</label>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="lastName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                                <label for="lastName" class="floating-label">Last Name</label>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <input type="date" id="dob" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <label for="dob" class="floating-label">Date of Birth</label>
+                        </div>
+                        
+                        <div class="relative">
+                            <input type="text" id="country" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                            <label for="country" class="floating-label">Country of Residence</label>
+                        </div>
+                        
+                        <div class="relative">
+                            <input type="text" id="address" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                            <label for="address" class="floating-label">Street Address</label>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="relative">
+                                <input type="text" id="city" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                                <label for="city" class="floating-label">City</label>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="state" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                                <label for="state" class="floating-label">State/Province</label>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="postalCode" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder=" ">
+                                <label for="postalCode" class="floating-label">Postal Code</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mt-8">
+                        <button id="nextToStep2" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Document Upload -->
+                <div id="step2" class="kyc-step hidden">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Document Verification</h3>
+                    <p class="text-gray-600 mb-6">Upload clear photos of your identity documents. Accepted formats: JPG, PNG, PDF (max 5MB each).</p>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Identity Document</h4>
+                            <p class="text-sm text-gray-500 mb-3">Passport, National ID, or Driver's License</p>
+                            <div class="document-upload-box rounded-lg p-6 text-center cursor-pointer">
+                                <input type="file" id="idDocument" class="hidden" accept="image/*,.pdf">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-id-card text-4xl text-blue-500 mb-3"></i>
+                                    <p class="text-gray-600 mb-1">Click to upload ID document</p>
+                                    <p class="text-xs text-gray-400">Front side only for ID cards, bio page for passport</p>
+                                </div>
+                            </div>
+                            <div id="idDocumentPreview" class="mt-3 hidden">
+                                <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                                        <span class="text-sm font-medium" id="idDocumentName">document.pdf</span>
+                                    </div>
+                                    <button class="text-red-500 hover:text-red-700" id="removeIdDocument">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Proof of Address</h4>
+                            <p class="text-sm text-gray-500 mb-3">Utility bill, bank statement, or government letter (not older than 3 months)</p>
+                            <div class="document-upload-box rounded-lg p-6 text-center cursor-pointer">
+                                <input type="file" id="addressDocument" class="hidden" accept="image/*,.pdf">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-home text-4xl text-blue-500 mb-3"></i>
+                                    <p class="text-gray-600 mb-1">Click to upload proof of address</p>
+                                    <p class="text-xs text-gray-400">Must show your name and address clearly</p>
+                                </div>
+                            </div>
+                            <div id="addressDocumentPreview" class="mt-3 hidden">
+                                <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                                        <span class="text-sm font-medium" id="addressDocumentName">document.pdf</span>
+                                    </div>
+                                    <button class="text-red-500 hover:text-red-700" id="removeAddressDocument">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Selfie with ID</h4>
+                            <p class="text-sm text-gray-500 mb-3">Take a photo of yourself holding your ID document</p>
+                            <div class="document-upload-box rounded-lg p-6 text-center cursor-pointer">
+                                <input type="file" id="selfieDocument" class="hidden" accept="image/*">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-camera text-4xl text-blue-500 mb-3"></i>
+                                    <p class="text-gray-600 mb-1">Click to upload selfie with ID</p>
+                                    <p class="text-xs text-gray-400">Ensure your face and ID details are clearly visible</p>
+                                </div>
+                            </div>
+                            <div id="selfieDocumentPreview" class="mt-3 hidden">
+                                <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-file-image text-blue-500 mr-2"></i>
+                                        <span class="text-sm font-medium" id="selfieDocumentName">selfie.jpg</span>
+                                    </div>
+                                    <button class="text-red-500 hover:text-red-700" id="removeSelfieDocument">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button id="backToStep1" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button id="nextToStep3" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Verification -->
+                <div id="step3" class="kyc-step hidden">
+                    <div class="text-center">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+                            <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Verification in Progress</h3>
+                        <p class="text-gray-600 mb-6">We're verifying your documents. This usually takes 1-3 business days.</p>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4 text-left max-w-md mx-auto">
+                            <div class="flex items-start mb-3">
+                                <div class="flex-shrink-0 h-5 w-5 text-green-500">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <p class="ml-2 text-sm text-gray-700">Personal information submitted</p>
+                            </div>
+                            <div class="flex items-start mb-3">
+                                <div class="flex-shrink-0 h-5 w-5 text-green-500">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <p class="ml-2 text-sm text-gray-700">Documents uploaded</p>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 h-5 w-5 text-blue-500">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <p class="ml-2 text-sm text-gray-700">Identity verification in progress</p>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mt-6">You'll receive an email notification once your verification is complete. You can also check the status in your profile.</p>
+                    </div>
+                    
+                    <div class="flex justify-center mt-8">
+                        <button id="nextToStep4" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none hidden">
+                            View Results
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Completion -->
+                <div id="step4" class="kyc-step hidden">
+                    <div class="text-center">
+                        <div class="kyc-success-checkmark bg-green-100 text-green-500 mb-4">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Verification Complete!</h3>
+                        <p class="text-gray-600 mb-6">Your identity has been successfully verified. You now have full access to all platform features.</p>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4 text-left max-w-md mx-auto">
+                            <div class="flex items-start mb-3">
+                                <div class="flex-shrink-0 h-5 w-5 text-green-500">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <p class="ml-2 text-sm text-gray-700">Identity verified</p>
+                            </div>
+                            <div class="flex items-start mb-3">
+                                <div class="flex-shrink-0 h-5 w-5 text-green-500">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <p class="ml-2 text-sm text-gray-700">Documents approved</p>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 h-5 w-5 text-green-500">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <p class="ml-2 text-sm text-gray-700">Account fully activated</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
+                                Start Investing <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rejected State -->
+                <div id="kycRejected" class="kyc-step hidden">
+                    <div class="text-center">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 text-red-500 mb-4">
+                            <i class="fas fa-times text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Verification Rejected</h3>
+                        <p class="text-gray-600 mb-6">We couldn't verify your identity with the provided documents.</p>
+                        
+                        <div class="bg-red-50 rounded-lg p-4 text-left max-w-md mx-auto">
+                            <h4 class="font-medium text-red-800 mb-2">Reason for rejection:</h4>
+                            <p class="text-sm text-red-700">The photo of your ID document was blurry and unreadable. Please upload a clear, high-quality image where all details are visible.</p>
+                        </div>
+                        
+                        <div class="mt-6 space-y-3">
+                            <p class="text-sm text-gray-500">You can try again with better quality documents or contact support if you believe this was an error.</p>
+                            <div class="flex justify-center space-x-4">
+                                <button id="retryKycBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
+                                    Try Again
+                                </button>
+                                <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none">
+                                    Contact Support
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Investment Card (shows KYC prompt when clicked) -->
+        <div class="mt-8 bg-white shadow rounded-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-green-800 px-6 py-4">
+                <h2 class="text-xl font-semibold text-white">Investment Opportunity</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Green Energy Fund</h3>
+                        <p class="text-gray-600 mt-1">Invest in renewable energy projects with projected 8-12% annual returns</p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-bolt mr-1"></i> High Growth
+                    </span>
+                </div>
+                
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Minimum Investment</p>
+                        <p class="font-medium">$1,000</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Projected Return</p>
+                        <p class="font-medium">8-12%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Term</p>
+                        <p class="font-medium">3 years</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <button id="investButton" class="w-full px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none">
+                        Invest Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const kycPromptModal = document.getElementById('kycPromptModal');
+            const kycContainer = document.getElementById('kycContainer');
+            const kycStatusBadge = document.getElementById('kycStatusBadge');
+            const investButton = document.getElementById('investButton');
+            const startKycBtn = document.getElementById('startKycBtn');
+            const cancelKycBtn = document.getElementById('cancelKycBtn');
+            const closeKycBtn = document.getElementById('closeKycBtn');
+            const kycProgressBar = document.getElementById('kycProgressBar');
+            const retryKycBtn = document.getElementById('retryKycBtn');
+            
+            // Step navigation buttons
+            const nextToStep2 = document.getElementById('nextToStep2');
+            const nextToStep3 = document.getElementById('nextToStep3');
+            const nextToStep4 = document.getElementById('nextToStep4');
+            const backToStep1 = document.getElementById('backToStep1');
+            
+            // Steps
+            const steps = document.querySelectorAll('.kyc-step');
+            const stepItems = document.querySelectorAll('.step-item');
+            
+            // Document upload handling
+            const idDocumentUpload = document.querySelector('.document-upload-box');
+            const idDocumentInput = document.getElementById('idDocument');
+            const idDocumentPreview = document.getElementById('idDocumentPreview');
+            const idDocumentName = document.getElementById('idDocumentName');
+            const removeIdDocument = document.getElementById('removeIdDocument');
+            
+            const addressDocumentUpload = document.querySelectorAll('.document-upload-box')[1];
+            const addressDocumentInput = document.getElementById('addressDocument');
+            const addressDocumentPreview = document.getElementById('addressDocumentPreview');
+            const addressDocumentName = document.getElementById('addressDocumentName');
+            const removeAddressDocument = document.getElementById('removeAddressDocument');
+            
+            const selfieDocumentUpload = document.querySelectorAll('.document-upload-box')[2];
+            const selfieDocumentInput = document.getElementById('selfieDocument');
+            const selfieDocumentPreview = document.getElementById('selfieDocumentPreview');
+            const selfieDocumentName = document.getElementById('selfieDocumentName');
+            const removeSelfieDocument = document.getElementById('removeSelfieDocument');
+            
+            // Current step tracking
+            let currentStep = 1;
+            
+            // Show KYC prompt when trying to invest without verification
+            investButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                kycPromptModal.classList.remove('hidden');
+            });
+            
+            // Start KYC process
+            startKycBtn.addEventListener('click', function() {
+                kycPromptModal.classList.add('hidden');
+                kycContainer.classList.remove('hidden');
+                updateKycStatus('pending');
+            });
+            
+            // Cancel KYC
+            cancelKycBtn.addEventListener('click', function() {
+                kycPromptModal.classList.add('hidden');
+            });
+            
+            // Close KYC container
+            closeKycBtn.addEventListener('click', function() {
+                kycContainer.classList.add('hidden');
+            });
+            
+            // Retry KYC after rejection
+            retryKycBtn.addEventListener('click', function() {
+                goToStep(1);
+                document.getElementById('kycRejected').classList.add('hidden');
+                document.getElementById('step1').classList.remove('hidden');
+                updateKycStatus('pending');
+            });
+            
+            // Step navigation
+            nextToStep2.addEventListener('click', function() {
+                if (validateStep1()) {
+                    goToStep(2);
+                }
+            });
+            
+            nextToStep3.addEventListener('click', function() {
+                if (validateStep2()) {
+                    goToStep(3);
+                    // Simulate API call to KYC provider
+                    setTimeout(() => {
+                        // Randomly decide if KYC is approved or rejected for demo purposes
+                        const isApproved = Math.random() > 0.2;
+                        if (isApproved) {
+                            nextToStep4.classList.remove('hidden');
+                            updateKycStatus('approved');
+                        } else {
+                            document.getElementById('step3').classList.add('hidden');
+                            document.getElementById('kycRejected').classList.remove('hidden');
+                            updateKycStatus('rejected');
+                        }
+                    }, 3000);
+                }
+            });
+            
+            nextToStep4.addEventListener('click', function() {
+                goToStep(4);
+            });
+            
+            backToStep1.addEventListener('click', function() {
+                goToStep(1);
+            });
+            
+            // Document upload handling
+            idDocumentUpload.addEventListener('click', function() {
+                idDocumentInput.click();
+            });
+            
+            idDocumentInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    idDocumentName.textContent = this.files[0].name;
+                    idDocumentPreview.classList.remove('hidden');
+                }
+            });
+            
+            removeIdDocument.addEventListener('click', function(e) {
+                e.stopPropagation();
+                idDocumentInput.value = '';
+                idDocumentPreview.classList.add('hidden');
+            });
+            
+            addressDocumentUpload.addEventListener('click', function() {
+                addressDocumentInput.click();
+            });
+            
+            addressDocumentInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    addressDocumentName.textContent = this.files[0].name;
+                    addressDocumentPreview.classList.remove('hidden');
+                }
+            });
+            
+            removeAddressDocument.addEventListener('click', function(e) {
+                e.stopPropagation();
+                addressDocumentInput.value = '';
+                addressDocumentPreview.classList.add('hidden');
+            });
+            
+            selfieDocumentUpload.addEventListener('click', function() {
+                selfieDocumentInput.click();
+            });
+            
+            selfieDocumentInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    selfieDocumentName.textContent = this.files[0].name;
+                    selfieDocumentPreview.classList.remove('hidden');
+                }
+            });
+            
+            removeSelfieDocument.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selfieDocumentInput.value = '';
+                selfieDocumentPreview.classList.add('hidden');
+            });
+            
+            // Helper functions
+            function goToStep(step) {
+                // Hide all steps
+                steps.forEach(step => step.classList.add('hidden'));
+                
+                // Show current step
+                if (step === 4) {
+                    document.getElementById('step4').classList.remove('hidden');
+                } else if (step === 3 && document.getElementById('kycRejected').classList.contains('hidden')) {
+                    document.getElementById('step3').classList.remove('hidden');
+                } else {
+                    document.getElementById(`step${step}`).classList.remove('hidden');
+                }
+                
+                // Update progress bar and step indicators
+                updateProgress(step);
+                
+                currentStep = step;
+            }
+            
+            function updateProgress(step) {
+                // Update progress bar width
+                const progressPercentage = (step / 4) * 100;
+                kycProgressBar.style.width = `${progressPercentage}%`;
+                
+                // Update step indicators
+                stepItems.forEach(item => {
+                    const stepNumber = parseInt(item.getAttribute('data-step'));
+                    const stepNumberEl = item.querySelector('.step-number');
+                    const stepLabelEl = item.querySelector('.step-label');
+                    
+                    if (stepNumber < step) {
+                        // Completed steps
+                        stepNumberEl.classList.remove('bg-gray-200', 'text-gray-600');
+                        stepNumberEl.classList.add('bg-blue-600', 'text-white');
+                        stepLabelEl.classList.remove('text-gray-500');
+                        stepLabelEl.classList.add('text-blue-600');
+                    } else if (stepNumber === step) {
+                        // Current step
+                        stepNumberEl.classList.remove('bg-gray-200', 'text-gray-600');
+                        stepNumberEl.classList.add('bg-blue-600', 'text-white');
+                        stepLabelEl.classList.remove('text-gray-500');
+                        stepLabelEl.classList.add('text-blue-600');
+                    } else {
+                        // Future steps
+                        stepNumberEl.classList.remove('bg-blue-600', 'text-white');
+                        stepNumberEl.classList.add('bg-gray-200', 'text-gray-600');
+                        stepLabelEl.classList.remove('text-blue-600');
+                        stepLabelEl.classList.add('text-gray-500');
+                    }
+                });
+            }
+            
+            function validateStep1() {
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const dob = document.getElementById('dob').value;
+                const country = document.getElementById('country').value;
+                const address = document.getElementById('address').value;
+                
+                if (!firstName || !lastName || !dob || !country || !address) {
+                    alert('Please fill in all required fields');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            function validateStep2() {
+                if (!idDocumentInput.files || !idDocumentInput.files[0]) {
+                    alert('Please upload your ID document');
+                    return false;
+                }
+                
+                if (!addressDocumentInput.files || !addressDocumentInput.files[0]) {
+                    alert('Please upload your proof of address');
+                    return false;
+                }
+                
+                if (!selfieDocumentInput.files || !selfieDocumentInput.files[0]) {
+                    alert('Please upload your selfie with ID');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            function updateKycStatus(status) {
+                // Update the status badge in the header
+                kycStatusBadge.className = 'kyc-status-badge';
+                
+                switch(status) {
+                    case 'not-started':
+                        kycStatusBadge.classList.add('kyc-not-started');
+                        kycStatusBadge.innerHTML = '<i class="fas fa-id-card mr-1"></i> KYC Not Started';
+                        break;
+                    case 'pending':
+                        kycStatusBadge.classList.add('kyc-pending');
+                        kycStatusBadge.innerHTML = '<i class="fas fa-hourglass-half mr-1"></i> KYC Pending';
+                        break;
+                    case 'approved':
+                        kycStatusBadge.classList.add('kyc-approved');
+                        kycStatusBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> KYC Verified';
+                        break;
+                    case 'rejected':
+                        kycStatusBadge.classList.add('kyc-rejected');
+                        kycStatusBadge.innerHTML = '<i class="fas fa-times-circle mr-1"></i> KYC Rejected';
+                        break;
+                }
+            }
+            
+            // Initialize
+            kycContainer.classList.add('hidden');
+            updateKycStatus('not-started');
+        });
+    </script>
+</body>
+</html>

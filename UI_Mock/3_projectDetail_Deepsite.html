@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details | SustainableInvest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .progress-bar {
+            height: 12px;
+            border-radius: 6px;
+        }
+        .gallery-thumbnail {
+            transition: all 0.3s ease;
+        }
+        .gallery-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .active-tab {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-600">SustainableInvest</h1>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Home</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Browse Projects</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">How It Works</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">About</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Connect Wallet</button>
+                    <button class="md:hidden">
+                        <i class="fas fa-bars text-gray-700 text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Project Header -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+            <!-- Image Gallery -->
+            <div class="relative">
+                <div class="h-96 bg-gray-200 flex items-center justify-center">
+                    <img id="mainImage" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                         alt="Project main image" class="w-full h-full object-cover">
+                    <button class="absolute top-4 left-4 bg-white/80 text-gray-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                        <i class="fas fa-images mr-2"></i> View Gallery
+                    </button>
+                </div>
+                
+                <!-- Thumbnail Gallery (hidden by default) -->
+                <div id="thumbnailGallery" class="hidden absolute bottom-0 left-0 right-0 bg-white/90 p-4 grid grid-cols-5 gap-2">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                         alt="Project image 1" class="gallery-thumbnail h-20 w-full object-cover cursor-pointer" onclick="changeMainImage(this)">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                         alt="Project image 2" class="gallery-thumbnail h-20 w-full object-cover cursor-pointer" onclick="changeMainImage(this)">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                         alt="Project image 3" class="gallery-thumbnail h-20 w-full object-cover cursor-pointer" onclick="changeMainImage(this)">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                         alt="Project image 4" class="gallery-thumbnail h-20 w-full object-cover cursor-pointer" onclick="changeMainImage(this)">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                         alt="Project image 5" class="gallery-thumbnail h-20 w-full object-cover cursor-pointer" onclick="changeMainImage(this)">
+                </div>
+                
+                <div class="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                    Funding Open
+                </div>
+            </div>
+            
+            <!-- Project Title and Basic Info -->
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">Sunny Valley Solar Farm</h1>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            <span>Fresno, California, USA</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Solar Energy</span>
+                    </div>
+                </div>
+                
+                <!-- Funding Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-500 text-sm mb-1">Funding Goal</p>
+                        <p class="text-xl font-bold">$2,400,000</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-500 text-sm mb-1">Amount Raised</p>
+                        <p class="text-xl font-bold">$1,560,000</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-500 text-sm mb-1">Investors</p>
+                        <p class="text-xl font-bold">84</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-500 text-sm mb-1">Days Left</p>
+                        <p class="text-xl font-bold">23</p>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>65% Funded</span>
+                        <span>$1,560,000 raised of $2,400,000</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="bg-green-500 h-3 rounded-full" style="width: 65%"></div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex-1 flex items-center justify-center">
+                        <i class="fas fa-wallet mr-2"></i> Connect Wallet to Invest
+                    </button>
+                    <button class="bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 flex-1 flex items-center justify-center">
+                        <i class="fas fa-share-alt mr-2"></i> Share Project
+                    </button>
+                    <button class="bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 flex items-center justify-center">
+                        <i class="fas fa-bookmark mr-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Tabs -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200">
+                <nav class="flex overflow-x-auto">
+                    <button class="tab-button px-6 py-4 text-sm font-medium active-tab" data-tab="overview">
+                        Overview
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium" data-tab="financials">
+                        Financials & Tokenomics
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium" data-tab="documents">
+                        Documents
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium" data-tab="updates">
+                        Updates
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-content active">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Project Overview</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">The Building</h3>
+                        <p class="text-gray-600 mb-4">
+                            The Sunny Valley Solar Farm is a 50MW photovoltaic power station located on 200 acres of land in California's Central Valley. 
+                            The site benefits from excellent solar irradiation levels averaging 5.8 kWh/m²/day, making it ideal for solar energy production.
+                        </p>
+                        <p class="text-gray-600 mb-4">
+                            The project will utilize high-efficiency bifacial solar panels mounted on single-axis tracking systems to maximize energy output. 
+                            The generated electricity will be sold to the local utility under a 20-year power purchase agreement (PPA).
+                        </p>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">The Challenge</h3>
+                        <p class="text-gray-600 mb-4">
+                            California has set ambitious renewable energy targets, aiming for 100% clean electricity by 2045. However, 
+                            the transition requires significant private investment in utility-scale renewable projects like this one.
+                        </p>
+                        <p class="text-gray-600">
+                            Traditional financing methods often have high barriers to entry for individual investors, limiting participation 
+                            in the clean energy transition. This project democratizes access through tokenized investment.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Proposed Solution</h3>
+                        <p class="text-gray-600 mb-4">
+                            The project will implement state-of-the-art solar technology including:
+                        </p>
+                        <ul class="list-disc pl-6 text-gray-600 mb-4 space-y-2">
+                            <li>Bifacial solar panels with 21.4% efficiency rating</li>
+                            <li>Single-axis tracking systems to follow the sun's path</li>
+                            <li>Advanced string inverters with 98.5% efficiency</li>
+                            <li>Robotic cleaning system to maintain optimal performance</li>
+                            <li>Comprehensive monitoring and analytics platform</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Expected Outcomes</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-blue-600 font-medium mb-1">Annual Energy Production</p>
+                                <p class="text-2xl font-bold">110,000 MWh</p>
+                                <p class="text-sm text-gray-600">Enough to power ~10,000 homes</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <p class="text-green-600 font-medium mb-1">CO2 Reduction</p>
+                                <p class="text-2xl font-bold">78,000 tons/year</p>
+                                <p class="text-sm text-gray-600">Equivalent to removing 17,000 cars</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <p class="text-purple-600 font-medium mb-1">Payback Period</p>
+                                <p class="text-2xl font-bold">6.5 years</p>
+                                <p class="text-sm text-gray-600">Project life: 25+ years</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Baseline Energy Data</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="font-medium">Current Energy Source</p>
+                                <p class="bg-gray-200 px-2 py-1 rounded text-sm">Grid Mix: 45% Natural Gas</p>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="font-medium">Current Emissions Factor</p>
+                                <p class="bg-gray-200 px-2 py-1 rounded text-sm">0.45 kg CO2/kWh</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <p class="font-medium">Current Energy Cost</p>
+                                <p class="bg-gray-200 px-2 py-1 rounded text-sm">$0.18/kWh (PPA rate)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Project Timeline</h3>
+                        <div class="relative">
+                            <!-- Timeline -->
+                            <div class="border-l-2 border-blue-200 pl-8 space-y-10">
+                                <!-- Milestone 1 -->
+                                <div class="relative">
+                                    <div class="absolute -left-11 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                                    </div>
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-bold text-blue-600">Funding Complete</p>
+                                                <p class="text-sm text-gray-600">Q1 2024</p>
+                                            </div>
+                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Completed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Milestone 2 -->
+                                <div class="relative">
+                                    <div class="absolute -left-11 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                                    </div>
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-bold text-blue-600">Permitting & Approvals</p>
+                                                <p class="text-sm text-gray-600">Q2 2024</p>
+                                            </div>
+                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">In Progress</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Milestone 3 -->
+                                <div class="relative">
+                                    <div class="absolute -left-11 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-bold text-gray-600">Construction</p>
+                                                <p class="text-sm text-gray-500">Q3-Q4 2024</p>
+                                            </div>
+                                            <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs">Pending</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Milestone 4 -->
+                                <div class="relative">
+                                    <div class="absolute -left-11 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-bold text-gray-600">Commercial Operation</p>
+                                                <p class="text-sm text-gray-500">Q1 2025</p>
+                                            </div>
+                                            <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs">Pending</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Financials & Tokenomics Tab -->
+                <div id="financials" class="tab-content">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Financials & Tokenomics</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Funding Details</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-gray-500 text-sm mb-1">Funding Goal</p>
+                                <p class="text-xl font-bold">$2,400,000 USDC</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-gray-500 text-sm mb-1">Minimum Investment</p>
+                                <p class="text-xl font-bold">$500 USDC</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-gray-500 text-sm mb-1">Accepted Stablecoins</p>
+                                <div class="flex space-x-2 mt-1">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">USDC</span>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">USDT</span>
+                                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">DAI</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">RET Token Information</h3>
+                        <div class="bg-gray-50 p-6 rounded-lg mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">Token Name</p>
+                                    <p class="text-lg font-bold">Sunny Valley Solar RET</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">Token Symbol</p>
+                                    <p class="text-lg font-bold">SVS-RET</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">Total Supply</p>
+                                    <p class="text-lg font-bold">10,000,000 SVS-RET</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">Token Standard</p>
+                                    <p class="text-lg font-bold">ERC-20 (Ethereum)</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">RET Distribution Breakdown</h4>
+                        <div class="flex flex-col md:flex-row gap-8 items-center">
+                            <div class="w-full md:w-1/3">
+                                <canvas id="tokenDistributionChart"></canvas>
+                            </div>
+                            <div class="w-full md:w-2/3">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-4 h-4 bg-blue-600 rounded-full mr-2"></div>
+                                            <p class="font-medium">Investors</p>
+                                        </div>
+                                        <p class="text-2xl font-bold">70%</p>
+                                        <p class="text-sm text-gray-600">7,000,000 SVS-RET</p>
+                                    </div>
+                                    <div class="bg-green-50 p-4 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                                            <p class="font-medium">Project Owner</p>
+                                        </div>
+                                        <p class="text-2xl font-bold">15%</p>
+                                        <p class="text-sm text-gray-600">1,500,000 SVS-RET</p>
+                                    </div>
+                                    <div class="bg-purple-50 p-4 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
+                                            <p class="font-medium">Platform</p>
+                                        </div>
+                                        <p class="text-2xl font-bold">10%</p>
+                                        <p class="text-sm text-gray-600">1,000,000 SVS-RET</p>
+                                    </div>
+                                    <div class="bg-yellow-50 p-4 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
+                                            <p class="font-medium">Insurance Fund</p>
+                                        </div>
+                                        <p class="text-2xl font-bold">5%</p>
+                                        <p class="text-sm text-gray-600">500,000 SVS-RET</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Dividend Distribution Mechanism</h3>
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <div class="relative">
+                                <!-- Process Steps -->
+                                <div class="space-y-8">
+                                    <!-- Step 1 -->
+                                    <div class="relative pl-16">
+                                        <div class="absolute left-0 top-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                            1
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                                            <h4 class="font-bold text-blue-600 mb-2">Energy Savings Verification</h4>
+                                            <p class="text-gray-600">
+                                                Monthly energy production and savings are verified by an independent third-party auditor (DNV) 
+                                                comparing actual performance to the pre-project baseline.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Step 2 -->
+                                    <div class="relative pl-16">
+                                        <div class="absolute left-0 top-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                            2
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                                            <h4 class="font-bold text-blue-600 mb-2">Funds Deposit</h4>
+                                            <p class="text-gray-600">
+                                                The project owner deposits the verified savings amount (in USDC) into the RewardDistribution 
+                                                smart contract within 5 business days of verification.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Step 3 -->
+                                    <div class="relative pl-16">
+                                        <div class="absolute left-0 top-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                            3
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                                            <h4 class="font-bold text-blue-600 mb-2">Automatic Distribution</h4>
+                                            <p class="text-gray-600">
+                                                The smart contract automatically distributes funds proportionally to all RET token holders 
+                                                based on their token balance at the time of distribution.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Step 4 -->
+                                    <div class="relative pl-16">
+                                        <div class="absolute left-0 top-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                            4
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                                            <h4 class="font-bold text-blue-600 mb-2">Claim or Reinvest</h4>
+                                            <p class="text-gray-600">
+                                                Investors can claim their USDC dividends to their wallet or choose to automatically reinvest 
+                                                them into other projects on the platform.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Projected Returns</h3>
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projected Savings</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Investor Dividend</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cumulative Return</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ROI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">1</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$420,000</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$294,000</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$294,000</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-green-600 font-medium">12.25%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">2</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$432,600</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$302,820</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$596,820</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-green-600 font-medium">24.87%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">3</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$445,578</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$311,904</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$908,724</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-green-600 font-medium">37.86%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">4</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$458,945</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$321,261</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$1,229,985</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-green-600 font-medium">51.25%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">5</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$472,714</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$330,900</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">$1,560,885</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-green-600 font-medium">65.04%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-500">
+                                <p><strong>Note:</strong> Projections are based on current energy prices and estimated production. Actual returns may vary.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documents Tab -->
+                <div id="documents" class="tab-content">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Project Documents</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Document 1 -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-300">
+                            <div class="p-4 bg-blue-50">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                        <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Project Summary</h3>
+                                        <p class="text-sm text-gray-600">PDF • 2.4 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Document 2 -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-300">
+                            <div class="p-4 bg-blue-50">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                        <i class="fas fa-file-contract text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Redacted PPA</h3>
+                                        <p class="text-sm text-gray-600">PDF • 1.8 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Document 3 -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-300">
+                            <div class="p-4 bg-blue-50">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                        <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Financial Model</h3>
+                                        <p class="text-sm text-gray-600">XLSX • 3.2 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Document 4 -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-300">
+                            <div class="p-4 bg-blue-50">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                        <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Energy Audit</h3>
+                                        <p class="text-sm text-gray-600">PDF • 5.1 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Document 5 -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-300">
+                            <div class="p-4 bg-blue-50">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                        <i class="fas fa-gavel text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Legal Opinion</h3>
+                                        <p class="text-sm text-gray-600">PDF • 1.2 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Document 6 -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-300">
+                            <div class="p-4 bg-blue-50">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                        <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Insurance Policy</h3>
+                                        <p class="text-sm text-gray-600">PDF • 2.7 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Updates Tab -->
+                <div id="updates" class="tab-content">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Project Updates</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Update 1 -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800">Funding Milestone Reached - 50% Funded!</h3>
+                                        <p class="text-sm text-gray-500">Posted on June 15, 2024</p>
+                                    </div>
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Funding Update</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">
+                                    We're excited to announce that the Sunny Valley Solar Farm project has reached 50% of its funding goal! 
+                                    Thank you to all 42 investors who have committed $1.2 million to date.
+                                </p>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-user mr-2"></i>
+                                    <span>Posted by Project Team</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Update 2 -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800">Permitting Process Initiated</h3>
+                                        <p class="text-sm text-gray-500">Posted on May 28, 2024</p>
+                                    </div>
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Regulatory Update</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">
+                                    The permitting process with the California Energy Commission has officially begun. 
+                                    We've submitted all required documentation and expect approval within 8-10 weeks. 
+                                    This is a critical milestone that keeps us on track for Q3 construction.
+                                </p>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-user mr-2"></i>
+                                    <span>Posted by Project Team</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Update 3 -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800">Equipment Procurement Complete</h3>
+                                        <p class="text-sm text-gray-500">Posted on May 10, 2024</p>
+                                    </div>
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Construction Update</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">
+                                    We've finalized contracts with our technology providers for the bifacial solar panels and tracking systems. 
+                                    The equipment will be delivered in phases beginning August 2024. This represents approximately 60% of the 
+                                    total project budget and ensures we have the latest, most efficient technology.
+                                </p>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-user mr-2"></i>
+                                    <span>Posted by Project Team</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Update 4 -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800">Community Engagement Meeting</h3>
+                                        <p class="text-sm text-gray-500">Posted on April 22, 2024</p>
+                                    </div>
+                                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">Community Update</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">
+                                    Last week we held a successful community engagement meeting in Fresno with over 120 local residents attending. 
+                                    The project was well-received, with particular interest in the 15-20 local jobs that will be created during 
+                                    construction. We addressed questions about visual impact, water usage, and long-term maintenance plans.
+                                </p>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-user mr-2"></i>
+                                    <span>Posted by Project Team</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Investment CTA Section -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-md p-8 text-white mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <h2 class="text-2xl font-bold mb-2">Ready to Invest in a Sustainable Future?</h2>
+                    <p class="opacity-90">Join 84 other investors who have already committed $1,560,000 to this project.</p>
+                </div>
+                <button class="bg-white text-blue-600 px-8 py-3 rounded-lg hover:bg-gray-100 font-medium whitespace-nowrap">
+                    <i class="fas fa-wallet mr-2"></i> Connect Wallet to Invest
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">SustainableInvest</h3>
+                    <p class="text-gray-400">Connecting investors with sustainable projects that generate financial returns and positive environmental impact.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Browse Projects</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">FAQ</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Glossary</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Risk Disclosure</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-2 text-gray-400"></i>
+                            <span class="text-gray-400">info@sustainableinvest.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-2 text-gray-400"></i>
+                            <span class="text-gray-400">(555) 123-4567</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                            <span class="text-gray-400">123 Green St, San Francisco, CA</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 SustainableInvest. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active-tab'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Gallery functionality
+        function toggleGallery() {
+            const gallery = document.getElementById('thumbnailGallery');
+            const isHidden = gallery.classList.contains('hidden');
+            
+            if (isHidden) {
+                gallery.classList.remove('hidden');
+                this.querySelector('span').textContent = 'Hide Gallery';
+            } else {
+                gallery.classList.add('hidden');
+                this.querySelector('span').textContent = 'View Gallery';
+            }
+        }
+        
+        function changeMainImage(thumbnail) {
+            const mainImage = document.getElementById('mainImage');
+            mainImage.src = thumbnail.src;
+        }
+        
+        // Initialize token distribution chart
+        const tokenDistributionCtx = document.getElementById('tokenDistributionChart').getContext('2d');
+        const tokenDistributionChart = new Chart(tokenDistributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Investors (70%)', 'Project Owner (15%)', 'Platform (10%)', 'Insurance Fund (5%)'],
+                datasets: [{
+                    data: [70, 15, 10, 5],
+                    backgroundColor: [
+                        '#3B82F6',
+                        '#10B981',
+                        '#8B5CF6',
+                        '#F59E0B'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Initialize gallery toggle
+        const galleryButtons = document.querySelectorAll('[onclick="toggleGallery()"]');
+        galleryButtons.forEach(button => {
+            button.addEventListener('click', toggleGallery);
+        });
+    </script>
+</body>
+</html>

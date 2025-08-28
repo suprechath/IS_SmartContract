@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details & Investment - Resync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .cta-button {
+            @apply bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed;
+        }
+        .secondary-button {
+            @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed;
+        }
+        .progress-bar-bg { @apply bg-gray-200 rounded-full h-4; }
+        .progress-bar-fill { @apply bg-green-500 h-4 rounded-full transition-all duration-500 ease-out; }
+        .tab-button { @apply py-3 px-6 font-medium text-gray-600 border-b-2 border-transparent hover:border-green-500 hover:text-green-600 transition duration-300; }
+        .tab-button.active { @apply border-green-500 text-green-600; }
+        .tab-content { @apply hidden py-6; }
+        .tab-content.active { @apply block; }
+        .gallery-image { @apply w-full h-96 object-cover rounded-lg shadow-md; }
+        
+        /* Investment Flow Styles */
+        .investment-input {
+            @apply w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-lg;
+        }
+        .info-display {
+            @apply bg-gray-50 p-3 rounded-md text-sm;
+        }
+        .info-label { @apply font-medium text-gray-700; }
+        .info-value { @apply text-gray-900 font-semibold; }
+
+        /* Transaction Status Modal */
+        .status-modal {
+            @apply fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center z-[150];
+        }
+        .status-modal-content {
+            @apply relative mx-auto p-6 sm:p-8 border w-full max-w-md shadow-xl rounded-xl bg-white text-center;
+        }
+        .status-icon { @apply text-5xl mb-5; }
+        .status-processing { @apply text-blue-500; }
+        .status-submitted { @apply text-yellow-500; }
+        .status-confirmed { @apply text-green-500; }
+        .status-failed { @apply text-red-500; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-green-600">Resync<span class="text-gray-700">.</span></a>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-gray-600 hover:text-green-600">Browse Projects</a>
+                <a href="#" class="text-gray-600 hover:text-green-600">My Portfolio</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="connectWalletBtnNavInv" class="cta-button text-sm px-4 py-2"><i class="fas fa-wallet mr-2"></i>Connect Wallet</button>
+                <div id="walletInfoNavInv" class="hidden items-center space-x-2 text-sm">
+                    <span id="walletAddressNavInv" class="bg-gray-100 text-gray-700 px-3 py-1 rounded-md font-mono text-xs">0xInvest...0r</span>
+                    <span id="networkNameNavInv" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-xs">Arbitrum</span>
+                </div>
+                <div class="relative" id="userProfileMenuContainerNavInv">
+                    <button id="userProfileBtnNavInv" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none">
+                        <i class="fas fa-user text-gray-600"></i>
+                    </button>
+                    <div id="userDropdownNavInv" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-xl z-20 py-1">
+                        <div class="px-4 py-2 text-sm text-gray-700">KYC Status: <span class="font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded-full text-xs">Approved</span></div>
+                        <button id="logoutBtnNavInv" class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section id="project-header-invest" class="mb-12">
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div>
+                    <img src="https://placehold.co/800x600/16a34a/ffffff?text=Project+Gamma" alt="Project Gamma" class="gallery-image mb-4">
+                    <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Project Gamma: Retail Chain Efficiency</h1>
+                    <p class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt mr-2 text-green-600"></i>Islandwide / Retail Stores</p>
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center text-sm text-gray-600 mb-1">
+                            <span>Funding Status: <span class="font-semibold text-green-600">30% Funded</span></span>
+                            <span><i class="far fa-clock mr-1"></i>25 Days Left</span>
+                        </div>
+                        <div class="progress-bar-bg mb-1">
+                            <div class="progress-bar-fill" style="width: 30%;"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Raised: 36,000 USDC</span>
+                            <span>Goal: 120,000 USDC</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="investment-flow-section" class="bg-white p-6 rounded-xl shadow-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Invest in Project Gamma</h2>
+                    
+                    <div class="mb-4">
+                        <label for="stablecoinSelect" class="block text-sm font-medium text-gray-700 mb-1">Select Stablecoin:</label>
+                        <select id="stablecoinSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            <option value="USDC" data-balance="5000.75">USDC (Balance: 5,000.75)</option>
+                            <option value="USDT" data-balance="1200.50">USDT (Balance: 1,200.50)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="investmentAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount to Invest (<span id="selectedStablecoinLabel">USDC</span>):</label>
+                        <div class="relative">
+                            <input type="number" id="investmentAmount" placeholder="e.g., 500" class="investment-input pr-16">
+                            <button id="setMaxAmountBtn" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-green-100 text-green-700 hover:bg-green-200 px-2 py-1 rounded">MAX</button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Min. Investment: 100 <span class="selectedStablecoinLabel">USDC</span> / Max. Project Cap: 120,000 <span class="selectedStablecoinLabel">USDC</span></p>
+                    </div>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="info-display flex justify-between items-center">
+                            <span class="info-label">Your <span class="selectedStablecoinLabel">USDC</span> Balance:</span>
+                            <span class="info-value" id="stablecoinBalanceDisplay">5,000.75 <span class="selectedStablecoinLabel">USDC</span></span>
+                        </div>
+                        <div class="info-display flex justify-between items-center">
+                            <span class="info-label">Estimated RET Tokens to Receive:</span>
+                            <span class="info-value" id="estimatedRetDisplay">0 RGM-RET</span>
+                        </div>
+                        <div class="info-display flex justify-between items-center">
+                            <span class="info-label">Estimated Gas Fee:</span>
+                            <span class="info-value" id="gasFeeDisplay">~0.005 ETH</span>
+                        </div>
+                         <p class="text-xs text-gray-500 text-center">1 <span class="selectedStablecoinLabel">USDC</span> = 1 RGM-RET (Project Gamma Token)</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <button id="approveStablecoinBtn" class="w-full cta-button">
+                            <i class="fas fa-check-circle mr-2"></i>Approve <span class="selectedStablecoinLabel">USDC</span>
+                        </button>
+                        <button id="confirmInvestmentBtn" class="w-full cta-button" disabled>
+                            <i class="fas fa-donate mr-2"></i>Confirm Investment
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 text-center">By investing, you agree to the <a href="#" class="underline hover:text-green-600">Terms of Service</a> and <a href="#" class="underline hover:text-green-600">Project Agreement</a>.</p>
+                </div>
+            </div>
+        </section>
+        <section class="mt-12 bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-700">Project Overview...</h3>
+            <p class="text-gray-600 mt-2">Detailed description of Project Gamma would go here...</p>
+        </section>
+    </main>
+
+    <div id="transactionStatusModal" class="status-modal hidden">
+        <div class="status-modal-content">
+            <div id="statusIconDisplay" class="status-icon">
+                </div>
+            <h3 id="statusTitleDisplay" class="text-2xl font-semibold mb-3">Processing Transaction</h3>
+            <p id="statusMessageDisplay" class="text-gray-600 mb-6">Please wait while we process your transaction. Do not close or refresh this page.</p>
+            <div id="explorerLinkContainer" class="mb-6 hidden">
+                <a id="explorerLink" href="#" target="_blank" class="text-green-600 hover:text-green-700 underline text-sm">
+                    View on Block Explorer <i class="fas fa-external-link-alt ml-1"></i>
+                </a>
+            </div>
+            <button id="closeStatusModalBtn" class="secondary-button px-6 py-2 hidden">Close</button>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; <span id="currentYearInv"></span> Resync Technologies Pte Ltd. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Basic Nav Dropdown & Wallet Connection Stub ---
+        const userProfileBtnNavInv = document.getElementById('userProfileBtnNavInv');
+        const userDropdownNavInv = document.getElementById('userDropdownNavInv');
+        const userProfileMenuContainerNavInv = document.getElementById('userProfileMenuContainerNavInv');
+        if (userProfileBtnNavInv && userDropdownNavInv) {
+            userProfileBtnNavInv.addEventListener('click', (e) => {
+                userDropdownNavInv.classList.toggle('hidden');
+                e.stopPropagation();
+            });
+            document.addEventListener('click', (e) => {
+                if (userProfileMenuContainerNavInv && !userProfileMenuContainerNavInv.contains(e.target) && !userDropdownNavInv.classList.contains('hidden')) {
+                    userDropdownNavInv.classList.add('hidden');
+                }
+            });
+        }
+        // Simulate already connected for demo
+        const connectWalletBtnNavInv = document.getElementById('connectWalletBtnNavInv');
+        const walletInfoNavInv = document.getElementById('walletInfoNavInv');
+        if (connectWalletBtnNavInv && walletInfoNavInv) {
+             connectWalletBtnNavInv.classList.add('hidden');
+             walletInfoNavInv.classList.remove('hidden');
+             walletInfoNavInv.classList.add('flex');
+        }
+        if(document.getElementById('currentYearInv')) {
+            document.getElementById('currentYearInv').textContent = new Date().getFullYear();
+        }
+
+        // --- Investment Flow Logic ---
+        const stablecoinSelect = document.getElementById('stablecoinSelect');
+        const investmentAmountInput = document.getElementById('investmentAmount');
+        const selectedStablecoinLabels = document.querySelectorAll('.selectedStablecoinLabel');
+        const stablecoinBalanceDisplay = document.getElementById('stablecoinBalanceDisplay');
+        const estimatedRetDisplay = document.getElementById('estimatedRetDisplay');
+        // const gasFeeDisplay = document.getElementById('gasFeeDisplay'); // Already declared
+        const approveStablecoinBtn = document.getElementById('approveStablecoinBtn');
+        const confirmInvestmentBtn = document.getElementById('confirmInvestmentBtn');
+        const setMaxAmountBtn = document.getElementById('setMaxAmountBtn');
+
+        // Transaction Status Modal Elements
+        const transactionStatusModal = document.getElementById('transactionStatusModal');
+        const statusIconDisplay = document.getElementById('statusIconDisplay');
+        const statusTitleDisplay = document.getElementById('statusTitleDisplay');
+        const statusMessageDisplay = document.getElementById('statusMessageDisplay');
+        const explorerLinkContainer = document.getElementById('explorerLinkContainer');
+        const explorerLink = document.getElementById('explorerLink');
+        const closeStatusModalBtn = document.getElementById('closeStatusModalBtn');
+
+        let currentStablecoin = 'USDC';
+        let currentBalance = 5000.75; // Default to USDC balance
+        const MIN_INVESTMENT = 100;
+        const TOKEN_PRICE = 1; // 1 Stablecoin = 1 RET Token
+
+        function updateSelectedStablecoin(coin) {
+            currentStablecoin = coin;
+            selectedStablecoinLabels.forEach(label => label.textContent = coin);
+            approveStablecoinBtn.querySelector('span').textContent = coin; // Update button text
+            // Update balance from select option's data attribute
+            const selectedOption = stablecoinSelect.options[stablecoinSelect.selectedIndex];
+            currentBalance = parseFloat(selectedOption.dataset.balance);
+            stablecoinBalanceDisplay.textContent = `${currentBalance.toFixed(2)} ${coin}`;
+            updateEstimatedRet(); // Recalculate RET on coin change
+        }
+
+        function updateEstimatedRet() {
+            const amount = parseFloat(investmentAmountInput.value) || 0;
+            const retAmount = amount / TOKEN_PRICE;
+            estimatedRetDisplay.textContent = `${retAmount.toFixed(2)} RGM-RET`; // RGM-RET for Project Gamma
+            
+            // Basic validation for button states
+            if (amount > 0 && amount <= currentBalance && amount >= MIN_INVESTMENT) {
+                approveStablecoinBtn.disabled = false;
+                // confirmInvestmentBtn would be enabled after approval
+            } else {
+                approveStablecoinBtn.disabled = true;
+                confirmInvestmentBtn.disabled = true;
+            }
+        }
+        
+        if (stablecoinSelect) {
+            stablecoinSelect.addEventListener('change', (e) => {
+                updateSelectedStablecoin(e.target.value);
+            });
+            // Initial call
+            updateSelectedStablecoin(stablecoinSelect.value);
+        }
+
+        if (investmentAmountInput) {
+            investmentAmountInput.addEventListener('input', updateEstimatedRet);
+        }
+
+        if (setMaxAmountBtn) {
+            setMaxAmountBtn.addEventListener('click', () => {
+                investmentAmountInput.value = currentBalance;
+                updateEstimatedRet();
+            });
+        }
+
+        function showTransactionStatus(status, title, message, txHash = null) {
+            transactionStatusModal.classList.remove('hidden');
+            statusTitleDisplay.textContent = title;
+            statusMessageDisplay.textContent = message;
+            closeStatusModalBtn.classList.add('hidden'); // Hide by default
+
+            let iconHtml = '';
+            let iconClass = '';
+
+            switch(status) {
+                case 'processing':
+                    iconHtml = '<i class="fas fa-spinner fa-spin"></i>';
+                    iconClass = 'status-processing';
+                    break;
+                case 'submitted':
+                    iconHtml = '<i class="fas fa-hourglass-half"></i>';
+                    iconClass = 'status-submitted';
+                    break;
+                case 'confirmed':
+                    iconHtml = '<i class="fas fa-check-circle"></i>';
+                    iconClass = 'status-confirmed';
+                    closeStatusModalBtn.classList.remove('hidden');
+                    break;
+                case 'failed':
+                    iconHtml = '<i class="fas fa-times-circle"></i>';
+                    iconClass = 'status-failed';
+                    closeStatusModalBtn.classList.remove('hidden');
+                    break;
+            }
+            statusIconDisplay.innerHTML = iconHtml;
+            statusIconDisplay.className = `status-icon ${iconClass}`;
+
+            if (txHash) {
+                explorerLink.href = `https://arbiscan.io/tx/${txHash}`; // Example for Arbitrum
+                explorerLinkContainer.classList.remove('hidden');
+            } else {
+                explorerLinkContainer.classList.add('hidden');
+            }
+        }
+
+        if (approveStablecoinBtn) {
+            approveStablecoinBtn.addEventListener('click', () => {
+                const amount = parseFloat(investmentAmountInput.value);
+                if (amount <= 0 || amount > currentBalance || amount < MIN_INVESTMENT) {
+                    alert(`Please enter a valid amount between ${MIN_INVESTMENT} and ${currentBalance} ${currentStablecoin}.`);
+                    return;
+                }
+                showTransactionStatus('processing', 'Approving Stablecoin...', `Please confirm the approval for ${amount} ${currentStablecoin} in your wallet.`);
+                
+                // Simulate approval transaction
+                setTimeout(() => {
+                    // Simulate success or failure
+                    const success = Math.random() > 0.1; // 90% chance of success
+                    if (success) {
+                        showTransactionStatus('submitted', 'Approval Submitted', `Approval for ${amount} ${currentStablecoin} submitted. Waiting for confirmation...`, '0xapprovalTxHash123');
+                        setTimeout(() => {
+                            showTransactionStatus('confirmed', 'Approval Confirmed!', `${amount} ${currentStablecoin} approved successfully. You can now confirm your investment.`, '0xapprovalTxHash123');
+                            approveStablecoinBtn.disabled = true;
+                            approveStablecoinBtn.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${currentStablecoin} Approved`;
+                            confirmInvestmentBtn.disabled = false;
+                            // Modal will auto-close or user closes it
+                             setTimeout(() => transactionStatusModal.classList.add('hidden'), 2000);
+                        }, 3000); // Simulate confirmation time
+                    } else {
+                        showTransactionStatus('failed', 'Approval Failed', 'The stablecoin approval transaction failed. Please try again.');
+                    }
+                }, 2000); // Simulate wallet interaction time
+            });
+        }
+
+        if (confirmInvestmentBtn) {
+            confirmInvestmentBtn.addEventListener('click', () => {
+                const amount = parseFloat(investmentAmountInput.value);
+                 showTransactionStatus('processing', 'Processing Investment...', `Submitting your investment of ${amount} ${currentStablecoin}. Please confirm in your wallet.`);
+                
+                // Simulate investment transaction
+                setTimeout(() => {
+                    const success = Math.random() > 0.1;
+                    if (success) {
+                        showTransactionStatus('submitted', 'Investment Submitted', `Your investment of ${amount} ${currentStablecoin} has been submitted. Waiting for blockchain confirmation...`, '0xinvestmentTxHash456');
+                        setTimeout(() => {
+                            showTransactionStatus('confirmed', 'Investment Confirmed!', `Successfully invested ${amount} ${currentStablecoin}. You have received ${amount / TOKEN_PRICE} RGM-RET.`, '0xinvestmentTxHash456');
+                            // Update UI (e.g., balance, project funding progress) - not fully implemented here
+                            currentBalance -= amount;
+                            stablecoinBalanceDisplay.textContent = `${currentBalance.toFixed(2)} ${currentStablecoin}`;
+                            investmentAmountInput.value = '';
+                            updateEstimatedRet();
+                            confirmInvestmentBtn.disabled = true;
+                            approveStablecoinBtn.disabled = false; // Reset approve button for next potential investment
+                            approveStablecoinBtn.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Approve ${currentStablecoin}`;
+
+                        }, 5000); // Simulate confirmation time
+                    } else {
+                        showTransactionStatus('failed', 'Investment Failed', 'Your investment transaction failed. Please check your wallet and try again.');
+                    }
+                }, 2000);
+            });
+        }
+
+        if (closeStatusModalBtn) {
+            closeStatusModalBtn.addEventListener('click', () => {
+                transactionStatusModal.classList.add('hidden');
+            });
+        }
+        
+        // Initial UI setup
+        updateEstimatedRet();
+
+    </script>
+</body>
+</html>

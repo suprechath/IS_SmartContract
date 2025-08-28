@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Resync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .cta-button {
+            @apply bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5;
+        }
+        .faq-item {
+            @apply bg-white rounded-xl shadow-lg mb-6 overflow-hidden;
+        }
+        .faq-question {
+            @apply flex justify-between items-center w-full p-6 text-left font-semibold text-gray-800 hover:bg-gray-50 focus:outline-none;
+        }
+        .faq-answer {
+            @apply p-6 border-t border-gray-200 text-gray-700 leading-relaxed;
+        }
+        .prose-custom { /* For styling answer content if it has lists etc. */
+            @apply prose max-w-none text-gray-700;
+        }
+        .prose-custom p, .prose-custom ul, .prose-custom ol {
+            @apply mb-3 text-base;
+        }
+        .prose-custom ul {
+            @apply list-disc pl-5 space-y-1;
+        }
+        .prose-custom ol {
+            @apply list-decimal pl-5 space-y-1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="resync_homepage_v1.html" class="text-2xl font-bold text-green-600">
+                Resync<span class="text-gray-700">.</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="resync_browse_projects_v1.html" class="text-gray-600 hover:text-green-600 transition duration-300">Browse Projects</a>
+                <a href="#my-portfolio" class="text-gray-600 hover:text-green-600 transition duration-300">My Portfolio</a>
+                <a href="resync_learn_how_it_works_v1.html" class="text-gray-600 hover:text-green-600 transition duration-300">Learn/How it Works</a>
+                <a href="resync_faq_v1.html" class="text-green-600 font-semibold border-b-2 border-green-600 pb-1">FAQ</a> </div>
+            <div class="flex items-center space-x-4">
+                <button id="connectWalletBtnFaq" class="cta-button text-sm px-4 py-2">
+                    <i class="fas fa-wallet mr-2"></i>Connect Wallet
+                </button>
+                <div id="walletInfoFaq" class="hidden items-center space-x-2 text-sm">
+                    <span id="walletAddressFaq" class="bg-gray-100 text-gray-700 px-3 py-1 rounded-md font-mono text-xs"></span>
+                    <span id="networkNameFaq" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-xs"></span>
+                </div>
+                <div class="relative hidden" id="userProfileMenuContainerFaq">
+                    <button id="userProfileBtnFaq" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none">
+                        <i class="fas fa-user text-gray-600"></i>
+                    </button>
+                    <div id="userDropdownFaq" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-20 py-1">
+                        <a href="#profile-settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
+                        <a href="#kyc-status" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">KYC Status: <span class="font-semibold text-yellow-500">Pending</span></a>
+                        <a href="#notifications" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Notifications</a>
+                        <button id="logoutBtnFaq" class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600">Logout</button>
+                    </div>
+                </div>
+                <button class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 relative">
+                    <i class="fas fa-bell text-gray-600"></i>
+                    <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                </button>
+                <button id="mobileMenuBtnFaq" class="md:hidden p-2 bg-gray-100 rounded-md hover:bg-gray-200">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+            </div>
+        </nav>
+        <div id="mobileMenuFaq" class="hidden md:hidden bg-white shadow-lg">
+            <a href="resync_browse_projects_v1.html" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-green-600">Browse Projects</a>
+            <a href="#my-portfolio" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-green-600">My Portfolio</a>
+            <a href="resync_learn_how_it_works_v1.html" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-green-600">Learn/How it Works</a>
+            <a href="resync_faq_v1.html" class="block px-4 py-3 text-green-600 font-semibold">FAQ</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-10 text-center">Frequently Asked Questions</h1>
+        <p class="text-lg text-gray-600 mb-12 text-center max-w-3xl mx-auto">
+            Find answers to common questions about Resync, investing, blockchain, and more. If you can't find your answer here, feel free to <a href="#contact" class="text-green-600 hover:underline">contact us</a>.
+        </p>
+
+        <div id="faq-list">
+            <h2 class="text-2xl font-semibold text-green-700 mt-10 mb-6 pb-2 border-b border-gray-300">General Questions</h2>
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>What is Resync?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Resync is a platform that enables individuals and institutions to invest in real-world energy efficiency projects using blockchain technology. We connect building owners looking to upgrade their energy systems with investors seeking to fund these green initiatives and earn returns from the resulting energy savings.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>How does Resync make money?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Resync typically earns revenue through a combination of:</p>
+                    <ul>
+                        <li>A platform fee on successfully funded projects.</li>
+                        <li>A percentage of the project-specific RET tokens allocated to Resync for platform operations and development (as outlined in each project's tokenomics).</li>
+                        <li>Potentially, a small operational fee deducted from the verified monetary savings before dividend distribution (this will be clearly stated in project details).</li>
+                    </ul>
+                    <p>Our goal is to align our success with the success of the projects and our investors.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>Who can invest on Resync?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Resync aims to be accessible to a global audience. However, investors must comply with the laws and regulations of their respective jurisdictions regarding cryptocurrency investments and participation in such platforms. KYC (Know Your Customer) procedures may be required, especially for larger investment amounts, to adhere to AML (Anti-Money Laundering) regulations.</p>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-semibold text-green-700 mt-10 mb-6 pb-2 border-b border-gray-300">Investing</h2>
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>How do I invest in a project?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>To invest in a project on Resync:</p>
+                    <ol>
+                        <li><strong>Connect Your Wallet:</strong> Use a compatible Web3 wallet (like MetaMask) to connect to the Resync platform.</li>
+                        <li><strong>Browse Projects:</strong> Explore available projects and review their details (overview, financials, expected returns).</li>
+                        <li><strong>Complete KYC (if required):</strong> Follow the instructions for identity verification.</li>
+                        <li><strong>Choose Investment Amount:</strong> Decide how much you want to invest in your chosen project (ensure you have sufficient stablecoins like USDC or USDT in your wallet).</li>
+                        <li><strong>Confirm Transaction:</strong> Approve the investment transaction in your wallet. This will send your stablecoins to the project's smart contract and mint project-specific RET tokens to your wallet.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>What are RET tokens?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>RET (Resync Energy Tokens or project-specific name like "Resync Alpha Building RET") are digital tokens representing your fractional ownership and right to receive dividends from a specific energy efficiency project funded on Resync. Each project has its own unique RET token. Holding these tokens means you are entitled to a proportional share of the profits generated from that project's energy savings.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>How are dividends paid out?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Dividends are derived from the monetary savings achieved by the energy efficiency project. Here's the general flow:</p>
+                    <ol>
+                        <li>Energy savings are measured and verified by a third-party auditor.</li>
+                        <li>The building owner deposits the agreed-upon share of these monetary savings (in stablecoins) into the project's RewardDistribution smart contract.</li>
+                        <li>The smart contract automatically distributes these stablecoins as dividends to all RET token holders of that project, proportional to their token holdings. Dividends are sent directly to your connected wallet.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>What is the minimum investment amount?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>The minimum investment amount varies from project to project. This information is clearly displayed on each project's details page. We strive to make investments accessible with reasonably low minimums.</p>
+                </div>
+            </div>
+
+             <div class="faq-item">
+                <button class="faq-question group">
+                    <span>What are the risks involved?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>All investments carry risk. For Resync projects, risks can include: project performance being lower than expected (affecting dividends), smart contract vulnerabilities (though audited), stablecoin de-pegging, third-party (auditor/building owner) risks, and regulatory uncertainties. We encourage you to read the "Understanding the Risks" section on our "Learn / How It Works" page and do your own research before investing.</p>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-semibold text-green-700 mt-10 mb-6 pb-2 border-b border-gray-300">Blockchain & Technical</h2>
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>Why does Resync use blockchain?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Blockchain technology offers several key advantages for Resync:</p>
+                    <ul>
+                        <li><strong>Transparency:</strong> All transactions (investments, dividend payouts, token ownership) are recorded on an immutable public ledger.</li>
+                        <li><strong>Security:</strong> Smart contracts automate processes, reducing counterparty risk and potential for fraud.</li>
+                        <li><strong>Efficiency:</strong> Streamlines the investment and dividend distribution process, making it faster and potentially cheaper.</li>
+                        <li><strong>Accessibility:</strong> Enables fractional ownership and participation from a global investor base.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>What is a Web3 wallet and why do I need one?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>A Web3 wallet (like MetaMask, Trust Wallet, etc.) is a digital wallet that allows you to interact with decentralized applications (dApps) like Resync on the blockchain. You need one to:</p>
+                    <ul>
+                        <li>Securely store your cryptocurrencies (stablecoins for investing, RET tokens).</li>
+                        <li>Connect to the Resync platform.</li>
+                        <li>Authorize transactions (e.g., making an investment, claiming dividends).</li>
+                        <li>Manage your digital assets. You control your private keys, meaning you have full ownership of your funds.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>Which blockchain does Resync use?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Resync plans to utilize efficient and scalable blockchain solutions, such as Layer 2 networks like Arbitrum or Polygon, to ensure low transaction fees (gas fees) and fast confirmation times for our users. The specific blockchain used for a project will be detailed on its project page.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question group">
+                    <span>Are smart contracts audited?</span>
+                    <i class="fas fa-chevron-down transform group-focus:rotate-180 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-answer hidden prose-custom">
+                    <p>Yes, security is a top priority. All Resync smart contracts undergo rigorous security audits by reputable third-party blockchain security firms before they are deployed. Summaries or links to audit reports will be made available where possible.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h5 class="text-xl font-semibold text-white mb-4">Resync</h5>
+                    <p class="text-sm mb-4">Pioneering decentralized funding for energy efficiency projects.</p>
+                </div>
+                <div>
+                    <h5 class="text-xl font-semibold text-white mb-4">Quick Links</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#about" class="hover:text-green-400">About Us</a></li>
+                        <li><a href="resync_browse_projects_v1.html" class="hover:text-green-400">Browse Projects</a></li>
+                        <li><a href="resync_learn_how_it_works_v1.html" class="hover:text-green-400">Learn</a></li>
+                        <li><a href="#terms" class="hover:text-green-400">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-xl font-semibold text-white mb-4">Connect</h5>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-telegram-plane fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-8 text-center text-sm">
+                <p>&copy; <span id="currentYearFaq"></span> Resync Technologies Pte Ltd. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="infoModalFaq" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[100]">
+        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-3">
+                    <i class="fas fa-check text-green-600 text-xl" id="modalIconFaq"></i>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitleFaq">Modal Title</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500" id="modalMessageFaq">Modal content.</p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="modalCloseButtonFaq" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Replicated Nav/Modal JS (with unique IDs for this page) ---
+        const mobileMenuBtnFaq = document.getElementById('mobileMenuBtnFaq');
+        const mobileMenuFaq = document.getElementById('mobileMenuFaq');
+        if (mobileMenuBtnFaq && mobileMenuFaq) {
+            mobileMenuBtnFaq.addEventListener('click', () => mobileMenuFaq.classList.toggle('hidden'));
+        }
+
+        const userProfileBtnFaq = document.getElementById('userProfileBtnFaq');
+        const userDropdownFaq = document.getElementById('userDropdownFaq');
+        const userProfileMenuContainerFaq = document.getElementById('userProfileMenuContainerFaq');
+        if (userProfileBtnFaq && userDropdownFaq && userProfileMenuContainerFaq) {
+            userProfileBtnFaq.addEventListener('click', (e) => { userDropdownFaq.classList.toggle('hidden'); e.stopPropagation(); });
+            document.addEventListener('click', (e) => {
+                if (userProfileMenuContainerFaq && !userProfileMenuContainerFaq.contains(e.target) && userDropdownFaq && !userDropdownFaq.classList.contains('hidden')) {
+                    userDropdownFaq.classList.add('hidden');
+                }
+            });
+        }
+        
+        const connectWalletBtnFaq = document.getElementById('connectWalletBtnFaq');
+        const walletInfoFaq = document.getElementById('walletInfoFaq');
+        const walletAddressElFaq = document.getElementById('walletAddressFaq');
+        const networkNameElFaq = document.getElementById('networkNameFaq');
+        const logoutBtnFaq = document.getElementById('logoutBtnFaq');
+        let isConnectedFaq = false; 
+
+        function updateWalletStatusFaq() {
+            if (isConnectedFaq) {
+                const exampleAddress = "0xFAQu...5678"; 
+                const exampleNetwork = "Ethereum";
+                if(walletAddressElFaq) walletAddressElFaq.textContent = exampleAddress;
+                if(networkNameElFaq) networkNameElFaq.textContent = exampleNetwork;
+                if(connectWalletBtnFaq) connectWalletBtnFaq.classList.add('hidden');
+                if(walletInfoFaq) {
+                    walletInfoFaq.classList.remove('hidden');
+                    walletInfoFaq.classList.add('flex');
+                }
+                if(userProfileMenuContainerFaq) userProfileMenuContainerFaq.classList.remove('hidden');
+            } else {
+                if(walletAddressElFaq) walletAddressElFaq.textContent = '';
+                if(networkNameElFaq) networkNameElFaq.textContent = '';
+                if(connectWalletBtnFaq) connectWalletBtnFaq.classList.remove('hidden');
+                if(walletInfoFaq) {
+                    walletInfoFaq.classList.add('hidden');
+                    walletInfoFaq.classList.remove('flex');
+                }
+                if(userProfileMenuContainerFaq) userProfileMenuContainerFaq.classList.add('hidden');
+                if (userDropdownFaq) userDropdownFaq.classList.add('hidden');
+            }
+        }
+        
+        if (connectWalletBtnFaq) {
+            connectWalletBtnFaq.addEventListener('click', () => {
+                if (!isConnectedFaq) {
+                    isConnectedFaq = true;
+                    updateWalletStatusFaq();
+                    showModalFaq("Wallet Connected!", `Successfully connected wallet.`);
+                }
+            });
+        }
+        if (logoutBtnFaq) {
+            logoutBtnFaq.addEventListener('click', () => {
+                isConnectedFaq = false;
+                updateWalletStatusFaq();
+                showModalFaq("Logged Out", "You have successfully disconnected your wallet.");
+            });
+        }
+        updateWalletStatusFaq();
+
+        const currentYearElFaq = document.getElementById('currentYearFaq');
+        if (currentYearElFaq) currentYearElFaq.textContent = new Date().getFullYear();
+
+        const infoModalFaq = document.getElementById('infoModalFaq');
+        const modalTitleElFaq = document.getElementById('modalTitleFaq');
+        const modalMessageElFaq = document.getElementById('modalMessageFaq');
+        const modalCloseButtonFaq = document.getElementById('modalCloseButtonFaq');
+        const modalIconFaq = document.getElementById('modalIconFaq');
+
+        function showModalFaq(title, message, iconClass = 'fa-check', iconColor = 'text-green-600') {
+            if (infoModalFaq && modalTitleElFaq && modalMessageElFaq && modalIconFaq) {
+                modalTitleElFaq.textContent = title;
+                modalMessageElFaq.textContent = message;
+                modalIconFaq.className = `fas ${iconClass} ${iconColor} text-xl`;
+                infoModalFaq.classList.remove('hidden');
+            }
+        }
+
+        if (modalCloseButtonFaq && infoModalFaq) {
+            modalCloseButtonFaq.addEventListener('click', () => infoModalFaq.classList.add('hidden'));
+        }
+        window.addEventListener('click', (e) => {
+            if (e.target === infoModalFaq) infoModalFaq.classList.add('hidden');
+        });
+
+        // --- FAQ Accordion Logic ---
+        const faqButtons = document.querySelectorAll('.faq-question');
+        faqButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const answer = button.nextElementSibling;
+                const icon = button.querySelector('i');
+
+                // Toggle answer visibility
+                if (answer.classList.contains('hidden')) {
+                    answer.classList.remove('hidden');
+                    if (icon) icon.classList.add('rotate-180');
+                } else {
+                    answer.classList.add('hidden');
+                    if (icon) icon.classList.remove('rotate-180');
+                }
+                
+                // Optional: Close other open FAQs
+                // faqButtons.forEach(otherButton => {
+                //     if (otherButton !== button) {
+                //         otherButton.nextElementSibling.classList.add('hidden');
+                //         otherButton.querySelector('i').classList.remove('rotate-180');
+                //     }
+                // });
+            });
+        });
+
+    </script>
+
+</body>
+</html>
