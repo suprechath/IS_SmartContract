@@ -114,9 +114,20 @@ const setupQueries = `
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
+  CREATE TABLE IF NOT EXISTS platform_config (
+    config_key VARCHAR(255) PRIMARY KEY,
+    config_value TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
   CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_onchain_id);
   CREATE INDEX IF NOT EXISTS idx_transactions_project_id ON transactions(project_onchain_id);
   CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type);
+
+  INSERT INTO platform_config (config_key, config_value)
+  VALUES ('PROJECT_FACTORY_ADDRESS', NULL)
+  ON CONFLICT (config_key) DO NOTHING;
 
   DO $$
   DECLARE
@@ -146,7 +157,6 @@ const setupQueries = `
       ON CONFLICT (wallet_address) DO NOTHING;
     END IF;
   END $$;
-
 `;
 
 const initializeDatabase = async () => {

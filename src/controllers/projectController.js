@@ -3,8 +3,7 @@ import userModel from '../models/userModel.js';
 import { handleResponse } from '../utils/responseHandler.js';
 import { separateProjectData } from '../utils/projectUtils.js';
 import { ethers } from 'ethers';
-import dotenv from 'dotenv';
-dotenv.config();
+import configModel from '../models/configModel.js';
 
 import fs from 'fs';
 import path from 'path';
@@ -123,6 +122,11 @@ export const prepareCreateProject = async (req, res) => {
     const creatorId = req.user.id;
 
     try {
+        const factoryAddress = await configModel.getConfigValue('PROJECT_FACTORY_ADDRESS');
+        if (!factoryAddress) {
+            return handleResponse(res, 503, 'ProjectFactory address is not configured on the platform. Deployment is currently unavailable.');
+        }
+
         const project = await projectModel.getOnchainProjectById(projectId);
         if (!project) {
             return handleResponse(res, 404, 'Project not found.');
@@ -139,9 +143,10 @@ export const prepareCreateProject = async (req, res) => {
 
         const creator = await userModel.getUserById(project.user_onchain_id);
         const creatorWallet = creator.wallet_address;
+        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
 
         const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
-        const factoryContract = new ethers.Contract(process.env.PROJECT_FACTORY_ADDRESS, ProjectFactory.abi, provider);
+        const factoryContract = new ethers.Contract(factoryAddress, ProjectFactory.abi, provider);
         const unsignedTx = await factoryContract.createProject.populateTransaction(
             ethers.encodeBytes32String(project.id.substring(0, 31)),
             creator.wallet_address,
@@ -149,7 +154,7 @@ export const prepareCreateProject = async (req, res) => {
             project.id.substring(0, 4).toUpperCase(),
             project.funding_usdc_goal,
             project.funding_duration_second,
-            process.env.USDC_CONTRACT_ADDRESS,
+            USDC_CONTRACT_ADDRESS,
             project.platform_fee_percentage,
             project.reward_fee_percentage
         );
@@ -160,8 +165,6 @@ export const prepareCreateProject = async (req, res) => {
         handleResponse(res, 500, 'Server error during transaction preparation.', error.message);
     }
 };
-
-/**
 // GET /api/projects/deploy/projectTokenPrep
 export const prepareProjectTokenDeployment  = async (req, res) => {
     const { projectId } = req.body;
@@ -217,6 +220,7 @@ export const prepareProjectMgmtDeployment = async (req, res) => {
         }
 
         const platformOwner = process.env.platformOperatorAddress;
+        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
         
         const managementFactory = new ethers.ContractFactory(ProjectManagement.abi, ProjectManagement.bytecode);
         const managementUnsignedTx = await managementFactory.getDeployTransaction(
@@ -224,7 +228,7 @@ export const prepareProjectMgmtDeployment = async (req, res) => {
             project.funding_goal,
             project.funding_duration*24*60, //day to seconds
             tokenContractAddress,
-            process.env.USDC_CONTRACT_ADDRESS, // Make sure this is in your .env file
+            USDC_CONTRACT_ADDRESS, // Make sure this is in your .env file
             platformOwner,
             project.platform_fee_percentage,
             project.reward_fee_percentage
@@ -239,6 +243,7 @@ export const prepareProjectMgmtDeployment = async (req, res) => {
         handleResponse(res, 500, 'Server error during management deployment preparation.', error.message);
     }
 };
+
 //GET /api/projects/deploy/onboard
 export const onboard = async (req, res) => {
     const { projectId } = req.body;
@@ -273,4 +278,3 @@ export const onboard = async (req, res) => {
         handleResponse(res, 500, 'Server error during deployment finalization.', error.message);
     }
 };
-*/

@@ -25,27 +25,42 @@ async function factoryContractDeployment() {
     const signer = await provider.getSigner();
     const signerAddress = await signer.getAddress();
     updateStatus(`User wallet address: ${signerAddress}`);
-    const Factory = new ethers.ContractFactory(ProjectFactory.abi, ProjectFactory.bytecode, signer);
-    const factoryContract = await Factory.deploy();
-    updateStatus(`⏳ Transaction sent! Waiting for confirmation...<br>Tx Hash: ${factoryContract.deploymentTransaction().hash}`);
-    await factoryContract.waitForDeployment();
-    const factoryContractAddress = await factoryContract.getAddress();
-    updateStatus(`✅ Factory contract deployed at: ${factoryContractAddress}`);
-    const deployedProjectFactory = new ethers.Contract(factoryContractAddress, ProjectFactory.abi, signer);
-    updateStatus(`Owner: ${await deployedProjectFactory.platformOwner()}`);
-    const registerFactoryRes = await axios.post(`${API_BASE_URL}/users/regBP`,
-      {
-        wallet_address: factoryContractAddress,
-        name: "factoryContract",
-        email: "factoryContract@commeff.com",
-        nonce: "factoryContract",
-        role: "Platform Operator"
+
+    updateStatus('Requesting unsigned transaction from backend...');
+    updateStatus(localStorage.getItem("jwt_token"));
+    const prepResponse = await axios.post(`${API_BASE_URL}/admin/deploy-factory/prepare`, {}, { 
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
       }
-    );
-    updateStatus(`Backend registered the factory contract as a Platform Operator: ${registerFactoryRes.data.message}`);
+    });
+    const { unsignedTx } = prepResponse.data.data;
+    updateStatus('✅ Unsigned transaction received.');
+    updateStatus('Please confirm the deployment transaction in MetaMask...');
+    const txResponse = await signer.sendTransaction(unsignedTx);
+    updateStatus(`⏳ Transaction sent! Waiting for confirmation... Tx Hash: ${txResponse.hash}`);
+    const receipt = await txResponse.wait();
+    const deployedContractAddress = receipt.contractAddress;
+    if (!deployedContractAddress) {
+      throw new Error("Contract address could not be retrieved from the transaction receipt.");
+    }
+    updateStatus(`✅ Factory contract deployed at: ${deployedContractAddress}`);
+
+    updateStatus('Recording new factory address with the backend...');
+    await axios.post(`${API_BASE_URL}/admin/deploy-factory/record`, {
+      factoryAddress: deployedContractAddress
+    }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+      }
+    });
+
+    updateStatus('✅ Address recorded. Please check server logs for final configuration steps.');
+    updateStatus("🎉🎉🎉 DEPLOYMENT COMPLETE! 🎉🎉🎉");
+
   } catch (error) {
-    console.error("Deployment failed:", error);
-    updateStatus(`❌ Deployment failed: ${error.reason || error.message}`);
+    const errorMsg = error.response ? error.response.data.message : error.message;
+    updateStatus(`❌ Deployment failed: ${errorMsg}`);
+    console.error('Deployment error:', error.response || error);
   } finally {
     factoryButton.disabled = true;
   }
@@ -89,15 +104,18 @@ async function usdcContractDeployment() {
     updateStatus(`Minted ${await deployedUSDC.balanceOf("0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65")} USDC to investor3`);
     updateStatus(`Minted ${await deployedUSDC.balanceOf("0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc")} USDC to investor4`);
     updateStatus(`Name: ${await deployedUSDC.name()}, Symbol: ${await deployedUSDC.symbol()}, Total Supply: ${await deployedUSDC.totalSupply()}`);
-    const registerUSDCRes = await axios.post(`${API_BASE_URL}/users/regBP`,
-      {
-        wallet_address: usdcContractAddress,
-        name: "USDC",
-        email: "USDC@commeff.com",
-        nonce: "USDC",
-        role: "Platform Operator"
+    updateStatus('Recording new factory address with the backend...');
+    console.log(usdcContractAddress);
+
+    const registerUSDCRes = await axios.post(`${API_BASE_URL}/admin/deploy/record`, {
+      recordKey: "USDC_CONTRACT_ADDRESS",
+      address: usdcContractAddress 
+    }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
       }
-    );
+    });
+
     updateStatus(`Backend registered the USDC contract as a Platform Operator: ${registerUSDCRes.data.message}`);
   } catch (error) {
     console.error("Deployment failed:", error);

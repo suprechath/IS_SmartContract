@@ -1,6 +1,7 @@
 import { handleResponse } from '../utils/responseHandler.js';
 import projectModel from '../models/projectModel.js';
 import { ethers } from 'ethers';
+import configModel from '../models/configModel.js';
 
 import fs from 'fs';
 import path from 'path';
@@ -41,10 +42,11 @@ export const investmentCheck = async (req, res) => {
         if (amountInWei + totalContributions > fundingGoal) {
             return handleResponse(res, 400, 'Investment amount exceeds the remaining funding goal., The maximum you can invest is ' + ethers.formatUnits(remainingGoal, 18) + ' tokens.');
         }
+        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
 
         handleResponse(res, 200, 'Investment is valid.', {
             management_contract_address: project.management_contract_address,
-            usdc_address: process.env.USDC_CONTRACT_ADDRESS,
+            usdc_address: USDC_CONTRACT_ADDRESS,
             amount: amount.toString()
         });
 
