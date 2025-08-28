@@ -15,7 +15,7 @@ const setupQueries = `
       IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'sanction_status'
       ) THEN
-        CREATE TYPE kyc_status AS ENUM ('Pending', 'Verified', 'Rejected');
+        CREATE TYPE sanction_status AS ENUM ('Pending', 'Verified', 'Rejected');
       END IF;
       IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'project_status'
@@ -124,7 +124,7 @@ const setupQueries = `
   BEGIN
     INSERT INTO users_offchain (full_name, date_of_birth, address, identification_number, email, kyc_status)
     VALUES (
-      'HH0',
+      'HH0 Admin',
       '2000-01-01',
       'Admin',
       '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
@@ -136,12 +136,11 @@ const setupQueries = `
     SELECT id INTO offchain_user_id FROM users_offchain WHERE email = 'admin@buildingyield.com';
 
     IF offchain_user_id IS NOT NULL THEN
-      INSERT INTO users_onchain (user_offchain_id, wallet_address, role, nonce, sanction_status)
+      INSERT INTO users_onchain (user_offchain_id, wallet_address, role, sanction_status)
       VALUES (
         offchain_user_id,
         '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
         'Platform Operator',
-        'comm-efficient-login',
         'Verified'
       )
       ON CONFLICT (wallet_address) DO NOTHING;

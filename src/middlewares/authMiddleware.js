@@ -16,7 +16,9 @@ export const protect = (requiredRole = null) => async (req, res, next) => {
             if (!user) {
                 return handleResponse(res, 401, 'Not authorized, user not found.');
             }
-
+            if (user.sanction_status !== 'Verified') {
+                return handleResponse(res, 403, 'Action forbidden. Account is not verified or is under sanction review.');
+            }
             if (requiredRole && user.role !== requiredRole) {
                 return handleResponse(res, 403, `Not authorized. ${requiredRole} role required.`);
             }

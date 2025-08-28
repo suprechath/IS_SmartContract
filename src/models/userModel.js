@@ -47,7 +47,7 @@ const registerUserServices = async (
     return onchainResult.rows[0];
   } catch (error) {
     await client.query('ROLLBACK');
-    throw error;
+    throw error.massage;
   } finally {
     client.release();
   }
@@ -71,7 +71,8 @@ const getUserById = async (id) => {
     SELECT
       id,
       wallet_address,
-      role
+      role,
+      sanction_status 
     FROM users_onchain
     WHERE id = $1;
   `;

@@ -12,7 +12,7 @@ const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPa
 
 // @desc    Prepare an investment by validating it against the smart contract
 // @route   POST /api/investments/check
-export const prepareInvestment = async (req, res) => {
+export const investmentCheck = async (req, res) => {
     const { projectId, amount } = req.body;
     const investorId = req.user.id;
 
@@ -30,7 +30,7 @@ export const prepareInvestment = async (req, res) => {
 
         const deadline = await contract.deadline();
         if (Date.now() / 1000 > deadline) {
-            await projectModel.updateProject(projectId, { status: 'Failed' });
+            await projectModel.updateProject(projectId, { project_status: 'Failed' },{});
             return handleResponse(res, 400, 'The funding deadline for this project has passed.');
         }
 

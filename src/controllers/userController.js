@@ -4,7 +4,7 @@ import { handleResponse } from '../utils/responseHandler.js';
 
 // @desc    Register a new user as Investor or Project Creator
 // @route   POST /api/users/register
-export const registerUser = async (req, res, next) => {
+export const registerUser = async (req, res) => {
   const {
     full_name,
     date_of_birth,
