@@ -55,21 +55,6 @@ export const prepareOnchainDeploymentSchema = Joi.object({
     projectId: Joi.string().uuid().required()
 });
 
-/**
-export const deployProjectTokenSchema = Joi.object({
-    projectId: Joi.string().uuid().required()
-});
-export const deployProjectMgmtSchema = Joi.object({
-    projectId: Joi.string().uuid().required(),
-    tokenContractAddress: Joi.string()
-        .pattern(/^0x[a-fA-F0-9]{40}$/)
-        .required()
-        .messages({
-            'string.pattern.base': 'Token contract address must be a valid Ethereum address.',
-            'any.required': 'Token contract address is required.',
-        }),
-});
-
 export const onboardSchema = Joi.object({
     projectId: Joi.string().uuid().required(),
     tokenContractAddress: Joi.string()
@@ -85,6 +70,5 @@ export const onboardSchema = Joi.object({
         .messages({
             'string.pattern.base': 'Management contract address must be a valid Ethereum address.',
             'any.required': 'Management contract address is required.',
-        }),
+        })
 });
-*/

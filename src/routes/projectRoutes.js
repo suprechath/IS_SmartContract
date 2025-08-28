@@ -1,9 +1,9 @@
 import express from 'express';
-import { createProject, getProjects, getProjectById, getMyProjects, updateProject, prepareCreateProject } from '../controllers/projectController.js';
+import { createProject, getProjects, getProjectById, getMyProjects, updateProject, prepareCreateProject, onboard} from '../controllers/projectController.js';
     // prepareProjectTokenDeployment,prepareProjectMgmtDeployment, onboard, 
 import { protect } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validator.js';
-import { createProjectSchema, updateProjectSchema, prepareOnchainDeploymentSchema } from '../middlewares/projectSchema.js';
+import { createProjectSchema, updateProjectSchema, prepareOnchainDeploymentSchema, onboardSchema } from '../middlewares/projectSchema.js';
 
 const router = express.Router();
 
@@ -14,6 +14,7 @@ router.get('/my', protect('Project Creator'), getMyProjects); //GET /api/project
 router.patch('/id/:projectId', protect('Project Creator'), validate(updateProjectSchema), updateProject); //PATCH /api/projects/id/:projectId
 
 router.post('/deploy/onchain', protect('Project Creator'), validate(prepareOnchainDeploymentSchema), prepareCreateProject); // POST /api/projects/deploy/onchain
+router.post('/deploy/onboard', protect('Project Creator'), validate(onboardSchema), onboard); // POST /api/projects/deploy/onboard
 
 
 export default router;

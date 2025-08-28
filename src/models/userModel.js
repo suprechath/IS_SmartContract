@@ -108,7 +108,8 @@ const updateSanctionStatus = async (id, status) => {
 };
 
 const updateUser = async (onchainId, offchainData) => {
-  const validFields = Object.keys(offchainData).filter(key => offchainData[key] != null && offchainData[key] !== '');  console.log('Valid fields for update:', validFields);
+  const validFields = Object.keys(offchainData).filter(key => offchainData[key] != null && offchainData[key] !== '');  
+  console.log('Valid fields for update:', validFields);
   if (validFields.length === 0) {
     throw new Error("No valid fields provided for update.");
   }
@@ -131,10 +132,10 @@ const updateUser = async (onchainId, offchainData) => {
 };
 
 export default {
-  registerUserServices, //yes
+  registerUserServices,
   getUserByWalletAddress,
   getUserById,
-  getFullUserProfileById, //yes
+  getFullUserProfileById, 
   updateSanctionStatus,
-  updateUser //yes
+  updateUser 
 };
