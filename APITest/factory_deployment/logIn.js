@@ -77,21 +77,23 @@ async function logIn() {
     const signerAddress = await signer.getAddress();
     updateStatus(`User wallet address: ${signerAddress}`);
     const nonceResponse = await axios.get(`${API_BASE_URL}/auth/nonce/${signerAddress}`);
-    const { nonce } = nonceResponse.data.data;
-    if (!nonce) {
+    const { nonceToken } = nonceResponse.data.data;
+    if (!nonceToken) {
       throw new Error("Nonce not received from the server.");
     }
-    updateStatus(`✅ Success! Nonce received: "${nonce}"`);
+
+    updateStatus(`✅ Success! Nonce received: "${nonceToken}"`);
     updateStatus('Please sign the message in the MetaMask popup...');
-    const signature = await signer.signMessage(nonce);
+    const signature = await signer.signMessage(nonceToken);
+    console.log(`Signature: ${signature}`);
     updateStatus('✅ Success! Message signed.');
     const verifyResponse = await axios.post(`${API_BASE_URL}/auth/verify`, {
-      wallet_address: signerAddress,
+      nonceToken: nonceToken,
       signature: signature
     });
-    console.log(verifyResponse);
-    const { token } = verifyResponse.data.data;
+    const { token, user } = verifyResponse.data.data;
     console.log(`JWT Token received: ${token}`);
+    updateStatus(`User status: ${user.sanction_status}`);
 
     const payloadBase64 = token.split('.')[1];
     const decodedPayload = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));

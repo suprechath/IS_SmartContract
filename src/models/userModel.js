@@ -58,7 +58,8 @@ const getUserByWalletAddress = async (wallet_address) => {
     SELECT
       id,
       wallet_address,
-      role
+      role,
+      sanction_status
     FROM users_onchain
     WHERE wallet_address = $1;
   `;
@@ -80,6 +81,17 @@ const getUserById = async (id) => {
   return result.rows[0];
 };
 
+const getFullUserProfileById = async (id) => {
+  const query = `
+    SELECT uoc.*, uoff.*
+    FROM users_onchain uoc
+    JOIN users_offchain uoff ON uoc.user_offchain_id = uoff.id
+    WHERE uoc.id = $1;
+  `;
+  const result = await pool.query(query, [id]);
+  return result.rows[0];
+};
+
 const updateSanctionStatus = async (id, status) => {
   const allowedStatuses = ['Pending', 'Verified', 'Rejected'];
   if (!allowedStatuses.includes(status)) {
@@ -96,7 +108,7 @@ const updateSanctionStatus = async (id, status) => {
 };
 
 const updateUser = async (onchainId, offchainData) => {
-  const validFields = Object.keys(offchainData).filter(key => offchainData[key] != null);
+  const validFields = Object.keys(offchainData).filter(key => offchainData[key] != null && offchainData[key] !== '');  console.log('Valid fields for update:', validFields);
   if (validFields.length === 0) {
     throw new Error("No valid fields provided for update.");
   }
@@ -107,7 +119,7 @@ const updateUser = async (onchainId, offchainData) => {
   const query = `
     UPDATE users_offchain
     SET ${finalSetClause}
-    WHERE id = (SELECT user_offchain_id FROM users_onchain WHERE id = $${onchainId})
+    WHERE id = (SELECT user_offchain_id FROM users_onchain WHERE id = $${validFields.length + 1})
     RETURNING *;
   `;
   const values = [
@@ -119,9 +131,10 @@ const updateUser = async (onchainId, offchainData) => {
 };
 
 export default {
-  registerUserServices,
+  registerUserServices, //yes
   getUserByWalletAddress,
   getUserById,
+  getFullUserProfileById, //yes
   updateSanctionStatus,
-  updateUser
+  updateUser //yes
 };

@@ -13,6 +13,7 @@ export const registerSchema = Joi.object({
 });
 
 export const updateUserSchema = Joi.object({
-    address: Joi.string().min(10).optional(),
-    email: Joi.string().email().optional()
+    full_name: Joi.string().min(3).optional().allow(''),
+    address: Joi.string().min(10).optional().allow(''),
+    email: Joi.string().email().optional().allow('')
 }).min(1);

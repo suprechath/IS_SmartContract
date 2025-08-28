@@ -66,7 +66,7 @@ const setupQueries = `
     location TEXT,
 
     cover_image_url TEXT,
-    tags VARCHAR(50)[],
+    tags VARCHAR(50),
 
     CO2_reduction DECIMAL,
     projected_roi DECIMAL,

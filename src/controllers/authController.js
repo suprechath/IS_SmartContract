@@ -16,13 +16,14 @@ export const getNonce = async (req, res) => {
             return handleResponse(res, 404, 'User with this wallet address not found. Please register first.');
         }
 
-        const nonce = `comm-efficient-login-${crypto.randomBytes(16).toString('hex')}`;
+        const nonce = crypto.randomBytes(16).toString('hex');
         const nonceToken = jwt.sign(
             { nonce, walletAddress },
             NONCE_JWT_SECRET,
             { expiresIn: '5m' } // Nonce is valid for 5 minutes
         );
         handleResponse(res, 200, 'Nonce token successfully generated.', { nonceToken });
+        console.log(`Nonce token created for ${walletAddress}`);
     } catch (error) {
         console.error('Get Nonce Error:', error);
         handleResponse(res, 500, 'Server error while generating nonce token', error.message);
@@ -34,10 +35,8 @@ export const getNonce = async (req, res) => {
 export const verifySignature = async (req, res) => {
     const { nonceToken, signature } = req.body;
     try {
-        const decodedNonceToken = jwt.verify(nonceToken, NONCE_JWT_SECRET);
-        const { nonce, walletAddress } = decodedNonceToken;
-
-        const signerAddress = ethers.verifyMessage(nonce, signature);
+        const { nonce, walletAddress } = jwt.verify(nonceToken, NONCE_JWT_SECRET);
+        const signerAddress = ethers.verifyMessage(nonceToken, signature);
         if (signerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
             return handleResponse(res, 401, 'Signature verification failed. Invalid signature.');
         }
@@ -61,7 +60,8 @@ export const verifySignature = async (req, res) => {
             user: {
                 id: user.id,
                 role: user.role,
-                wallet_address: walletAddress
+                wallet_address: walletAddress,
+                sanction_status: user.sanction_status
             }
         });
     } catch (error) {

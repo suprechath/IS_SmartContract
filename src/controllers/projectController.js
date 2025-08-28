@@ -23,7 +23,7 @@ const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'u
 export const createProject = async (req, res) => {
     try {
         const { onchainData, offchainData } = separateProjectData(req.body);
-        const newProject = await projectModel.createProjectOnoffchain(onchainData, offchainData, req.user.id);
+        const newProject = await projectModel.createProject(onchainData, offchainData, req.user.id);
         handleResponse(res, 201, 'Project created successfully', newProject);
     } catch (error) {
         console.error('Create Project Error:', error);
@@ -106,6 +106,8 @@ export const updateProject = async (req, res) => {
         }
         
         const { onchainData, offchainData } = separateProjectData(req.body);
+        console.log('Onchain Data to update:', onchainData);
+        console.log('Offchain Data to update:', offchainData);
         const updatedProject = await projectModel.updateProject(projectId, onchainData, offchainData);
         handleResponse(res, 200, 'Project updated successfully', updatedProject);
     } catch (error) {

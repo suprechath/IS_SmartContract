@@ -15,8 +15,5 @@ router.patch('/id/:projectId', protect('Project Creator'), validate(updateProjec
 
 router.post('/deploy/onchain', protect('Project Creator'), validate(prepareOnchainDeploymentSchema), prepareCreateProject); // POST /api/projects/deploy/onchain
 
-// router.post('/deploy/projectTokenPrep', protect('Project Creator'), validate(deployProjectTokenSchema), prepareProjectTokenDeployment); //POST /api/projects/deploy/projectTokenPrep
-// router.post('/deploy/projectMgmtPrep', protect('Project Creator'), validate(deployProjectMgmtSchema), prepareProjectMgmtDeployment); //POST /api/projects/deploy/projectMgmtPrep
-// router.post('/deploy/onboard', protect('Project Creator'), validate(onboardSchema), onboard); // POST /api/projects/deploy/onboard
 
 export default router;

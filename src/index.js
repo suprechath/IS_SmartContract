@@ -33,11 +33,11 @@ app.get('/', async (req, res) => {
   const result = await pool.query('SELECT current_database()');
   handleResponse(res, 200, `Connected to database: ${result.rows[0].current_database}`, { database: result.rows[0].current_database });
 });
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/sanctions', sanctionRoutes);
-app.use('/api/projects', projectRoutes);
+app.use('/api/users', userRoutes); //yes
+app.use('/api/auth', authRoutes); //yes
+app.use('/api/admin', adminRoutes); //yes
+app.use('/api/sanctions', sanctionRoutes); //yes
+app.use('/api/projects', projectRoutes); //yes
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/investments', investmentRoutes);
 // app.use('/api/rewards', rewardRoutes);

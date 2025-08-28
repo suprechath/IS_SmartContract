@@ -1,7 +1,6 @@
 import userModel from '../models/userModel.js';
 import { handleResponse } from '../utils/responseHandler.js';
 
-
 // @desc    Register a new user as Investor or Project Creator
 // @route   POST /api/users/register
 export const registerUser = async (req, res) => {
@@ -37,25 +36,36 @@ export const registerUser = async (req, res) => {
 // @desc Get user profile
 // @route GET /api/users/me
 export const getUserProfile = async (req, res) => {
-    const user = req.user;
-    handleResponse(res, 200, 'User profile retrieved successfully', user);
+    try {
+        const user = await userModel.getFullUserProfileById(req.user.id);
+        if (!user) {
+            return handleResponse(res, 404, 'User not found.');
+        }
+        handleResponse(res, 200, 'User profile retrieved successfully', user);
+    } catch (error) {
+        console.error('Get User Profile Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving user profile.', error.message);
+    }
 };
 
 // @desc    Update user profile
 // @route   PUT /api/users/me
 export const updateUserProfile = async (req, res) => {
   const { id } = req.user;
+  console.log('Updating profile for user ID:', id);
+  const offchainDataToUpdate = req.body;
   try {
-    const updatedProfile = await userModel.updateUser(id, req.body);
-    if (!updatedProfile) {
-      return handleResponse(res, 404, 'User profile not found.');
+    await userModel.updateUser(id, offchainDataToUpdate);
+    const updatedUserProfile = await userModel.getFullUserProfileById(id);
+    if (!updatedUserProfile) {
+      return handleResponse(res, 404, 'User profile not found after update.');
     }
-    handleResponse(res, 200, 'User profile updated successfully', updatedProfile);
+    handleResponse(res, 200, 'User profile updated successfully', updatedUserProfile);
   } catch (error) {
     if (error.code === '23505') {
       return handleResponse(res, 409, 'A user with this email already exists.');
     }
     console.error('Update Profile Error:', error);
-    handleResponse(res, 500, 'Server error during profile update.', error.message);
+    handleResponse(res, 500, 'Server error during profile update.', { error: error.message });
   }
 };
