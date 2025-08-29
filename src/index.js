@@ -10,6 +10,7 @@ import sanctionRoutes from './routes/sanctionRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import investmentRoutes from './routes/investmentRoutes.js';
+import depositRoutes from './routes/depositRoutes.js';
 
 // import rewardRoutes from './routes/rewardRoutes.js';
 // import refundRoutes from './routes/refundRoutes.js';
@@ -33,16 +34,14 @@ app.get('/', async (req, res) => {
   const result = await pool.query('SELECT current_database()');
   handleResponse(res, 200, `Connected to database: ${result.rows[0].current_database}`, { database: result.rows[0].current_database });
 });
-app.use('/api/users', userRoutes); //yes
-app.use('/api/auth', authRoutes); //yes
-app.use('/api/admin', adminRoutes); //yes
-app.use('/api/sanctions', sanctionRoutes); //yes
-app.use('/api/projects', projectRoutes); //yes
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/sanctions', sanctionRoutes);
+app.use('/api/projects', projectRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/investments', investmentRoutes);
-// app.use('/api/rewards', rewardRoutes);
-// app.use('/api/refunds', refundRoutes);
-// app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/deposits', depositRoutes);
 
 // Start the server
 app.listen(port, () => {

@@ -1,10 +1,10 @@
 import { ethers } from 'ethers';
 import dotenv from 'dotenv';
-import investmentModel from '../models/investmentModel.js';
+dotenv.config();
 import projectModel from '../models/projectModel.js';
 import userModel from '../models/userModel.js';
+import transactionModel from '../models/transactionModel.js';
 
-// import ProjectManagement from '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json' assert { type: "json" };
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,99 +13,325 @@ const __dirname = path.dirname(__filename);
 const projectManagementArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
 
-dotenv.config();
-
 const WSS_URL = process.env.network_wss_url;
 const RECONNECT_DELAY = 5000; // 5 seconds
-const POLLING_INTERVAL = 30000; // 30 seconds
-const HEALTH_CHECK_INTERVAL = 15000; // 15 seconds
+const POLLING_INTERVAL = 15000; // 15 seconds for checking for new projects
+const HEALTH_CHECK_INTERVAL = 30000; // 30 seconds for checking websocket health
 
 let provider;
-const monitoredContracts = new Set();
-let projectPollingIntervalId;
+const monitoredContracts = new Map(); 
+let pollingIntervalId;
 let healthCheckIntervalId;
 
-const stopServices = () => {
-    console.log('Stopping all services...');
-    if (projectPollingIntervalId) clearInterval(projectPollingIntervalId);
-    if (healthCheckIntervalId) clearInterval(healthCheckIntervalId);
-    if (provider) {
-        provider.removeAllListeners();
+async function handleInvestment(projectId, investorAddress, amount, event) {
+    const transactionHash = event.log.transactionHash;
+    console.log(`
+    ✅ ---- Event Received: Invested ----
+       - Project ID: ${projectId}
+       - Investor: ${investorAddress}
+       - Amount: ${ethers.formatUnits(amount, 'ether')} USDC
+       - Tx Hash: ${transactionHash}
+    `);
+
+    try {
+        const existingTx = await transactionModel.getTransactionByTxHash(transactionHash);
+        if (existingTx) {
+            console.log(`[INFO] Transaction ${transactionHash} already recorded. Skipping.`);
+            return;
+        }
+        const user = await userModel.getUserByWalletAddress(investorAddress);
+        if (!user) {
+            console.error(`[ERROR] Investor ${investorAddress} not found in the database.`);
+            return;
+        }
+        const txData = {
+            project_onchain_id: projectId,
+            USDC_amount: amount.toString(),
+            transaction_type: 'Investment',
+            transaction_hash: transactionHash,
+        };
+
+        await transactionModel.createTransaction(txData, user.id);
+        console.log(`[SUCCESS] Investment from ${investorAddress} for project ${projectId} recorded.`);
+
+        const project = await projectModel.getOnchainProjectById(projectId);
+        const newTotal = BigInt(project.total_contributions || 0) + BigInt(amount.toString());
+        await projectModel.updateProject(projectId, { total_contributions: newTotal.toString() }, {});
+        console.log(`[SUCCESS] Project ${projectId} total contributions updated.`);
+
+        const fundingGoal = BigInt(project.funding_usdc_goal);
+        if (newTotal >= fundingGoal) {
+            console.log(`[INFO] Funding goal for project ${projectId} has been met.`);
+            await projectModel.updateProject(projectId, { project_status: 'Succeeded' }, {});
+            console.log(`[SUCCESS] Project ${projectId} status updated to 'Succeeded'.`);
+        }
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to process 'Invested' event for tx ${transactionHash}:`, dbError);
+    }
+}
+
+async function handleTokenMinted(projectId, from, to, amount, event) {
+    if (from !== ethers.ZeroAddress) {
+        return; // focus on mint events only
+    }
+
+    const transactionHash = event.log.transactionHash;
+    console.log(`
+    ✅ ---- Event Received: Token Minted (Transfer from 0x0) ----
+       - Project ID: ${projectId}
+       - Recipient: ${to}
+       - Amount: ${ethers.formatUnits(amount, 'ether')} tokens
+       - Tx Hash: ${transactionHash}
+    `);
+
+    try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project) {
+            console.error(`[ERROR] Project with ID ${projectId} not found for mint event.`);
+            return;
+        }
+        const currentMintedSupply = BigInt(project.total_minted_token || 0);
+        const newMintedSupply = currentMintedSupply + BigInt(amount.toString());
+
+        await projectModel.updateProject(projectId, {
+            total_minted_token: newMintedSupply.toString()
+        }, {});
+
+        console.log(`[SUCCESS] Project ${projectId} total minted supply updated to: ${ethers.formatUnits(newMintedSupply.toString(), 'ether')}`);
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to update minted supply for project ${projectId}:`, dbError);
+    }
+}
+
+async function handleAllTokensMinted(projectId, totalAmount, event) {
+    console.log(`
+    ✅ ---- Event Received: All TokensMinted ----
+       - Project ID: ${projectId}
+       - Total Supply: ${ethers.formatUnits(totalAmount, 'ether')} tokens
+       - Tx Hash: ${event.log.transactionHash}
+    `);
+    try {
+        await projectModel.updateProject(projectId, {
+            project_status: 'Active',
+            tokens_minted: true,
+            token_total_supply: totalAmount.toString()
+        }, {});
+        console.log(`[SUCCESS] Project ${projectId} status updated to 'Active' and final token supply recorded.`);
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to update project status for ${projectId}:`, dbError);
+    }
+}
+
+async function handleFundsWithdrawn(projectId, creatorAmount, platformFee, event) {
+    const transactionHash = event.log.transactionHash;
+    console.log(`
+    ✅ ---- Event Received: FundsWithdrawn ----
+       - Project ID: ${projectId}
+       - Creator Amount: ${ethers.formatUnits(creatorAmount, 'ether')} USDC
+       - Platform Fee: ${ethers.formatUnits(platformFee, 'ether')} USDC
+       - Tx Hash: ${transactionHash}
+    `);
+    try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project) {
+            console.error(`[ERROR] Project ${projectId} not found for withdrawal event.`);
+            return;
+        }
+
+        const txData = {
+            project_onchain_id: projectId,
+            USDC_amount: creatorAmount.toString(),
+            transaction_type: 'Withdrawal',
+            transaction_hash: transactionHash,
+            platform_fee: platformFee.toString()
+        };
+
+        await transactionModel.createTransaction(txData, project.user_onchain_id);
+        console.log(`[SUCCESS] Withdrawal for project ${projectId} recorded.`);
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to record 'FundsWithdrawn' event for tx ${transactionHash}:`, dbError);
+    }
+}
+
+async function handleRewardDeposited(projectId, totalAmount, platformFee, event) {
+    const transactionHash = event.log.transactionHash;
+    console.log(`
+    ✅ ---- Event Received: RewardDeposited ----
+       - Project ID: ${projectId}
+       - Net Reward Amount: ${ethers.formatUnits(totalAmount, 'ether')} USDC
+       - Platform Fee: ${ethers.formatUnits(platformFee, 'ether')} USDC
+       - Tx Hash: ${transactionHash}
+    `);
+    try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project) {
+            console.error(`[ERROR] Project ${projectId} not found for reward deposit event.`);
+            return;
+        }
+        const txData = {
+            project_onchain_id: projectId,
+            USDC_amount: totalAmount.toString(),
+            transaction_type: 'RewardDeposit',
+            transaction_hash: transactionHash,
+            platform_fee: platformFee.toString()
+        };
+        await transactionModel.createTransaction(txData, project.user_onchain_id);
+        console.log(`[SUCCESS] Reward deposit for project ${projectId} recorded.`);
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to record 'RewardDeposited' event for tx ${transactionHash}:`, dbError);
+    }
+}
+
+async function handleRewardClaimed(projectId, investorAddress, amount, event) {
+    const transactionHash = event.log.transactionHash;
+    console.log(`
+    ✅ ---- Event Received: RewardClaimed ----
+       - Project ID: ${projectId}
+       - Investor: ${investorAddress}
+       - Amount Claimed: ${ethers.formatUnits(amount, 'ether')} USDC
+       - Tx Hash: ${transactionHash}
+    `);
+    try {
+        const user = await userModel.getUserByWalletAddress(investorAddress);
+        if (!user) {
+            console.error(`[ERROR] Investor ${investorAddress} not found for reward claim.`);
+            return;
+        }
+        const txData = {
+            project_onchain_id: projectId,
+            USDC_amount: amount.toString(),
+            transaction_type: 'RewardClaim',
+            transaction_hash: transactionHash,
+        };
+        await transactionModel.createTransaction(txData, user.id);
+        console.log(`[SUCCESS] Reward claim for project ${projectId} by ${investorAddress} recorded.`);
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to record 'RewardClaimed' event for tx ${transactionHash}:`, dbError);
+    }
+}
+
+async function handleRefund(projectId, investorAddress, amount, event) {
+    const transactionHash = event.log.transactionHash;
+    console.log(`
+    ✅ ---- Event Received: Refunded ----
+       - Project ID: ${projectId}
+       - Investor: ${investorAddress}
+       - Amount Refunded: ${ethers.formatUnits(amount, 'ether')} USDC
+       - Tx Hash: ${transactionHash}
+    `);
+    try {
+        const user = await userModel.getUserByWalletAddress(investorAddress);
+        if (!user) {
+            console.error(`[ERROR] Investor ${investorAddress} not found for refund.`);
+            return;
+        }
+        const txData = {
+            project_onchain_id: projectId,
+            USDC_amount: amount.toString(),
+            transaction_type: 'Refund',
+            transaction_hash: transactionHash,
+        };
+        await transactionModel.createTransaction(txData, user.id);
+        console.log(`[SUCCESS] Refund for project ${projectId} to ${investorAddress} recorded.`);
+    } catch (dbError) {
+        console.error(`[DB_ERROR] Failed to record 'Refunded' event for tx ${transactionHash}:`, dbError);
+    }
+}
+
+// --- Main Service Logic ---
+
+const attachListenersToContract = (project) => {
+    const mgmtContractAddress = project.management_contract_address;
+    const tokenContractAddress = project.token_contract_address;
+
+    if (!mgmtContractAddress || !tokenContractAddress) {
+        return;
+    }
+
+    if (!monitoredContracts.has(mgmtContractAddress)) {
+        const mgmtContract = new ethers.Contract(mgmtContractAddress, ProjectManagement.abi, provider);
+        monitoredContracts.set(mgmtContractAddress, { contract: mgmtContract, project });
+        console.log(`➕ Attaching Management listeners for project: ${project.title} (${mgmtContractAddress})`);
+        mgmtContract.on('Invested', (investor, amount, event) => handleInvestment(project.id, investor, amount, event));
+        mgmtContract.on('TokensMinted', (totalAmount, event) => handleAllTokensMinted(project.id, totalAmount, event));
+        mgmtContract.on('FundsWithdrawn', (creatorAmount, platformFee, event) => handleFundsWithdrawn(project.id, creatorAmount, platformFee, event));
+        mgmtContract.on('RewardDeposited', (totalAmount, platformFee, event) => handleRewardDeposited(project.id, totalAmount, platformFee, event));
+        mgmtContract.on('RewardClaimed', (investor, amount, event) => handleRewardClaimed(project.id, investor, amount, event));
+        mgmtContract.on('Refunded', (investor, amount, event) => handleRefund(project.id, investor, amount, event));
+    }
+
+    if (!monitoredContracts.has(tokenContractAddress)) {
+        const tokenContract = new ethers.Contract(tokenContractAddress, ProjectToken.abi, provider);
+        monitoredContracts.set(tokenContractAddress, { contract: tokenContract, project });
+        console.log(`➕ Attaching Token listeners for project: ${project.title} (${tokenContractAddress})`);
+        tokenContract.on('Transfer', (from, to, amount, event) => handleTokenMinted(project.id, from, to, amount, event));
     }
 };
 
 const findAndAttachToNewProjects = async () => {
-    console.log('🔍 Checking for new projects to monitor...');
+    console.log('🔍 Checking for new and active projects to monitor...');
     try {
-        const fundingProjects = await projectModel.getProjectsByStatus(['Funding']);
-
-        fundingProjects.forEach(project => {
-            const contractAddress = project.management_contract_address;
-            if (contractAddress && !monitoredContracts.has(contractAddress)) {
-                monitoredContracts.add(contractAddress);
-                const contract = new ethers.Contract(contractAddress, ProjectManagement.abi, provider);
-                console.log(`➕ Adding new listener for project: ${project.title} (${contractAddress})`);
-
-                contract.on('Invested', async (investor, amount, event) => {
-                    const transaction_hash = event.log.transactionHash;
-                    console.log(`
-                    ✅ ---- Event Received: Invested ----
-                       - Project: ${project.title}
-                       - Investor: ${investor}
-                       - Amount: ${ethers.formatEther(amount)} USDC
-                       - Tx Hash: ${transaction_hash}
-                    `);
-                    try {
-                        const existing = await investmentModel.getInvestmentByTxHash(transaction_hash);
-                        if (existing) {
-                            console.log(`[INFO] Tx ${transaction_hash} already recorded. Skipping.`);
-                            return;
-                        }
-                        const user = await userModel.getUserByWalletAddress(investor);
-                        if (!user) {
-                            console.error(`[ERROR] Investor ${investor} not found in DB.`);
-                            return;
-                        }
-                        const investmentData = {
-                            project_id: project.id,
-                            amount: amount.toString(),
-                            transaction_hash
-                        };
-                        await investmentModel.createInvestment(investmentData, user.id);
-                        console.log(`[SUCCESS] Investment for ${investor} recorded in DB.`);
-                    } catch (dbError) {
-                        console.error(`[DB_ERROR] Failed to record tx ${transaction_hash}:`, dbError);
-                    }
-                });
-            }
-        });
+        const projectsToMonitor = await projectModel.getProjectsByStatus(['Funding', 'Succeeded', 'Active']);
+        projectsToMonitor.forEach(attachListenersToContract);
     } catch (error) {
         console.error('Error during project polling:', error.message);
     }
 };
 
+const stopServices = () => {
+    console.log('Stopping all listeners and intervals...');
+    if (pollingIntervalId) clearInterval(pollingIntervalId);
+    if (healthCheckIntervalId) clearInterval(healthCheckIntervalId);
+    if (provider) {
+        provider.removeAllListeners();
+        monitoredContracts.forEach(({ contract }) => contract.removeAllListeners());
+        monitoredContracts.clear();
+        provider.destroy();
+    }
+};
+
 const start = () => {
-    console.log('Attempting to connect and start services...');
+    console.log(`Attempting to connect to WebSocket provider at ${WSS_URL}...`);
     provider = new ethers.WebSocketProvider(WSS_URL);
-    monitoredContracts.clear();
 
-    findAndAttachToNewProjects();
-    projectPollingIntervalId = setInterval(findAndAttachToNewProjects, POLLING_INTERVAL);
+    provider.on('open', () => {
+        console.log('✅ WebSocket connection established.');
+        monitoredContracts.clear();
 
-    healthCheckIntervalId = setInterval(async () => {
-        try {
-            const blockNumber = await provider.getBlockNumber();
-            console.log(`💓 Health check OK. Current block: ${blockNumber}`);
-        } catch (error) {
-            console.error('❗️ Health check failed. Reconnecting...');
-            stopServices();
-            setTimeout(start, RECONNECT_DELAY);
-        }
-    }, HEALTH_CHECK_INTERVAL);
+        findAndAttachToNewProjects();
+        pollingIntervalId = setInterval(findAndAttachToNewProjects, POLLING_INTERVAL);
+
+        healthCheckIntervalId = setInterval(async () => {
+            try {
+                const blockNumber = await provider.getBlockNumber();
+                console.log(`💓 Health check OK. Current block: ${blockNumber}`);
+            } catch (error) {
+                console.error('❗️ Health check failed, attempting to reconnect...');
+                provider.destroy();
+            }
+        }, HEALTH_CHECK_INTERVAL);
+    });
 
     provider.on('error', (err) => {
-        console.error('A low-level provider error occurred:', err.message);
+        console.error('A WebSocket provider error occurred:', err.message);
+    });
+
+    provider.on('close', (code, reason) => {
+        console.warn(`❗️ WebSocket connection closed. Code: ${code}, Reason: ${reason}. Attempting to reconnect in ${RECONNECT_DELAY / 1000}s...`);
+        stopServices();
+        setTimeout(start, RECONNECT_DELAY);
     });
 };
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received. Shutting down gracefully.');
+    stopServices();
+    process.exit(0);
+});
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Shutting down gracefully.');
+    stopServices();
+    process.exit(0);
+});
 
 start();

@@ -72,3 +72,10 @@ export const onboardSchema = Joi.object({
             'any.required': 'Management contract address is required.',
         })
 });
+
+export const prepareMintTokensSchema = Joi.object({
+    projectId: Joi.string().uuid().required(),
+    batchLimit: Joi.number().integer().positive().required().messages({
+        'number.base': 'Batch limit must be a positive number.'
+    })
+});

@@ -92,7 +92,7 @@ export const getMyProjects = async (req, res) => {
 export const updateProject = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const project = await projectModel.getProjectById(projectId);
+        const project = await projectModel.getOnchainProjectById(projectId);
 
         if (!project) {
             return handleResponse(res, 404, 'Project not found.');
@@ -170,11 +170,11 @@ export const prepareCreateProject = async (req, res) => {
 export const onboard = async (req, res) => {
     const { projectId, tokenContractAddress, managementContractAddress } = req.body;
     try {
-        const project = await projectModel.getProjectById(projectId);
+        const project = await projectModel.getOnchainProjectById(projectId);
         if (!project) {
             return handleResponse(res, 404, 'Project not found.');
         }
-        if (project.creator_id !== req.user.id) {
+        if (project.user_onchain_id !== req.user.id) {
             return handleResponse(res, 403, 'You are not the creator of this project.');
         }
         if (project.status !== 'Approved') {
@@ -198,3 +198,40 @@ export const onboard = async (req, res) => {
         handleResponse(res, 500, 'Server error during deployment finalization.', error.message);
     }
 };
+
+//POST /api/projects/mint/prepare
+export const prepareMintTokens = async (req, res) => {
+    const { projectId, batchLimit } = req.body;
+    const creatorId = req.user.id;
+
+    try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+        if (project.user_onchain_id !== creatorId) {
+            return handleResponse(res, 403, 'Not authorized to mint tokens for this project.');
+        }
+        if (project.project_status !== 'Succeeded') {
+            return handleResponse(res, 400, `Project is not in 'Succeeded' status. Current status: '${project.project_status}'.`);
+        }
+        if (!project.management_contract_address) {
+            return handleResponse(res, 400, 'Project management contract has not been deployed.');
+        }
+        if (project.tokens_minted) {
+            return handleResponse(res, 400, 'All tokens for this project have already been minted.');
+        }
+
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
+        const contract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+
+        const unsignedTx = await contract.mintTokens.populateTransaction(batchLimit);
+
+        handleResponse(res, 200, 'Mint tokens transaction prepared successfully.', { unsignedTx });
+
+    } catch (error) {
+        console.error('Prepare Mint Tokens Error:', error);
+        handleResponse(res, 500, 'Server error during transaction preparation.', { error: error.message });
+    }
+};
+
