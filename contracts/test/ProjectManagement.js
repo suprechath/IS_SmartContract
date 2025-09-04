@@ -15,11 +15,11 @@ describe("ProjectManagement", function () {
 
         // Deploy a mock USDC token (using ProjectToken contract as it's a standard ERC20)
         USDC = await ethers.getContractFactory("ProjectToken");
-        usdc = await USDC.deploy("Mock USDC", "mUSDC", ethers.parseUnits("1000000", 18), owner.address);
+        usdc = await USDC.deploy("MockUSDC", "mUSDC", ethers.parseUnits("1000000", 18));
 
         // Deploy the ProjectToken
         ProjectToken = await ethers.getContractFactory("ProjectToken");
-        projectToken = await ProjectToken.deploy("Project Token", "PT", fundingGoal, platformOwner.address);
+        projectToken = await ProjectToken.deploy("ProjectToken", "PT", fundingGoal);
 
         // Deploy the ProjectManagement contract
         const ProjectManagementFactory = await ethers.getContractFactory("ProjectManagement");
@@ -36,9 +36,9 @@ describe("ProjectManagement", function () {
 
         // --- Setup ---
         // Set the ProjectManagement contract as the minter for the ProjectToken
-        await projectToken.connect(platformOwner).setMinter(projectManagement.target);
+        await projectToken.connect(owner).setMinter(projectManagement.target);
         // Link the ProjectToken to the ProjectManagement contract for reward updates
-        await projectToken.connect(platformOwner).setProjectManagement(projectManagement.target);
+        await projectToken.connect(owner).setProjectManagement(projectManagement.target);
 
         // Mint and distribute mock USDC
         await usdc.connect(owner).setMinter(owner.address);

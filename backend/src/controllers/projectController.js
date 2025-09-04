@@ -10,11 +10,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectTokenArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectToken.sol/ProjectToken.json');
-const projectManagementArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const projectTokenArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectToken.sol/ProjectToken.json');
+const projectManagementArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectToken = JSON.parse(fs.readFileSync(projectTokenArtifactPath, 'utf8'));
 const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
-const projectFactoryArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
+const projectFactoryArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
 const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'utf8'));
 
 // @desc    Create a new project

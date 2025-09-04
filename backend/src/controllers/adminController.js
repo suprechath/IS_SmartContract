@@ -9,7 +9,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectFactoryArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
+const projectFactoryArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
+
 const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'utf8'));
 
 

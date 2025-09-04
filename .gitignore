@@ -2,9 +2,15 @@ node_modules
 .env
 # apiTest
 
+# backend
+backend/node_modules
+backend/.env
+
 # Hardhat files
-/cache
-/artifacts
+contracts/cache
+contracts/artifacts
+contracts/node_modules
+
 
 # TypeChain files
 /typechain

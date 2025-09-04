@@ -10,7 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectManagementArtifactPath = path.resolve(__dirname, '../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const projectManagementArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
 
 const WSS_URL = process.env.network_wss_url;
@@ -295,6 +295,7 @@ const start = () => {
     provider = new ethers.WebSocketProvider(WSS_URL);
 
     provider.on('open', () => {
+        
         console.log('✅ WebSocket connection established.');
         monitoredContracts.clear();
 

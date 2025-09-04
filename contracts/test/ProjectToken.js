@@ -18,7 +18,7 @@ describe("ProjectToken", function () {
       TOKEN_NAME,
       TOKEN_SYMBOL,
       TOKEN_CAP,
-      owner.address
+      // owner.address
     );
     // await projectToken.deployed() is no longer needed with recent ethers.js versions
   });
@@ -141,7 +141,9 @@ describe("ProjectToken", function () {
     beforeEach(async function() {
         // Deploy a mock USDC token
         const USDC = await ethers.getContractFactory("ProjectToken"); // Using ProjectToken as a mock ERC20
-        usdc = await USDC.deploy("Mock USDC", "mUSDC", ethers.parseUnits("1000000", 18), owner.address);
+        usdc = await USDC.deploy("Mock USDC", "mUSDC", ethers.parseUnits("1000000", 18)
+          // , owner.address
+        );
 
         // Deploy ProjectManagement
         const ProjectManagement = await ethers.getContractFactory("ProjectManagement");
