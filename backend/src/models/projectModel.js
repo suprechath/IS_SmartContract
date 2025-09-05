@@ -174,11 +174,23 @@ const updateProject = async (projectId, onchainData, offchainData) => {
     }
 };
 
+const getProjectIdsAndTitles = async () => {
+    const query = `
+        SELECT pon.id, poff.title, pon.project_status, pon.management_contract_address, pon.token_contract_address
+        FROM project_onchain pon
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        ORDER BY poff.title;
+    `;
+    const result = await pool.query(query);
+    return result.rows;
+};
+
 export default {
     createProject,
     getProjectsByStatus,
     getProjectById,
     getOnchainProjectById,
     getProjectsByCreatorId,
-    updateProject
+    updateProject,
+    getProjectIdsAndTitles
 };

@@ -1,4 +1,8 @@
+const projectManagementResp = await fetch('../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const ProjectManagement = await projectManagementResp.json();
+
 const API_BASE_URL = 'http://localhost:5001/api';
+const projectIdSelect = document.getElementById('ProjectIdInput');
 
 function randomString(length) {
     return Math.random().toString(36).substring(2, 2 + length);
@@ -49,14 +53,13 @@ const createProject = async () => {
 
 const verifyProject = async () => {
     updateStatus('Verifying project...');
-    const projectId = document.getElementById('projectIdInput').value;
     try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         const signer = await provider.getSigner();
         const signerAddress = await signer.getAddress();
         const verifyResponse = await axios.post(`${API_BASE_URL}/admin/projects/review`, {
-                projectId: projectId,
+                projectId: projectIdSelect.value,
                 status: "Approved"
             },{
             headers: {
@@ -64,7 +67,7 @@ const verifyProject = async () => {
             }
         });
         console.log("Verify project response:", verifyResponse);
-        updateStatus(`Project verification successful! Is Verified: ${verifyResponse.data.data.isVerified}`);
+        updateStatus(`Project verification successful! Is Verified: ${verifyResponse.data.message}`);
     } catch (error) {
         console.error("Error during project verification:", error);
         updateStatus(`Project verification failed: ${error.response.data.message || error.message}`);
@@ -73,7 +76,27 @@ const verifyProject = async () => {
 
 const invest = async () => {
     updateStatus('Investing in project...');
-    const amount = document.getElementById('amountInput').value;
+    const amountInput = document.getElementById('amountInput').value;
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    try {
+        const signerAddress = await signer.getAddress();
+        console.log(projectIdSelect.value);
+        const investResponse = await axios.post(`${API_BASE_URL}/investments/check`, {
+            projectId: projectIdSelect.value,
+            amount: amountInput
+        }, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+        console.log("Invest response:", investResponse);
+        updateStatus(`Investment successful! Transaction Hash: ${investResponse.data.data.transaction_hash}`);
+    } catch (error) {
+        console.error("Error during investment:", error);
+        updateStatus(`Investment failed: ${error.response.data.message || error.message}`);
+    }
 };
 
 window.verifyProject = verifyProject;

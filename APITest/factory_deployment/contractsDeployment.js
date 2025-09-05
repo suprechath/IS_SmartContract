@@ -9,7 +9,7 @@ const ProjectFactory = await ProjectFactoryResp.json();
 
 const API_BASE_URL = 'http://localhost:5001/api';
 const onchainDeployButton = document.getElementById('onchainDeployButton');
-const onchainProjectIdInput = document.getElementById('onchainProjectIdInput');
+const onchainProjectIdInput = document.getElementById('ProjectIdInput');
 // const onchainProjectIdInput = "86f0b345-bade-412d-9937-5dc6420f064b";
 
 let unsignedTxData = null;

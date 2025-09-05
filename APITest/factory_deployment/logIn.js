@@ -12,6 +12,7 @@ const loginButton = document.getElementById('loginButton');
 const logoutButton = document.getElementById('logoutButton');
 const onchainDeployButton = document.getElementById('onchainDeployButton');
 const sanctionButton = document.getElementById('checkButton');
+const projectSection = document.getElementById('projectSection');
 
 async function walletAddress() {
   if (!window.ethereum) {
@@ -45,6 +46,7 @@ async function checkLoginStatus() {
     logoutButton.disabled = false;
     onchainDeployButton.disabled = false;
     sanctionButton.disabled = false;
+    projectSection.style.display = 'block';
   } else {
     updateStatus('Please log in with MetaMask.');
     localStorage.removeItem(TOKEN_KEY);
@@ -64,6 +66,7 @@ function logOut() {
     logoutButton.disabled = true;
     onchainDeployButton.disabled = true;
     sanctionButton.disabled = true;
+    projectSection.style.display = 'none';
 }
 
 async function logIn() {
@@ -111,6 +114,7 @@ async function logIn() {
     logoutButton.disabled = false;
     onchainDeployButton.disabled = false;
     sanctionButton.disabled = false;
+    projectSection.style.display = 'block';
     updateStatus(`Login successful! Token will expire at: ${Date(parseInt(expirationTime)).toLocaleString()}`);  
 
   } catch (error) {

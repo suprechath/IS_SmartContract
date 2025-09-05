@@ -152,7 +152,7 @@ export const prepareCreateProject = async (req, res) => {
             creator.wallet_address,
             project.title,
             project.id.substring(0, 4).toUpperCase(),
-            project.funding_usdc_goal,
+            ethers.parseUnits(project.funding_usdc_goal.toString(), 18),
             project.funding_duration_second,
             USDC_CONTRACT_ADDRESS,
             project.platform_fee_percentage,
@@ -234,4 +234,18 @@ export const prepareMintTokens = async (req, res) => {
         handleResponse(res, 500, 'Server error during transaction preparation.', { error: error.message });
     }
 };
+
+// @desc    Get all project IDs and titles
+// @route   GET /api/projects/ids
+export const getProjectIds = async (req, res) => {
+    try {
+        const projects = await projectModel.getProjectIdsAndTitles();
+        handleResponse(res, 200, 'Project IDs and titles retrieved successfully', projects);
+    } catch (error) {
+        console.error('Get Project IDs Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving project IDs.', error.message);
+    }
+};
+
+
 

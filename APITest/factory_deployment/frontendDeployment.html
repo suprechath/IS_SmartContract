@@ -40,6 +40,7 @@
             background-color: white;
             min-width: 600px;
             max-width: 1000px;
+            max-height: 2000px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -109,20 +110,20 @@
             </select>
             <button id="registerButton" onclick="register()">Register</button>
             <button id="checkButton" onclick="sanction()" disabled>Sanction</button>
-            
-            <h2>Project</h2>
-            <input type="text" id="fundingGoalInput" placeholder="Funding goal" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-            <button id="createProjectButton" onclick="createProject()">Create Project</button>
-            <input type="text" id="projectIdInput" placeholder="Verify project ID" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-            <button id="verifyButton" onclick="verifyProject()">Verify Project</button>
-            
-            <h2>Deploy Project Contracts</h2>
-            <input type="text" id="onchainProjectIdInput" placeholder="Enter Project ID" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-            <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button>
-
-            <h2>Project interactions</h2>
-            <input type="text" id="amountInput" placeholder="Amount" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-            <button id="investButton" onclick="invest()">Invest</button>
+            <div id="projectSection">
+                <h2>Project</h2>
+                <input type="text" id="fundingGoalInput" placeholder="Funding goal" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                <button id="createProjectButton" onclick="createProject()">Create Project</button> <br>
+    
+                <select id="ProjectIdInput" style="width: 600px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;"></select> <br>
+    
+                <button id="verifyButton" onclick="verifyProject()">Verify Project</button>
+                <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button> <br>
+                
+                <h2>Project interactions</h2>
+                <input type="text" id="amountInput" placeholder="Amount" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                <button id="investButton" onclick="invest()">Invest</button>
+            </div>
 
 
         </div>
@@ -140,11 +141,43 @@
     <script type="module" src="project.js"></script>
     <!-- <script type="module" src="apiClient.js"></script> -->
     <script>
+        document.getElementById('projectSection').style.display = 'none';
+
         const statusDiv = document.getElementById('status');
         function updateStatus(message) {
             console.log(message);
             statusDiv.textContent += `\n> ${message}`;
         }
+
+        const projectIdSelect = document.getElementById('ProjectIdInput');
+        async function populateProjectDropdown() {
+            try {
+                const response = await axios.get('http://localhost:5001/api/projects/ids');
+                const projects = response.data.data;
+                if (projects.length === 0) {
+                    const option = document.createElement('option');
+                    option.textContent = "No projects found";
+                    option.disabled = true;
+                    projectIdSelect.appendChild(option);
+                    return;
+                }
+
+                projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = `${project.title} (${project.id}): ${project.project_status}`;
+                    projectIdSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Failed to fetch projects:', error);
+                const option = document.createElement('option');
+                option.textContent = "Error loading projects";
+                option.disabled = true;
+                projectIdSelect.appendChild(option);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', populateProjectDropdown);
     </script>
 </body>
 </html>
