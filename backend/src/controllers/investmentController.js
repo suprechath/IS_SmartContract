@@ -37,18 +37,29 @@ export const investmentCheck = async (req, res) => {
 
         const totalContributions = await contract.totalContributions();
         const fundingGoal = await contract.fundingGoal();
-        const amountInWei = ethers.parseUnits(amount.toString(), 18);
+        const amountInWei = ethers.parseUnits(amount.toString(), 6);
         const remainingGoal = fundingGoal - totalContributions;
+        // console.log('remainingGoal:', ethers.formatUnits(remainingGoal, 6));
         if (amountInWei + totalContributions > fundingGoal) {
-            return handleResponse(res, 400, 'Investment amount exceeds the remaining funding goal., The maximum you can invest is ' + ethers.formatUnits(remainingGoal, 18) + ' tokens.');
+            return handleResponse(res, 400, 'Investment amount exceeds the remaining funding goal., The maximum you can invest is ' + ethers.formatUnits(remainingGoal, 6) + ' tokens.');
         }
         const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
+        // console.log('USDC_CONTRACT_ADDRESS:', USDC_CONTRACT_ADDRESS);
+        // console.log('amount', amountInWei);
 
-        handleResponse(res, 200, 'Investment is valid.', {
+        const unsignedTx = await contract.invest.populateTransaction(amountInWei);
+        handleResponse(res, 200, 'Investment is valid and unsigned transaction is provided.', {
+            unsignedTx,
             management_contract_address: project.management_contract_address,
             usdc_address: USDC_CONTRACT_ADDRESS,
             amount: amount.toString()
         });
+
+        // handleResponse(res, 200, 'Investment is valid.', {
+        //     management_contract_address: project.management_contract_address,
+        //     usdc_address: USDC_CONTRACT_ADDRESS,
+        //     amount: amount.toString()
+        // });
 
     } catch (error) {
         console.error('Prepare Investment Error:', error);

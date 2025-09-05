@@ -1,5 +1,7 @@
 const projectManagementResp = await fetch('../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectManagement = await projectManagementResp.json();
+const projectTokenResp = await fetch('../../contracts/artifacts/contracts/ProjectToken.sol/ProjectToken.json');
+const ProjectToken = await projectTokenResp.json();
 
 const API_BASE_URL = 'http://localhost:5001/api';
 const projectIdSelect = document.getElementById('ProjectIdInput');
@@ -82,7 +84,6 @@ const invest = async () => {
     const signer = await provider.getSigner();
     try {
         const signerAddress = await signer.getAddress();
-        console.log(projectIdSelect.value);
         const investResponse = await axios.post(`${API_BASE_URL}/investments/check`, {
             projectId: projectIdSelect.value,
             amount: amountInput
@@ -91,8 +92,20 @@ const invest = async () => {
                 Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
             }
         });
-        console.log("Invest response:", investResponse);
-        updateStatus(`Investment successful! Transaction Hash: ${investResponse.data.data.transaction_hash}`);
+        const { unsignedTx, management_contract_address, usdc_address, amount } = investResponse.data.data;
+
+        const usdcContract = new ethers.Contract(usdc_address, ProjectToken.abi, signer);
+        const amountInWei = ethers.parseUnits(amount.toString(), 6);
+        
+        updateStatus('Approving USDC spend...');
+        const approveTx = await usdcContract.approve(management_contract_address, amountInWei);
+        await approveTx.wait();
+        updateStatus('USDC spend approved.');
+
+        const tx = await signer.sendTransaction(unsignedTx);
+        await tx.wait();
+        updateStatus(`Investment successful! Transaction Hash: ${tx.hash}`);
+
     } catch (error) {
         console.error("Error during investment:", error);
         updateStatus(`Investment failed: ${error.response.data.message || error.message}`);

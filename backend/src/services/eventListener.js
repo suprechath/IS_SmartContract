@@ -31,7 +31,7 @@ async function handleInvestment(projectId, investorAddress, amount, event) {
     ✅ ---- Event Received: Invested ----
        - Project ID: ${projectId}
        - Investor: ${investorAddress}
-       - Amount: ${ethers.formatUnits(amount, 'ether')} USDC
+       - Amount: ${ethers.formatUnits(amount, 6)} USDC
        - Tx Hash: ${transactionHash}
     `);
 
@@ -57,11 +57,14 @@ async function handleInvestment(projectId, investorAddress, amount, event) {
         console.log(`[SUCCESS] Investment from ${investorAddress} for project ${projectId} recorded.`);
 
         const project = await projectModel.getOnchainProjectById(projectId);
-        const newTotal = BigInt(project.total_contributions || 0) + BigInt(amount.toString());
+        const newTotal = BigInt(project.total_contributions || 0) + BigInt(amount);
+        // console.log('amount:', amount);
+        // console.log('newTotal:', newTotal);
         await projectModel.updateProject(projectId, { total_contributions: newTotal.toString() }, {});
         console.log(`[SUCCESS] Project ${projectId} total contributions updated.`);
 
-        const fundingGoal = BigInt(project.funding_usdc_goal);
+        const fundingGoal = BigInt(ethers.parseUnits(project.funding_usdc_goal, 6));
+        // console.log('fundingGoal:', fundingGoal);
         if (newTotal >= fundingGoal) {
             console.log(`[INFO] Funding goal for project ${projectId} has been met.`);
             await projectModel.updateProject(projectId, { project_status: 'Succeeded' }, {});

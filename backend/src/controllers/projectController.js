@@ -144,6 +144,7 @@ export const prepareCreateProject = async (req, res) => {
         const creator = await userModel.getUserById(project.user_onchain_id);
         const creatorWallet = creator.wallet_address;
         const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
+        console.log('USDC_CONTRACT_ADDRESS:', USDC_CONTRACT_ADDRESS);
 
         const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
         const factoryContract = new ethers.Contract(factoryAddress, ProjectFactory.abi, provider);
@@ -152,7 +153,7 @@ export const prepareCreateProject = async (req, res) => {
             creator.wallet_address,
             project.title,
             project.id.substring(0, 4).toUpperCase(),
-            ethers.parseUnits(project.funding_usdc_goal.toString(), 18),
+            ethers.parseUnits(project.funding_usdc_goal.toString(), 6),
             project.funding_duration_second,
             USDC_CONTRACT_ADDRESS,
             project.platform_fee_percentage,

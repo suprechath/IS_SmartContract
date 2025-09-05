@@ -79,9 +79,10 @@ async function usdcContractDeployment() {
     const signer = await provider.getSigner();
     const signerAddress = await signer.getAddress();
     updateStatus(`User wallet address: ${signerAddress}`);
+    const USDC_DECIMALS = 6; 
 
     const USDC = new ethers.ContractFactory(ProjectToken.abi, ProjectToken.bytecode, signer);
-    const usdcContract = await USDC.deploy("USD Coin", "USDC", 1000000);
+    const usdcContract = await USDC.deploy("USD Coin", "USDC", ethers.parseUnits("2000000000", USDC_DECIMALS));
     updateStatus(`⏳ Transaction sent! Waiting for confirmation...<br>Tx Hash: ${usdcContract.deploymentTransaction().hash}`);
     await usdcContract.waitForDeployment();
     const usdcContractAddress = await usdcContract.getAddress();
@@ -90,17 +91,17 @@ async function usdcContractDeployment() {
     await deployedUSDC.connect(signer).setMinter(signerAddress);
     updateStatus(`Minter set to: ${signerAddress}`);
     await delay(3000);
-    await deployedUSDC.connect(signer).mint("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", 100000);
+    await deployedUSDC.connect(signer).mint("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", ethers.parseUnits("250000000", USDC_DECIMALS));
     await delay(2000);
-    await deployedUSDC.connect(signer).mint("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 100000);    
+    await deployedUSDC.connect(signer).mint("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", ethers.parseUnits("250000000", USDC_DECIMALS));    
     await delay(2000);
-    await deployedUSDC.connect(signer).mint("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", 100000);    
+    await deployedUSDC.connect(signer).mint("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", ethers.parseUnits("250000000", USDC_DECIMALS));    
     await delay(2000);
-    await deployedUSDC.connect(signer).mint("0x90F79bf6EB2c4f870365E785982E1f101E93b906", 100000);    
+    await deployedUSDC.connect(signer).mint("0x90F79bf6EB2c4f870365E785982E1f101E93b906", ethers.parseUnits("250000000", USDC_DECIMALS));    
     await delay(2000);
-    await deployedUSDC.connect(signer).mint("0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65", 100000);    
+    await deployedUSDC.connect(signer).mint("0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65", ethers.parseUnits("250000000", USDC_DECIMALS));    
     await delay(2000);
-    await deployedUSDC.connect(signer).mint("0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc", 100000);    
+    await deployedUSDC.connect(signer).mint("0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc", ethers.parseUnits("250000000", USDC_DECIMALS));    
     await delay(5000);
     updateStatus(`Minted ${await deployedUSDC.balanceOf("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")} USDC to deployer address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"`);
     updateStatus(`Minted ${await deployedUSDC.balanceOf("0x70997970C51812dc3A010C7d01b50e0d17dc79C8")} USDC to project creator`);

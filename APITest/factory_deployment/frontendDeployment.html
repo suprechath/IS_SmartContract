@@ -110,9 +110,10 @@
             </select>
             <button id="registerButton" onclick="register()">Register</button>
             <button id="checkButton" onclick="sanction()" disabled>Sanction</button>
+
             <div id="projectSection">
                 <h2>Project</h2>
-                <input type="text" id="fundingGoalInput" placeholder="Funding goal" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                <input type="text" id="fundingGoalInput" placeholder="Funding goal (USDC)" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                 <button id="createProjectButton" onclick="createProject()">Create Project</button> <br>
     
                 <select id="ProjectIdInput" style="width: 600px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;"></select> <br>
@@ -121,7 +122,7 @@
                 <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button> <br>
                 
                 <h2>Project interactions</h2>
-                <input type="text" id="amountInput" placeholder="Amount" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                <input type="text" id="amountInput" placeholder="Amount USDC" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                 <button id="investButton" onclick="invest()">Invest</button>
             </div>
 
