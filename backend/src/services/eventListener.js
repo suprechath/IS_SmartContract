@@ -12,6 +12,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectManagementArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectManagement = JSON.parse(fs.readFileSync(projectManagementArtifactPath, 'utf8'));
+const projectTokenArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectToken.sol/ProjectToken.json');
+const ProjectToken = JSON.parse(fs.readFileSync(projectTokenArtifactPath, 'utf8'));
 
 const WSS_URL = process.env.network_wss_url;
 const RECONNECT_DELAY = 5000; // 5 seconds
@@ -240,7 +242,7 @@ async function handleRefund(projectId, investorAddress, amount, event) {
 
 // --- Main Service Logic ---
 
-const attachListenersToContract = (project) => {
+const attachListenersToContract = async (project) => {
     const mgmtContractAddress = project.management_contract_address;
     const tokenContractAddress = project.token_contract_address;
 
@@ -249,7 +251,21 @@ const attachListenersToContract = (project) => {
     }
 
     if (!monitoredContracts.has(mgmtContractAddress)) {
+        // backfill
+        console.log(`➕ Discovered new project to monitor: ${project.title} (${mgmtContractAddress})`);
         const mgmtContract = new ethers.Contract(mgmtContractAddress, ProjectManagement.abi, provider);
+        const currentBlock = await provider.getBlockNumber();
+        // A block is ~2 seconds on Optimism, so 43200 blocks is ~24 hours.
+        const fromBlock = currentBlock - 43200 > 0 ? currentBlock - 43200 : 0;
+        console.log(`[Backfill] Querying past 'Invested' events for ${project.title} from block ${fromBlock} to ${currentBlock}`);
+        const pastInvestedEvents = await mgmtContract.queryFilter('Invested', fromBlock, 'latest');
+        for (const event of pastInvestedEvents) {
+            const [investor, amount] = event.args;
+            await handleInvestment(project.id, investor, amount, { log: event });
+        }
+        console.log(`[Backfill] Finished processing ${pastInvestedEvents.length} past 'Invested' events.`)
+
+        // const mgmtContract = new ethers.Contract(mgmtContractAddress, ProjectManagement.abi, provider);
         monitoredContracts.set(mgmtContractAddress, { contract: mgmtContract, project });
         console.log(`➕ Attaching Management listeners for project: ${project.title} (${mgmtContractAddress})`);
         mgmtContract.on('Invested', (investor, amount, event) => handleInvestment(project.id, investor, amount, event));
@@ -292,11 +308,9 @@ const stopServices = () => {
 
 const start = () => {
     console.log(`Attempting to connect to WebSocket provider at ${WSS_URL}...`);
-    provider = new ethers.WebSocketProvider(WSS_URL);
-
-    provider.on('open', () => {
-        
-        console.log('✅ WebSocket connection established.');
+    try {
+        provider = new ethers.WebSocketProvider(WSS_URL);
+        console.log('✅ WebSocket connection process initiated.');
         monitoredContracts.clear();
 
         findAndAttachToNewProjects();
@@ -308,20 +322,21 @@ const start = () => {
                 console.log(`💓 Health check OK. Current block: ${blockNumber}`);
             } catch (error) {
                 console.error('❗️ Health check failed, attempting to reconnect...');
-                provider.destroy();
+                if (provider.destroy) {
+                    provider.destroy();
+                }
             }
         }, HEALTH_CHECK_INTERVAL);
-    });
 
-    provider.on('error', (err) => {
-        console.error('A WebSocket provider error occurred:', err.message);
-    });
+        provider.on('error', (err) => {
+            console.error('A WebSocket provider error occurred:', err.message);
+        });
 
-    provider.on('close', (code, reason) => {
-        console.warn(`❗️ WebSocket connection closed. Code: ${code}, Reason: ${reason}. Attempting to reconnect in ${RECONNECT_DELAY / 1000}s...`);
-        stopServices();
+    } catch (connError) {
+        console.error('Initial connection failed:', connError.message);
+        console.log(`Retrying in ${RECONNECT_DELAY / 1000}s...`);
         setTimeout(start, RECONNECT_DELAY);
-    });
+    };
 };
 
 process.on('SIGINT', () => {
