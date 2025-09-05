@@ -1,10 +1,10 @@
 // import { ethers } from 'ethers';
 // import axios from 'axios';
-const projectTokenResp = await fetch('../../artifacts/contracts/ProjectToken.sol/ProjectToken.json');
+const projectTokenResp = await fetch('../../contracts/artifacts/contracts/ProjectToken.sol/ProjectToken.json');
 const ProjectToken = await projectTokenResp.json();
-const projectManagementResp = await fetch('../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const projectManagementResp = await fetch('../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectManagement = await projectManagementResp.json();
-const ProjectFactoryResp = await fetch('../../artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
+const ProjectFactoryResp = await fetch('../../contracts/artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
 const ProjectFactory = await ProjectFactoryResp.json();
 
 const API_BASE_URL = 'http://localhost:5001/api';
@@ -91,11 +91,16 @@ async function usdcContractDeployment() {
     updateStatus(`Minter set to: ${signerAddress}`);
     await delay(3000);
     await deployedUSDC.connect(signer).mint("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", 100000);
-    await deployedUSDC.connect(signer).mint("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 100000);
-    await deployedUSDC.connect(signer).mint("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", 100000);
-    await deployedUSDC.connect(signer).mint("0x90F79bf6EB2c4f870365E785982E1f101E93b906", 100000);
-    await deployedUSDC.connect(signer).mint("0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65", 100000);
-    await deployedUSDC.connect(signer).mint("0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc", 100000);
+    await delay(2000);
+    await deployedUSDC.connect(signer).mint("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 100000);    
+    await delay(2000);
+    await deployedUSDC.connect(signer).mint("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", 100000);    
+    await delay(2000);
+    await deployedUSDC.connect(signer).mint("0x90F79bf6EB2c4f870365E785982E1f101E93b906", 100000);    
+    await delay(2000);
+    await deployedUSDC.connect(signer).mint("0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65", 100000);    
+    await delay(2000);
+    await deployedUSDC.connect(signer).mint("0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc", 100000);    
     await delay(5000);
     updateStatus(`Minted ${await deployedUSDC.balanceOf("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")} USDC to deployer address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"`);
     updateStatus(`Minted ${await deployedUSDC.balanceOf("0x70997970C51812dc3A010C7d01b50e0d17dc79C8")} USDC to project creator`);

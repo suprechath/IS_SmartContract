@@ -25,6 +25,28 @@ services:
     networks:
       - postgres_network
 
+  # backend:
+  #   build: .
+  #   ports:
+  #     - "5001:5001"
+  #   environment:
+  #     - DB_USER=${DB_USER}
+  #     - DB_HOST=DB
+  #     - DB_DATABASE=${DB_DATABASE}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DB_DBPORT=${DB_DBPORT}
+  #     - PORT=${PORT}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - hardhat_rpc_url=${hardhat_rpc_url}
+  #     - network_wss_url=${network_wss_url}
+  #     - 'x-api-key=${x-api-key}'
+  #     - platformOperatorAddress=${platformOperatorAddress}
+  #   depends_on:
+  #     - DB
+  #   networks:
+  #     - postgres_network
+
+
 # Define the network for services to communicate
 networks:
   postgres_network:

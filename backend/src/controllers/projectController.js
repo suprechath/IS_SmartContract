@@ -177,7 +177,7 @@ export const onboard = async (req, res) => {
         if (project.user_onchain_id !== req.user.id) {
             return handleResponse(res, 403, 'You are not the creator of this project.');
         }
-        if (project.status !== 'Approved') {
+        if (project.project_status !== 'Approved') {
             return handleResponse(res, 400, `Project must be in 'Approved' status to be finalized.`);
         }
         if (project.management_contract_address || project.token_contract_address) {

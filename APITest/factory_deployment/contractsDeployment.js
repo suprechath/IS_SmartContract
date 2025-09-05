@@ -1,10 +1,10 @@
 // import { ethers } from 'ethers';
 // import axios from 'axios';
-const projectTokenResp = await fetch('../../artifacts/contracts/ProjectToken.sol/ProjectToken.json');
+const projectTokenResp = await fetch('../../contracts/artifacts/contracts/ProjectToken.sol/ProjectToken.json');
 const ProjectToken = await projectTokenResp.json();
-const projectManagementResp = await fetch('../../artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
+const projectManagementResp = await fetch('../../contracts/artifacts/contracts/ProjectManagement.sol/ProjectManagement.json');
 const ProjectManagement = await projectManagementResp.json();
-const ProjectFactoryResp = await fetch('../../artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
+const ProjectFactoryResp = await fetch('../../contracts/artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
 const ProjectFactory = await ProjectFactoryResp.json();
 
 const API_BASE_URL = 'http://localhost:5001/api';

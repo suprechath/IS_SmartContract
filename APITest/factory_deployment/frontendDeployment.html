@@ -15,12 +15,34 @@
             margin: 0;
             background-color: #f4f7f9;
         }
+        .main-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+            align-items: flex-start;
+        }
         .container {
             text-align: center;
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             background-color: white;
+            min-width: 600px;
+            max-width: 1000px;
+        }
+        .status-container {
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            min-width: 600px;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         h1 {
             color: #333;
@@ -65,33 +87,57 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             min-height: 100px;
-            max-width: 750px;
+            max-width: 500px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>One-time deploy</h1>
-        <button id="factoryButton" onclick="factoryContractDeployment()"> Deploy Factory contract</button>
-        <button id="usdcButton" onclick="usdcContractDeployment()"> Deploy USDC contract</button>
-        <h1>Deploy Project Contracts</h1>
-        <button id="loginButton" onclick="login()">Login with MetaMask</button>
-        <button id="logoutButton" onclick="logout()" disabled>Logout</button>
-        <p>Click the button below to start the deployment process.</p>
+    <div class="main-layout">
+        <div class="container">
+            <h2>One-time deploy</h2>
+            <button id="factoryButton" onclick="factoryContractDeployment()"> Deploy Factory contract</button>
+            <button id="usdcButton" onclick="usdcContractDeployment()"> Deploy USDC contract</button>
+            
+            <h2>Login</h2>
+            <button id="loginButton" onclick="login()">Login with MetaMask</button>
+            <button id="logoutButton" onclick="logout()" disabled>Logout</button>
 
-        <input type="text" id="onchainProjectIdInput" placeholder="Enter Project ID" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-        <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button>
-        <!-- <hr>
-        <input type="text" id="projectIdInput" placeholder="Enter Project ID" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-        <button id="deployButton" onclick="deployContracts()" disabled>Deploy contract (3 step)</button> -->
-        <!-- <button id="deployButton" onclick="deployManagementAndFinalize()">🚀 Deploy Now</button> -->
-        <div id="status">Deployment status will appear here...</div>
+            <h2>Register</h2>
+            <select id="roleDropdown" style="margin-bottom: 5px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                <option value="Project Creator">Project Creator</option>
+                <option value="Investor">Investor</option>
+            </select>
+            <button id="registerButton" onclick="register()">Register</button>
+            <button id="checkButton" onclick="sanction()" disabled>Sanction</button>
+            
+            <h2>Project</h2>
+            <input type="text" id="fundingGoalInput" placeholder="Funding goal" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+            <button id="createProjectButton" onclick="createProject()">Create Project</button>
+            <input type="text" id="projectIdInput" placeholder="Verify project ID" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+            <button id="verifyButton" onclick="verifyProject()">Verify Project</button>
+            
+            <h2>Deploy Project Contracts</h2>
+            <input type="text" id="onchainProjectIdInput" placeholder="Enter Project ID" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+            <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button>
+
+            <h2>Project interactions</h2>
+            <input type="text" id="amountInput" placeholder="Amount" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+            <button id="investButton" onclick="invest()">Invest</button>
+
+
+        </div>
+        <div class="status-container">
+            <h2>Status</h2>
+            <div id="status">Deployment status will appear here...</div>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="module" src="contractsDeployment.js"></script>
     <script type="module" src="logIn.js"></script>
     <script type="module" src="oneTimeDeployment.js"></script>
+    <script type="module" src="register.js"></script>
+    <script type="module" src="project.js"></script>
     <!-- <script type="module" src="apiClient.js"></script> -->
     <script>
         const statusDiv = document.getElementById('status');
