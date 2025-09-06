@@ -9,7 +9,7 @@
     "dev:listener": "nodemon ./src/services/eventListener.js",
     "start:listener": "node ./src/services/eventListener.js",
     "dev:keeper": "nodemon ./src/services/keeper.js",
-    "start:keeper": "nodemon ./src/services/keeper.js",
+    "start:keeper": "node ./src/services/keeper.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
