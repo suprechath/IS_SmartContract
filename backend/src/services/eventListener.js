@@ -175,6 +175,11 @@ async function handleRewardDeposited(projectId, totalAmount, platformFee, event)
        - Tx Hash: ${transactionHash}
     `);
     try {
+        const existingTx = await transactionModel.getTransactionByTxHash(transactionHash);
+        if (existingTx) {
+            console.log(`[INFO] Transaction ${transactionHash} already recorded. Skipping.`);
+            return;
+        }
         const project = await projectModel.getOnchainProjectById(projectId);
         if (!project) {
             console.error(`[ERROR] Project ${projectId} not found for reward deposit event.`);
@@ -274,6 +279,12 @@ const attachListenersToContract = async (project) => {
             await handleInvestment(project.id, investor, amount, { log: event });
         }
         console.log(`[Backfill] Finished processing ${pastInvestedEvents.length} past 'Invested' events.`)
+        const pastDepositEvents = await mgmtContract.queryFilter('RewardDeposited', fromBlock, 'latest');
+        for (const event of pastDepositEvents) {
+            const [totalAmount, platformFee] = event.args;
+            await handleRewardDeposited(project.id, totalAmount, platformFee, { log: event });
+        }
+        console.log(`[Backfill] Finished processing ${pastDepositEvents.length} past 'Deposit' events.`)
 
         // const mgmtContract = new ethers.Contract(mgmtContractAddress, ProjectManagement.abi, provider);
         monitoredContracts.set(mgmtContractAddress, { contract: mgmtContract, project });

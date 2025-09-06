@@ -17,7 +17,7 @@ router.get('/id/:projectId', protect(), getProjectById); //GET /api/projects/id/
 router.get('/my', protect('Project Creator'), getMyProjects); //GET /api/projects/my
 router.patch('/id/:projectId', protect('Project Creator'), validate(updateProjectSchema), updateProject); //PATCH /api/projects/id/:projectId
 router.get('/ids', getProjectIds);//mock for projectId select in frontend
-router.get('/onchain/id/:projectId', protect(), getOnchainProjectIds);//mock for projectId select in frontend
+router.get('/onchain/id/:projectId', protect(), getOnchainProjectIds);//mock helper for onchain projectId select in frontend
 
 router.post('/deploy/onchain', protect('Project Creator'), validate(prepareOnchainDeploymentSchema), prepareCreateProject); // POST /api/projects/deploy/onchain
 router.post('/deploy/onboard', protect('Project Creator'), validate(onboardSchema), onboard); // POST /api/projects/deploy/onboard

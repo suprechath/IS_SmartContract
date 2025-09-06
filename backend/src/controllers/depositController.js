@@ -29,13 +29,13 @@ export const prepareDeposit = async (req, res) => {
 
         const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
         const contract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
-        const amountInWei = ethers.parseUnits(amount.toString(), 'ether');
+        const amountInWei = ethers.parseUnits(amount.toString(), 6);
         const unsignedTx = await contract.depositReward.populateTransaction(amountInWei);
         handleResponse(res, 200, 'Reward deposit transaction prepared successfully.', {
             unsignedTx,
-            usdcContractAddress: project.usdc_contract_address,
-            managementContractAddress: project.management_contract_address,
-            amountToApprove: amountInWei.toString()
+            management_contract_address: project.management_contract_address,
+            usdc_address: project.usdc_contract_address,
+            amount: amount.toString()
         });
 
     } catch (error) {

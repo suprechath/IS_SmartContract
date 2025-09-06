@@ -170,8 +170,90 @@ const withdrawal = async () => {
         updateStatus(`Withdrawal failed: ${error.message}`);
     }
 };
+
+const deposit = async () => {
+    updateStatus('Depositing USDC to wallet...');
+    const depositInput = document.getElementById('depositInput').value;
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    try {
+        const depositRes = await axios.post(`${API_BASE_URL}/deposits`, {
+            projectId: projectIdSelect.value,
+            amount: depositInput
+        }, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+        console.log("Deposit config:", depositRes);
+        const { unsignedTx, management_contract_address, usdc_address, amount } = depositRes.data.data;
+        const usdcContract = new ethers.Contract(usdc_address, ProjectToken.abi, signer);
+        const amountInWei = ethers.parseUnits(amount.toString(), 6);
+
+        updateStatus('Approving USDC spend...');
+        const approveTx = await usdcContract.approve(management_contract_address, amountInWei);
+        await approveTx.wait();
+        updateStatus('USDC spend approved.');
+
+        const tx = await signer.sendTransaction(unsignedTx);
+        await tx.wait();
+        updateStatus(`Deposit successful! Transaction Hash: ${tx.hash}`);
+    } catch (error) {
+        console.error("Error during deposit:", error);
+        updateStatus(`Deposit failed: ${error.message}`);
+    }
+};
+
+const reward = async () => {
+    updateStatus('Depositing reward to backers...');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    try {
+        const projectRes = await axios.get(`${API_BASE_URL}/projects/onchain/id/${projectIdSelect.value}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+        const signerAddress = await signer.getAddress();
+        const mgmtContract = new ethers.Contract(projectRes.data.data.management_contract_address, ProjectManagement.abi, signer);
+        const rewardTx = await mgmtContract.claimReward();
+        rewardTx.wait();
+        updateStatus(`Reward deposit successful! Transaction Hash: ${rewardTx.hash}`);
+    } catch (error) {
+        console.error("Error during reward deposit:", error);
+        updateStatus(`Reward deposit failed: ${error.message}`);
+    }
+};
+
+const refund = async () => {
+    updateStatus('Claiming refund from project...');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    try {
+        const projectRes = await axios.get(`${API_BASE_URL}/projects/onchain/id/${projectIdSelect.value}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+        const signerAddress = await signer.getAddress();
+        const mgmtContract = new ethers.Contract(projectRes.data.data.management_contract_address, ProjectManagement.abi, signer);
+        const refundTx = await mgmtContract.claimRefund();
+        await refundTx.wait();
+        updateStatus(`Refund successful! Transaction Hash: ${refundTx.hash}`);
+    } catch (error) {
+        console.error("Error during refund:", error);
+        updateStatus(`Refund failed: ${error.message}`);
+    }
+};
+
 window.withdrawal = withdrawal;
 window.verifyProject = verifyProject;
 window.createProject = createProject;
 window.invest = invest;
 window.mintToken = mintToken;
+window.deposit = deposit;
+window.reward = reward;
+window.refund = refund;
