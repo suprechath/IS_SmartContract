@@ -40,10 +40,11 @@
             background-color: white;
             min-width: 600px;
             max-width: 1000px;
-            max-height: 2000px;
+            max-height: 1000px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-y: auto;
         }
         h1 {
             color: #333;
@@ -89,6 +90,8 @@
             word-wrap: break-word;
             min-height: 100px;
             max-width: 500px;
+            max-height: 700px;
+            overflow-y: auto;  
         }
     </style>
 </head>
@@ -113,17 +116,21 @@
 
             <div id="projectSection">
                 <h2>Project</h2>
-                <input type="text" id="fundingGoalInput" placeholder="Funding goal (USDC)" style="width: 200px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                <input type="text" id="fundingGoalInput" placeholder="Funding goal (USDC)" style="width: 150px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                <input type="text" id="durationInput" placeholder="Duration in Second" style="width: 150px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                 <button id="createProjectButton" onclick="createProject()">Create Project</button> <br>
     
                 <select id="ProjectIdInput" style="width: 600px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;"></select> <br>
     
                 <button id="verifyButton" onclick="verifyProject()">Verify Project</button>
-                <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button> <br>
+                <button id="onchainDeployButton" onclick="onchainDeployContracts()" disabled>Onchain Deploy contract</button> 
+                <button onclick="allTokenCheck()">My all token balance</button><br>
                 
                 <h2>Project interactions</h2>
                 <input type="text" id="amountInput" placeholder="Amount USDC" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                 <button id="investButton" onclick="invest()">Invest</button>
+                <button id="mintButton" onclick="mintToken()">Token minting</button>
+                <button id="withdrawalButton" onclick="withdrawal()">Fund withdrawal</button>
             </div>
 
 
@@ -140,6 +147,7 @@
     <script type="module" src="oneTimeDeployment.js"></script>
     <script type="module" src="register.js"></script>
     <script type="module" src="project.js"></script>
+    <script type="module" src="assetCheck.js"></script>
     <!-- <script type="module" src="apiClient.js"></script> -->
     <script>
         document.getElementById('projectSection').style.display = 'none';

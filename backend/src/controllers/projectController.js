@@ -248,5 +248,15 @@ export const getProjectIds = async (req, res) => {
     }
 };
 
+// @route   GET /api/projects/ids
+export const getOnchainProjectIds = async (req, res) => {
+    try {
+        const projects = await projectModel.getOnchainProjectById(req.params.projectId);
+        handleResponse(res, 200, 'Project onchain table retrieved successfully', projects);
+    } catch (error) {
+        console.error('Get Project IDs Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving project IDs.', error.message);
+    }
+};
 
 

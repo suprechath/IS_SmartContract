@@ -13,6 +13,7 @@ function randomString(length) {
 const createProject = async () => {
     updateStatus('Creating project...');
     const fundingGoal = document.getElementById('fundingGoalInput').value;
+    const durationInput = document.getElementById('durationInput').value;
     try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
@@ -37,7 +38,7 @@ const createProject = async () => {
                 "https://example.com/docs/auditor-verification.pdf"
             ],
             funding_USDC_goal: fundingGoal,
-            funding_duration_second: 3600,
+            funding_duration_second: durationInput,
             platform_fee_percentage: 500,
             reward_fee_percentage: 300
         }, {
@@ -112,6 +113,65 @@ const invest = async () => {
     }
 };
 
+const mintToken = async () => {
+    updateStatus('Minting project tokens...');
+    const selectedProjectId = projectIdSelect.value;
+    const batchLimit = 2; // As specified in your previous code
+    if (!selectedProjectId) {
+        updateStatus("Please select a project.");
+        return;
+    }
+
+    try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = await provider.getSigner();
+        updateStatus(`Requesting unsigned transaction for project ID: ${selectedProjectId} with batch limit: ${batchLimit}...`);     
+        const prepMintResponse = await axios.post(`${API_BASE_URL}/projects/mint/prepare`, {
+            projectId: selectedProjectId,
+            batchLimit: batchLimit
+        }, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+        const { unsignedTx } = prepMintResponse.data.data;
+        updateStatus('Unsigned transaction received from backend.');
+        updateStatus('Please confirm the minting transaction in your wallet...');
+        const mintTx = await signer.sendTransaction(unsignedTx);
+        updateStatus(`Transaction sent! Waiting for confirmation... Hash: ${mintTx.hash}`);
+        await mintTx.wait();
+        updateStatus(`Token minting successful! Transaction Hash: ${mintTx.hash}`);
+    } catch (error) {
+        console.error("Error during token minting:", error);
+        const errorMsg = error.response ? error.response.data.message : (error.reason || error.message);
+        updateStatus(`Token minting failed: ${errorMsg}`);
+    }
+};
+
+const withdrawal = async () => {
+    updateStatus('Withdrawing funds from project...');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    try {
+        const projectRes = await axios.get(`${API_BASE_URL}/projects/onchain/id/${projectIdSelect.value}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+        const signerAddress = await signer.getAddress();
+        const mgmtContract = new ethers.Contract(projectRes.data.data.management_contract_address, ProjectManagement.abi, signer);
+        const withdrawTx = await mgmtContract.withdrawFunds();
+        await withdrawTx.wait();
+        updateStatus(`Withdrawal successful! Transaction Hash: ${withdrawTx.hash}`);
+    } catch (error) {
+        console.error("Error during withdrawal:", error);
+        updateStatus(`Withdrawal failed: ${error.message}`);
+    }
+};
+window.withdrawal = withdrawal;
 window.verifyProject = verifyProject;
 window.createProject = createProject;
 window.invest = invest;
+window.mintToken = mintToken;

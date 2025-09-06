@@ -62,11 +62,14 @@ async function handleInvestment(projectId, investorAddress, amount, event) {
         // console.log('newTotal:', newTotal);
         await projectModel.updateProject(projectId, { total_contributions: newTotal.toString() }, {});
         console.log(`[SUCCESS] Project ${projectId} total contributions updated.`);
+        // const mgmtContract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+        // console.log(`[INFO] Onchain total contribution: ${await mgmtContract.totalContributions()}`);
 
         const fundingGoal = BigInt(ethers.parseUnits(project.funding_usdc_goal, 6));
         // console.log('fundingGoal:', fundingGoal);
         if (newTotal >= fundingGoal) {
             console.log(`[INFO] Funding goal for project ${projectId} has been met.`);
+            // console.log(`[INFO] Onchain project status: ${await mgmtContract.currentState()}`);
             await projectModel.updateProject(projectId, { project_status: 'Succeeded' }, {});
             console.log(`[SUCCESS] Project ${projectId} status updated to 'Succeeded'.`);
         }
@@ -85,7 +88,7 @@ async function handleTokenMinted(projectId, from, to, amount, event) {
     ✅ ---- Event Received: Token Minted (Transfer from 0x0) ----
        - Project ID: ${projectId}
        - Recipient: ${to}
-       - Amount: ${ethers.formatUnits(amount, 'ether')} tokens
+       - Amount: ${ethers.formatUnits(amount, 6)} tokens
        - Tx Hash: ${transactionHash}
     `);
 
@@ -95,14 +98,14 @@ async function handleTokenMinted(projectId, from, to, amount, event) {
             console.error(`[ERROR] Project with ID ${projectId} not found for mint event.`);
             return;
         }
-        const currentMintedSupply = BigInt(project.total_minted_token || 0);
+        const currentMintedSupply = BigInt(project.token_total_supply || 0);
         const newMintedSupply = currentMintedSupply + BigInt(amount.toString());
 
         await projectModel.updateProject(projectId, {
-            total_minted_token: newMintedSupply.toString()
+            token_total_supply: newMintedSupply.toString()
         }, {});
 
-        console.log(`[SUCCESS] Project ${projectId} total minted supply updated to: ${ethers.formatUnits(newMintedSupply.toString(), 'ether')}`);
+        console.log(`[SUCCESS] Project ${projectId} total minted supply updated to: ${ethers.formatUnits(newMintedSupply.toString(), 6)}`);
     } catch (dbError) {
         console.error(`[DB_ERROR] Failed to update minted supply for project ${projectId}:`, dbError);
     }
@@ -112,10 +115,14 @@ async function handleAllTokensMinted(projectId, totalAmount, event) {
     console.log(`
     ✅ ---- Event Received: All TokensMinted ----
        - Project ID: ${projectId}
-       - Total Supply: ${ethers.formatUnits(totalAmount, 'ether')} tokens
+       - Total Supply: ${ethers.formatUnits(totalAmount, 6)} tokens
        - Tx Hash: ${event.log.transactionHash}
     `);
     try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        const mgmtContract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+        console.log(`[INFO] Onchain project status: ${await mgmtContract.currentState()}`);
+
         await projectModel.updateProject(projectId, {
             project_status: 'Active',
             tokens_minted: true,
@@ -132,8 +139,8 @@ async function handleFundsWithdrawn(projectId, creatorAmount, platformFee, event
     console.log(`
     ✅ ---- Event Received: FundsWithdrawn ----
        - Project ID: ${projectId}
-       - Creator Amount: ${ethers.formatUnits(creatorAmount, 'ether')} USDC
-       - Platform Fee: ${ethers.formatUnits(platformFee, 'ether')} USDC
+       - Creator Amount: ${ethers.formatUnits(creatorAmount, 6)} USDC
+       - Platform Fee: ${ethers.formatUnits(platformFee, 6)} USDC
        - Tx Hash: ${transactionHash}
     `);
     try {
@@ -163,8 +170,8 @@ async function handleRewardDeposited(projectId, totalAmount, platformFee, event)
     console.log(`
     ✅ ---- Event Received: RewardDeposited ----
        - Project ID: ${projectId}
-       - Net Reward Amount: ${ethers.formatUnits(totalAmount, 'ether')} USDC
-       - Platform Fee: ${ethers.formatUnits(platformFee, 'ether')} USDC
+       - Net Reward Amount: ${ethers.formatUnits(totalAmount, 6)} USDC
+       - Platform Fee: ${ethers.formatUnits(platformFee, 6)} USDC
        - Tx Hash: ${transactionHash}
     `);
     try {
@@ -193,7 +200,7 @@ async function handleRewardClaimed(projectId, investorAddress, amount, event) {
     ✅ ---- Event Received: RewardClaimed ----
        - Project ID: ${projectId}
        - Investor: ${investorAddress}
-       - Amount Claimed: ${ethers.formatUnits(amount, 'ether')} USDC
+       - Amount Claimed: ${ethers.formatUnits(amount, 6)} USDC
        - Tx Hash: ${transactionHash}
     `);
     try {
@@ -221,7 +228,7 @@ async function handleRefund(projectId, investorAddress, amount, event) {
     ✅ ---- Event Received: Refunded ----
        - Project ID: ${projectId}
        - Investor: ${investorAddress}
-       - Amount Refunded: ${ethers.formatUnits(amount, 'ether')} USDC
+       - Amount Refunded: ${ethers.formatUnits(amount, 6)} USDC
        - Tx Hash: ${transactionHash}
     `);
     try {
