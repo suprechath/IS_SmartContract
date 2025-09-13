@@ -1,6 +1,9 @@
 node_modules
 .env
 # apiTest
+Roitai
+UI_Mock
+commeff_frontend
 
 # backend
 backend/node_modules
