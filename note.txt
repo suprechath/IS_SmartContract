@@ -1,0 +1,94 @@
+commefficient-frontend/
+├── .next/                   
+├── public/                  
+│   ├── images/
+│   └── fonts/
+├── src/                     
+│   ├── app/                 # ROOT ROUTING & LAYOUTS (Kept minimal)
+│   │   ├── (main)/          # Main route group for core user-facing pages
+│   │   │   ├── projects/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [projectId]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx # Will redirect to investor or creator
+│   │   │   ├── admin/
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── layout.tsx       # Root layout (providers, global styles)
+│   │   └── page.tsx         # Homepage
+│   ├── components/          # SHARED & REUSABLE UI ONLY
+│   │   └── ui/              # The "Lego Bricks": Button, Card, Input, Modal etc.
+│   ├── features/            # <-- THE CORE OF THE NEW STRUCTURE
+│   │   ├── auth/            # Authentication feature
+│   │   │   ├── components/
+│   │   │   │   └── WalletConnectButton.tsx
+│   │   │   └── hooks/
+│   │   │       └── useAuth.ts
+│   │   ├── projects/        # All project-related logic
+│   │   │   ├── components/
+│   │   │   │   ├── ProjectCard.tsx
+│   │   │   │   ├── ProjectList.tsx
+│   │   │   │   └── InvestModal.tsx
+│   │   │   ├── hooks/
+│   │   │   │   └── useProject.ts
+│   │   │   └── types/
+│   │   │       └── index.ts
+│   │   ├── dashboard/       # Investor & Creator dashboard features
+│   │   │   ├── components/
+│   │   │   │   ├── PortfolioView.tsx
+│   │   │   │   └── RewardClaim.tsx
+│   │   │   └── services/
+│   │   │       └── getDashboardData.ts
+│   │   └── admin/           # Admin-specific features
+│   │       ├── components/
+│   │       │   └── ProjectVettingTable.tsx
+│   │       └── hooks/
+│   │           └── useAdminActions.ts
+│   ├── lib/                 # Core libraries & utilities
+│   │   ├── api.ts           # Central API client (axios instance)
+│   │   ├── utils.ts         # General helper functions (formatting, etc.)
+│   │   └── web3/            # Centralized Web3 setup
+│   │       ├── contracts/   # ABIs and addresses
+│   │       ├── wagmi.ts     # wagmi/viem config
+│   │       └── chains.ts    # Chain definitions
+│   ├── contexts/            # Global contexts
+│   │   └── Web3Provider.tsx # Manages global web3 state
+│   └── styles/              # Global styles
+│       └── globals.css
+├── .env.local               
+├── next.config.mjs          
+├── package.json             
+└── tsconfig.json            
+
+
+
+Key Changes and Benefits of This Structure
+Introducing the src/features/ Directory: This is the most significant change. Instead of grouping files by type (components, hooks, services), we now group them by feature. When you work on the "project details" page, almost everything you need—the components, hooks, and types for that feature—is located inside src/features/projects/.
+
+Simplified src/components/ Directory: Your concern about the complexity in components is directly addressed. This folder is now radically simplified. It only holds globally reusable, generic UI components (your "Lego Bricks"). It has no business logic. This makes it very clear what is a shared element versus a feature-specific one.
+
+Colocation of Logic: The logic is now "colocated" with the view layer that uses it. The useProject.ts hook, which is only ever used for project-related components, now lives right next to them in src/features/projects/hooks/. This makes your code much easier to navigate and understand.
+
+Clear Boundaries: This structure creates clear boundaries between different parts of your application. The auth feature doesn't need to know about the internals of the dashboard feature. This reduces complexity and makes the codebase easier to reason about, especially as your team grows.
+
+Scalability: This is the biggest win. When you add a new major feature, like a secondary marketplace for tokens, you simply add a new folder 
+
+src/features/marketplace/. You can build out this entire feature in a self-contained module without cluttering the rest of the codebase.
+
+This feature-based architecture is the gold standard for building robust, scalable frontend applications and is perfectly suited for the complexity of a web3 platform like CommEfficient.
+
+
+What's Next:
+
+Build UI Components: Start creating your generic "Lego brick" components in src/components/ui/ (like Card, Header, Footer).
+
+Fetch Projects: Create an API client in src/lib/api.ts to fetch project data from your backend and start building the src/app/projects/page.tsx discovery page.
+
+Contract Interaction: Begin creating hooks like useProjectContract.ts to read data (e.g., fundingGoal, totalContributions) from your smart contracts.
+
+
+
+
+
+
