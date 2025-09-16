@@ -5,6 +5,8 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { Wallet } from 'lucide-react';
 
+const baseButtonStyles =
+  'inline-flex items-center justify-center w-48 h-9 rounded-md px-4 font-semibold shadow-lg transition-all duration-200';
 
 export function WalletConnectButton() {
   const { address, isConnected } = useAccount();
@@ -17,7 +19,7 @@ export function WalletConnectButton() {
         {/* <p>Connected: {address?.slice(0, 6)}...{address?.slice(-4)}</p> */}
         <button
           onClick={() => disconnect()}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-1000"
+          className={`${baseButtonStyles} bg-red-500 text-white hover:bg-red-600`}
         >
           Disconnect
         </button>
@@ -28,7 +30,7 @@ export function WalletConnectButton() {
   return (
     <button
       onClick={() => connect({ connector: injected() })}
-      className="bg-[linear-gradient(135deg,_hsl(158,64%,25%),_hsl(158,45%,45%))] text-zinc-50 hover:scale-105 transition-bounce font-semibold shadow-lg h-9 rounded-md px-3 inline-flex items-center"
+      className={`${baseButtonStyles} bg-[linear-gradient(135deg,_hsl(158,64%,25%),_hsl(158,45%,45%))] text-zinc-50 hover:scale-105`}
     >
       <Wallet className="mr-2" size={25} />
       Connect Wallet

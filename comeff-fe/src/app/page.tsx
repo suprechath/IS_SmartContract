@@ -13,7 +13,6 @@ export default function Home() {
         <p className="text-lg text-gray-600 mb-8">
           Invest in a sustainable future. Fund verified energy efficiency projects.
         </p>
-        <WalletConnectButton />
       </div>
     </main>
   );
