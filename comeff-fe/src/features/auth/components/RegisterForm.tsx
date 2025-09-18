@@ -1,20 +1,25 @@
-import { useState } from "react";
+'use client';
+import React, { useState, useEffect } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { injected } from "wagmi/connectors";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarIcon, Users, Building2, ArrowLeft, ArrowRight, Check, Wallet } from "lucide-react";
+import { CalendarIcon, Users, Building2, ArrowLeft, ArrowRight, Check, Wallet, Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const Register = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedRole, setSelectedRole] = useState<"investor" | "creator" | null>(null);
-  const [walletConnected, setWalletConnected] = useState(false);
+  const { address, isConnected, isConnecting } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -23,22 +28,20 @@ const Register = () => {
     idNumber: "",
     agreedToTerms: false,
   });
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedRole, setSelectedRole] = useState<"investor" | "creator" | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleRoleSelect = (role: "investor" | "creator") => {
     setSelectedRole(role);
   };
 
-  const handleWalletConnect = () => {
-    // Mock wallet connection
-    setWalletConnected(true);
-  };
-
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const canProceedFromStep1 = selectedRole && walletConnected;
+  const canProceedFromStep1 = selectedRole && address;
   const canProceedFromStep2 = formData.fullName && formData.email && formData.dateOfBirth && formData.address && formData.idNumber;
   const canSubmit = canProceedFromStep2 && formData.agreedToTerms;
 
@@ -78,14 +81,13 @@ const Register = () => {
             </div>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-10">
         <div className="max-w-4xl mx-auto">
           {/* Progress Indicator */}
           <div className="flex items-center justify-center mb-8">
@@ -93,7 +95,7 @@ const Register = () => {
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center">
                   <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                    "w-10 h-10 rounded-full flex items-center justify-center text-lg font-medium transition-colors",
                     currentStep >= step
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"
@@ -102,7 +104,7 @@ const Register = () => {
                   </div>
                   {step < 3 && (
                     <div className={cn(
-                      "w-16 h-0.5 mx-2 transition-colors",
+                      "w-16 h-1 mx-2 transition-colors round",
                       currentStep > step ? "bg-primary" : "bg-muted"
                     )} />
                   )}
@@ -111,53 +113,53 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Create Your Account</h1>
-            <p className="text-muted-foreground">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-emerald-900 mb-2">Create Your Account</h1>
+            <p className="text-emerald-700">
               {currentStep === 1 && "Choose your role and connect your wallet"}
               {currentStep === 2 && "Enter your personal information"}
               {currentStep === 3 && "Review and accept terms"}
             </p>
           </div>
 
-          <Card className="shadow-elegant">
-            <CardContent className="p-8">
+          <Card className="shadow-xl">
+            <CardContent className="p-4">
               {/* Step 1: Role Selection & Wallet Connection */}
               {currentStep === 1 && (
                 <div className="space-y-8">
                   <div>
-                    <h2 className="text-xl font-semibold mb-6 text-center">Select Your Role</h2>
+                    <h2 className="text-xl font-bold mb-6 text-center text-emerald-900">Select Your Role</h2>
                     <div className="grid md:grid-cols-2 gap-6">
                       <Card
                         className={cn(
-                          "cursor-pointer transition-all duration-200 hover:shadow-md",
+                          "cursor-pointer transition-all duration-200 hover:shadow-2xl",
                           selectedRole === "investor" ? "ring-2 ring-primary bg-primary/5" : ""
                         )}
                         onClick={() => handleRoleSelect("investor")}
                       >
-                        <CardContent className="p-6 text-center">
-                          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Users className="h-8 w-8 text-primary" />
+                        <CardContent className="p-2 text-center">
+                          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Users className="h-10 w-10 text-primary" />
                           </div>
-                          <h3 className="text-lg font-semibold mb-2">I am an Investor</h3>
+                          <h3 className="text-lg font-semibold mb-2 text-emerald-950">I am an Investor</h3>
                           <p className="text-muted-foreground text-sm">
-                            Browse and invest in vetted energy efficiency projects.
+                            Browse and invest in vetted energy projects.
                           </p>
                         </CardContent>
                       </Card>
 
                       <Card
                         className={cn(
-                          "cursor-pointer transition-all duration-200 hover:shadow-md",
+                          "cursor-pointer transition-all duration-200 hover:shadow-2xl",
                           selectedRole === "creator" ? "ring-2 ring-primary bg-primary/5" : ""
                         )}
                         onClick={() => handleRoleSelect("creator")}
                       >
-                        <CardContent className="p-6 text-center">
-                          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Building2 className="h-8 w-8 text-primary" />
+                        <CardContent className="p-2 text-center">
+                          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Building2 className="h-10 w-10 text-primary" />
                           </div>
-                          <h3 className="text-lg font-semibold mb-2">I am a Project Creator</h3>
+                          <h3 className="text-lg font-semibold mb-2 text-emerald-950">I am a Project Creator</h3>
                           <p className="text-muted-foreground text-sm">
                             Raise capital for your energy efficiency upgrades.
                           </p>
@@ -168,21 +170,21 @@ const Register = () => {
 
                   {selectedRole && (
                     <div className="text-center space-y-4">
-                      <h3 className="text-lg font-semibold">Connect Your Wallet</h3>
-                      {!walletConnected ? (
+                      <h3 className="text-lg font-semibold">Connect Your Wallet </h3>
+                      {!isConnected ? (
                         <Button
-                          onClick={handleWalletConnect}
+                          onClick={() => { connect({ connector: injected() }); }}
                           size="lg"
-                          className="w-full sm:w-auto"
+                          className="w-auto"
                         >
-                          <Wallet className="mr-2 h-5 w-5" />
+                          <Wallet className="mr-2 w-5 h-5" />
                           Connect Your Wallet
                         </Button>
                       ) : (
-                        <div className="bg-success/10 border border-success/20 rounded-lg p-4">
+                        <div className="bg-success/10 border border-success border-2 rounded-lg p-4">
                           <div className="flex items-center justify-center text-success">
-                            <Check className="mr-2 h-5 w-5" />
-                            <span className="font-medium">Wallet Connected: 0x123...abc</span>
+                            <Check className="mr-2 h-7 w-7" />
+                            <span className="font-medium">Wallet Connected: {address?.slice(0, 6)}...{address?.slice(-4)}</span>
                           </div>
                         </div>
                       )}
@@ -233,7 +235,7 @@ const Register = () => {
                             {formData.dateOfBirth ? format(formData.dateOfBirth, "PPP") : "Pick a date"}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-64 p-0" align="start">
                           <Calendar
                             mode="single"
                             selected={formData.dateOfBirth}
@@ -285,16 +287,19 @@ const Register = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-center space-x-3">
                     <Checkbox
                       id="terms"
                       checked={formData.agreedToTerms}
                       onCheckedChange={(checked) => handleInputChange("agreedToTerms", checked)}
                     />
                     <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                      I agree to the <a href="#" className="text-primary hover:underline">CommEfficient Terms of Service</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>. I understand that identity verification is required before I can use the platform.
+                      I agree to the <a href="#" className="text-primary hover:underline">CommEfficient Terms of Service</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>
                     </Label>
                   </div>
+                  <p className="text-sm">
+                    I understand that identity verification is required before I can use the platform.
+                  </p>
 
                   <Button
                     onClick={handleSubmit}
