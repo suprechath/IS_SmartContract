@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { format } from "date-fns";
+import { useRouter } from 'next/navigation'; 
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarIcon, Users, Building2, ArrowLeft, ArrowRight, Check, Wallet } from "lucide-react";
+import { CalendarIcon, Users, Building2, ArrowLeft, ArrowRight, Check, Wallet, Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -20,6 +21,7 @@ import RegistrationPending from './RegistrationPending';
 
 
 const Register = () => {
+  const router = useRouter(); 
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { register, isLoading, error } = useAuth();
@@ -28,16 +30,16 @@ const Register = () => {
     fullName: "",
     email: "",
     dateOfBirth: undefined as Date | undefined,
-    address: "",
+    physicalAddress: "",
     idNumber: "",
     agreedToTerms: false,
   });
 
+  
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedRole, setSelectedRole] = useState<"investor" | "creator" | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<"Investor" | "Project Creator" | null>(null);
 
-  const handleRoleSelect = (role: "investor" | "creator") => {
+  const handleRoleSelect = (role: "Investor " | "Project Creator") => {
     setSelectedRole(role);
   };
 
@@ -46,70 +48,32 @@ const Register = () => {
   };
 
   const canProceedFromStep1 = selectedRole && address;
-  const canProceedFromStep2 = formData.fullName && formData.email && formData.dateOfBirth && formData.address && formData.idNumber;
+  const canProceedFromStep2 = formData.fullName && formData.email && formData.dateOfBirth && formData.physicalAddress && formData.idNumber;
   const canSubmit = canProceedFromStep2 && formData.agreedToTerms;
 
   const handleSubmit = async () => {
     if (!canSubmit || !selectedRole || !address) return;
 
     const registrationData = {
-      fullName: formData.fullName,
+      full_Name: formData.fullName,
+      date_of_birth: format(formData.dateOfBirth, "yyyy-MM-dd"),
+      address: formData.physicalAddress,
+      identification_number: formData.idNumber,
       email: formData.email,
-      dateOfBirth: formData.dateOfBirth,
-      address: formData.address,
-      idNumber: formData.idNumber,
-      role: selectedRole,
       wallet_address: address,
+      role: selectedRole,
     };
+    
 
     const result = await register(registrationData);
 
     if (result?.success) {
-      setShowConfirmation(true);
+      alert('Registration successful! Please proceed to identity verification.');
+      // setShowConfirmation(true);
+      // router.push('/pending-verification');
     }
 
   };
-
-  if (showConfirmation) {
-    return (
-      <div className="min-h-screen bg-gradient-subtle">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-background rounded-lg p-8 shadow-elegant">
-              <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Hourglass className="h-8 w-8 text-amber-500" />
-              </div>
-              <h1 className="text-3xl font-bold text-foreground mb-4">Registration Submitted!</h1>
-              <p className="text-muted-foreground mb-8">
-                Welcome to CommEfficient! Your account has been created and is now pending verification. This is a crucial step to ensure the security and integrity of our platform.
-              </p>
-
-              <div className="bg-primary/5 rounded-lg p-6 mb-8 text-left">
-                <h2 className="text-xl font-semibold text-foreground mb-3 text-center">What Happens Next?</h2>
-                <ul className="space-y-3 text-muted-foreground list-disc list-inside">
-                  <li>
-                    <span className="font-semibold text-foreground">Verification in Progress:</span> Our system is now automatically conducting the necessary KYC (Know Your Customer) and sanction checks.
-                  </li>
-                  <li>
-                    <span className="font-semibold text-foreground">Notification:</span> You will receive an email notification as soon as your account is approved. This process is typically quick but can take up to 24 hours.
-                  </li>
-                  <li>
-                    <span className="font-semibold text-foreground">Next Steps:</span> Once approved, you will gain full access to the platform to {selectedRole === 'Investor' ? 'invest in projects' : 'create your first project'}.
-                  </li>
-                </ul>
-              </div>
-
-              <p className="text-sm text-muted-foreground mb-6">You can now close this page. We'll be in touch shortly!</p>
-
-              <Button variant="outline" onClick={() => window.location.href = '/'}>
-                Return to Homepage
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
@@ -159,9 +123,9 @@ const Register = () => {
                       <Card
                         className={cn(
                           "cursor-pointer transition-all duration-200 hover:shadow-2xl",
-                          selectedRole === "investor" ? "ring-2 ring-primary bg-primary/5" : ""
+                          selectedRole === "Investor" ? "ring-2 ring-primary bg-primary/5" : ""
                         )}
-                        onClick={() => handleRoleSelect("investor")}
+                        onClick={() => handleRoleSelect("Investor")}
                       >
                         <CardContent className="p-2 text-center">
                           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -177,9 +141,9 @@ const Register = () => {
                       <Card
                         className={cn(
                           "cursor-pointer transition-all duration-200 hover:shadow-2xl",
-                          selectedRole === "creator" ? "ring-2 ring-primary bg-primary/5" : ""
+                          selectedRole === "Project Creator" ? "ring-2 ring-primary bg-primary/5" : ""
                         )}
-                        onClick={() => handleRoleSelect("creator")}
+                        onClick={() => handleRoleSelect("Project Creator")}
                       >
                         <CardContent className="p-2 text-center">
                           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -288,9 +252,9 @@ const Register = () => {
                   <div className="space-y-2">
                     <Label htmlFor="address">Full Address *</Label>
                     <Textarea
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => handleInputChange("address", e.target.value)}
+                      id="physicalAddress"
+                      value={formData.physicalAddress}
+                      onChange={(e) => handleInputChange("physicalAddress", e.target.value)}
                       placeholder="Enter your complete physical address"
                       rows={3}
                     />
@@ -306,7 +270,7 @@ const Register = () => {
                   <div className="bg-muted/30 rounded-lg p-6">
                     <h3 className="font-semibold mb-3">Review Your Information</h3>
                     <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Role:</span> {selectedRole === 'investor' ? 'Investor' : 'Project Creator'}</p>
+                      <p><span className="font-medium">Role:</span> {selectedRole === 'Investor' ? 'Investor' : 'Project Creator'}</p>
                       <p><span className="font-medium">Name:</span> {formData.fullName}</p>
                       <p><span className="font-medium">Email:</span> {formData.email}</p>
                       <p><span className="font-medium">Date of Birth:</span> {formData.dateOfBirth ? format(formData.dateOfBirth, "PPP") : ""}</p>
@@ -329,11 +293,11 @@ const Register = () => {
 
                   <Button
                     onClick={handleSubmit}
-                    disabled={!canSubmit}
+                    disabled={!canSubmit|| isLoading}
                     size="lg"
                     className="w-full"
                   >
-                    Create Account
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create Account'}
                   </Button>
                 </div>
               )}

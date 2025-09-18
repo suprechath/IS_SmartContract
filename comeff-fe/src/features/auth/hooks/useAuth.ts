@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
 import { recoverMessageAddress } from 'viem';
 import api from '@/lib/api';
+import axios from 'axios';
 
 interface User {
     id: string;
@@ -12,13 +13,13 @@ interface User {
 }
 
 interface RegisterFormData {
-    fullName: string;
-    email: string;
-    dateOfBirth: Date | undefined;
+    full_Name: string;
+    date_of_birth: Date | undefined;
     address: string;
-    idNumber: string;
-    role: 'Investor' | 'Project Creator';
+    identification_number: string;
+    email: string;
     wallet_address: string;
+    role: 'Investor' | 'Project Creator';
 }
 
 export const useAuth = () => {
@@ -35,18 +36,23 @@ export const useAuth = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await api.post('/users/register', formData);
-            if (response.status === 201) {
-                //automatically log the user in after registration
-                const loginResult = await login();
-                if (loginResult.success) {
-                    return { success: true, user: loginResult.user };
-                } else {
-                    // This case might happen if login fails right after registration, though unlikely.
-                    setError('Registration successful, but login failed. Please try logging in manually.');
-                    return { success: false, error: 'Post-registration login failed.' };
-                }
+            console.log("Registering user with data:", formData);
+            const registerResponse = await axios.post('http://localhost:5001/api/users/register', formData);
+            if (registerResponse.status === 201) {
+                console.log("Registration successful:", registerResponse.data);                
             }
+            // const response = await api.post('/users/register', formData);
+            // if (response.status === 201) {
+            //     //automatically log the user in after registration
+            //     const loginResult = await login();
+            //     if (loginResult.success) {
+            //         return { success: true, user: loginResult.user };
+            //     } else {
+            //         // This case might happen if login fails right after registration, though unlikely.
+            //         setError('Registration successful, but login failed. Please try logging in manually.');
+            //         return { success: false, error: 'Post-registration login failed.' };
+            //     }
+            // }
         } catch (err: any) {
             setError(err.response?.data?.message || 'An unexpected error occurred.');
             return { success: false, error: err.response?.data?.message || 'An unexpected error occurred.' };
