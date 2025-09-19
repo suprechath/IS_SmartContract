@@ -1,7 +1,9 @@
 // src/features/auth/hooks/useProvideAuth.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
 import api from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { el } from 'date-fns/locale';
 
 interface User {
     id: string;
@@ -25,6 +27,7 @@ export const useProvideAuth = () => {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter(); // <-- Import and use the router
 
     const { address, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
@@ -32,13 +35,31 @@ export const useProvideAuth = () => {
 
     useEffect(() => {
         const storedToken = localStorage.getItem('jwt_token');
-        const storedAddress = localStorage.getItem('wallet_address');
+        const storedUser = localStorage.getItem('user');
+        const storedUserObj = storedUser ? JSON.parse(storedUser) : null;
 
-        if (storedToken && storedAddress && isConnected && storedAddress.toLowerCase() === address?.toLowerCase()) {
+        if (storedToken && storedUserObj) {
             setToken(storedToken);
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-        } 
-    }, [isConnected, address]);
+            console.log("Found existing token in localStorage, fetching user data...");
+            if (storedUserObj.sanction_status !== 'Verified') {
+                alert('Your account is pending verification.\nYou will be redirected to the Pending Verification page.');
+                router.push('/pending-verification');
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        const storedToken = localStorage.getItem('jwt_token');
+        const storedUser = localStorage.getItem('user');
+        const storedUserObj = storedUser ? JSON.parse(storedUser) : null;
+        if (!storedToken && !storedUserObj) {
+            setUser(null);
+            setToken(null);
+            delete api.defaults.headers.common['Authorization'];
+            console.log("No token found in localStorage, user is logged out.");
+        }
+    }, [isConnected]);
 
     const register = async (formData: RegisterFormData) => {
         setIsLoading(true);
@@ -90,13 +111,19 @@ export const useProvideAuth = () => {
             const { token: jwtToken, user: userData } = verifyRes.data.data;
 
             setToken(jwtToken);
-            setUser(userData);
+            setUser(userData.sanction_status);
             api.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
 
             // Store token in localStorage for persistence
             localStorage.setItem('jwt_token', jwtToken);
-            localStorage.setItem('wallet_address', userData.wallet_address);
+            localStorage.setItem('user', JSON.stringify(userData));
             console.log(`The address of ${userData.wallet_address} has logged in as ${userData.role} successfully.`);
+            
+            if (userData.sanction_status !== 'Verified') {
+                alert('Your account is pending verification.\nYou will be redirected to the Pending Verification page.');
+                router.push('/pending-verification');
+            }
+
             return { success: true, user: userData };
 
         } catch (err: any) {
@@ -117,7 +144,7 @@ export const useProvideAuth = () => {
         setToken(null);
         delete api.defaults.headers.common['Authorization'];
         localStorage.removeItem('jwt_token');
-        localStorage.removeItem('wallet_address');
+        localStorage.removeItem('user');
         disconnect();
         console.log("User logged out successfully.");
     };

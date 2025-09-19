@@ -1,7 +1,7 @@
 // src/features/auth/components/LoginButton.tsx
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -12,7 +12,7 @@ import { Wallet, LogOut, Loader2 } from 'lucide-react';
 export function LoginButton() {
   const { isConnected, address } = useAccount();
   const { connect, error: connectError } = useConnect();
-  const { login, logout, token, isLoading, error, setError } = useAuth();
+  const { login, logout, token, isLoading, error } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function LoginButton() {
       };
       performLogin();
     }
-  }, [isConnected, token]);
+  }, [isConnected]);
 
   useEffect(() => {
     if (connectError) {
