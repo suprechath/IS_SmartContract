@@ -22,6 +22,16 @@ interface RegisterFormData {
     role: 'Investor' | 'Project Creator';
 }
 
+const setAuthToken = (token: string | null) => {
+  if (token) {
+    localStorage.setItem('jwt_token', token);
+    document.cookie = `jwt_token=${token}; path=/; max-age=86400; SameSite=Lax;`;
+  } else {
+    localStorage.removeItem('jwt_token');
+    document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+  }
+};
+
 export const useProvideAuth = () => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
@@ -40,6 +50,7 @@ export const useProvideAuth = () => {
 
         if (storedToken && storedUserObj) {
             setToken(storedToken);
+            // setAuthToken(storedToken);
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
             console.log("Found existing token in localStorage, fetching user data...");
             if (storedUserObj.sanction_status !== 'Verified') {
@@ -57,6 +68,7 @@ export const useProvideAuth = () => {
             setUser(null);
             setToken(null);
             delete api.defaults.headers.common['Authorization'];
+            setAuthToken(null);
             console.log("No token found in localStorage, user is logged out.");
         }
     }, [isConnected]);
@@ -117,6 +129,7 @@ export const useProvideAuth = () => {
             // Store token in localStorage for persistence
             localStorage.setItem('jwt_token', jwtToken);
             localStorage.setItem('user', JSON.stringify(userData));
+            setAuthToken(jwtToken);
             console.log(`The address of ${userData.wallet_address} has logged in as ${userData.role} successfully.`);
             
             if (userData.sanction_status !== 'Verified') {

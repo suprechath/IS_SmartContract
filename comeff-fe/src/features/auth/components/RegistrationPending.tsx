@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Hourglass, Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthProvider";
 
 
 // Define the props the component will accept
@@ -10,10 +11,9 @@ interface RegistrationPendingProps {
 }
 
 const RegistrationPending: React.FC<RegistrationPendingProps> = ({ selectedRole }) => {
+  const { logout } = useAuth();
   const storedUser = localStorage.getItem('user');
-  const storedToken = localStorage.getItem('jwt_token');
   const user = storedUser ? JSON.parse(storedUser) : null;
-  // console.log(user.role);
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 py-16">
@@ -26,9 +26,9 @@ const RegistrationPending: React.FC<RegistrationPendingProps> = ({ selectedRole 
             <p className="text-muted-foreground">
               Welcome!
             </p>
-            {/* <p className="text-emerald-950 font-bold mb-8">
+            <p className="text-emerald-950 font-bold mb-8">
               Your account has been created and you're one step closer to {user.role === 'Investor' ? 'investing in sustainable projects' : 'raising capital for your energy projects'}.
-            </p> */}
+            </p>
 
 
             <div className="bg-primary/5 rounded-lg p-6 mb-8">
@@ -41,7 +41,10 @@ const RegistrationPending: React.FC<RegistrationPendingProps> = ({ selectedRole 
               </Button>
             </div>
 
-            <Button variant="outline" onClick={() => window.location.href = '/'}>
+            <Button variant="outline" onClick={() => {
+              logout();
+              window.location.href = '/';
+            }}>
               Return to Homepage
             </Button>
           </div>
