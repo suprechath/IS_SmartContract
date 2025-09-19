@@ -47,7 +47,7 @@ const registerUserServices = async (
     return onchainResult.rows[0];
   } catch (error) {
     await client.query('ROLLBACK');
-    throw error.massage;
+    throw error;
   } finally {
     client.release();
   }
