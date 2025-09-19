@@ -16,15 +16,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { cn } from "@/lib/utils";
-import { useAuth } from "../hooks/useAuth";
-import RegistrationPending from './RegistrationPending';
+import { useAuth } from "@/contexts/AuthProvider"; 
+// import { useProvideAuth } from "../hooks/useProvideAuth";
 
 
 const Register = () => {
   const router = useRouter(); 
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
-  const { register, isLoading, error } = useAuth();
+  const { register, isLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -55,7 +55,7 @@ const Register = () => {
     if (!canSubmit || !selectedRole || !address) return;
 
     const registrationData = {
-      full_Name: formData.fullName,
+      full_name: formData.fullName,
       date_of_birth: format(formData.dateOfBirth, "yyyy-MM-dd"),
       address: formData.physicalAddress,
       identification_number: formData.idNumber,
@@ -69,8 +69,10 @@ const Register = () => {
 
     if (result?.success) {
       alert('Registration successful! Please proceed to identity verification.');
-      // setShowConfirmation(true);
-      // router.push('/pending-verification');
+      router.push('/pending-verification');
+    } else {
+      alert(`Registration failed: ${result?.error}`);
+      console.error('Registration error:', result?.error);
     }
 
   };

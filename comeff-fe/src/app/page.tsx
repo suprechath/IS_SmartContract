@@ -1,5 +1,5 @@
 // src/app/page.tsx
-import { WalletConnectButton } from '@/components/WalletConnectButton';
+import { WalletConnectButton } from '@/components/LoginButton';
 import Hero from '@/components/Hero';
 import FeatureProject from '@/components/FeatureProject';
 

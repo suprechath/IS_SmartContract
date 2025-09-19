@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Leaf } from "lucide-react";
-import { WalletConnectButton } from '@/components/WalletConnectButton';
+import { LoginButton } from '@/components/LoginButton';
 
 export const Header = () => {
     return (
@@ -35,7 +35,7 @@ export const Header = () => {
                     <button className='hover:bg-[hsl(45_93%_55%)] hover:text-[hsl(210_12%_8%)] hover:rounded-lg px-4 py-1 text-lg font-medium text-green-700 transition-shadow]'>
                         <Link href="/register">Get Started</Link>
                     </button>
-                    <WalletConnectButton />
+                    <LoginButton />
                 </div>
             </div>
         </header>

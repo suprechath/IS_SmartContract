@@ -1,6 +1,6 @@
 // src/lib/web3/wagmi.ts
 import { http, createConfig } from 'wagmi';
-import { optimismSepolia, hardhat } from 'wagmi/chains';
+import { optimismSepolia, hardhat, sepolia } from 'wagmi/chains';
 import { chains } from './chains';
 
 export const config = createConfig({
@@ -8,6 +8,7 @@ export const config = createConfig({
   transports: {
     [optimismSepolia.id]: http(),
     [hardhat.id]: http(),
+    [sepolia.id]: http(),
   },
   ssr: true, // Enable SSR for Next.js
 });

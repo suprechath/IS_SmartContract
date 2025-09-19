@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { Web3Provider } from "@/contexts/Web3Provider";
 import { Header } from "@/components/Header";
+import { AuthProvider } from "@/contexts/AuthProvider"; // Import the new provider
+
 
 const inter = Inter({ subsets: ["latin"]});
 
@@ -17,8 +19,10 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
     <html lang="en">
       <body className={inter.className}>
         <Web3Provider>
-          <Header />
-          {children}
+          <AuthProvider>
+            <Header />
+            {children}
+          </AuthProvider>
         </Web3Provider> 
       </body>
     </html>
