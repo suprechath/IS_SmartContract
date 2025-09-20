@@ -43,7 +43,7 @@ export function LoginButton() {
   useEffect(() => {
     if (error) {
       console.error(error);
-      alert(error);
+      // alert(error);
       setIsLoggingIn(false);
     }
   }, [error]);

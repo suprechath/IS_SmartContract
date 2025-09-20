@@ -63,13 +63,17 @@ const RegistrationPending: React.FC<RegistrationPendingProps> = ({ role, kycStat
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto text-center">
           <div className="bg-background rounded-lg p-8 shadow-elegant">
-            <div className="w-32 h-32 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="h-20 w-20 text-success" />
-            </div>
-            <h1 className="text-3xl font-bold text-foreground mb-4">Account Created Successfully!</h1>
-            <p className="text-emerald-950 font-bold mb-8">
-              You're one step closer to {role === 'Investor' ? 'investing in sustainable projects' : 'funding your energy project'}.
-            </p>
+            {kycStatus !== 'Rejected' && (
+              <div>
+                <div className="w-32 h-32 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check className="h-20 w-20 text-success" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground mb-4">Account Created Successfully!</h1>
+                <p className="text-emerald-950 font-bold mb-8">
+                  You're one step closer to {role === 'Investor' ? 'investing in sustainable projects' : 'funding your energy project'}.
+                </p>
+              </div>
+            )}
 
             {renderVerificationStatus()}
 

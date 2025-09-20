@@ -1,9 +1,15 @@
 // src/features/auth/hooks/useProvideAuth.ts
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { el, fi, se } from 'date-fns/locale';
+
+interface User {
+    id: string;
+    role: string;
+    wallet_address: string;
+    sanction_status: string;
+}
 
 interface RegisterFormData {
     full_name: string;
@@ -15,13 +21,19 @@ interface RegisterFormData {
     role: 'Investor' | 'Project Creator';
 }
 
-const setAuthToken = (token: string | null) => {
-    if (token) {
+const setAuthToken = (token: string | null, expiresAt: string | null, user: User | null) => {
+    if (token && expiresAt && user) {
         localStorage.setItem('jwt_token', token);
-        document.cookie = `jwt_token=${token}; path=/; max-age=86400; SameSite=Lax;`;
+        localStorage.setItem('jwt_expires_at', expiresAt);
+        localStorage.setItem('user', JSON.stringify(user));
+        document.cookie = `jwt_token=${token}; jwt_expires_at=${expiresAt}; path=/; SameSite=Lax;`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
         localStorage.removeItem('jwt_token');
-        document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+        localStorage.removeItem('jwt_expires_at');
+        localStorage.removeItem('user');
+        document.cookie = 'jwt_token=; jwt_expires_at=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+        delete api.defaults.headers.common['Authorization'];
     }
 };
 
@@ -39,31 +51,32 @@ export const useProvideAuth = () => {
 
     useEffect(() => {
         const storedToken = localStorage.getItem('jwt_token');
+        const storedExpiresAt = localStorage.getItem('jwt_expires_at');
         const storedUser = localStorage.getItem('user');
         const storedUserObj = storedUser ? JSON.parse(storedUser) : null;
 
-        if (storedToken && storedUserObj) {
+        if (storedToken && storedUserObj && new Date().getTime() < new Date(storedExpiresAt).getTime()) {
             setToken(storedToken);
-            // setAuthToken(storedToken);
+            setUser(storedUserObj.sanction_status);
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
             console.log("Found existing token in localStorage, fetching user data...");
             if (storedUserObj.sanction_status !== 'Verified') {
-                alert('Your account is pending verification.\nYou will be redirected to the Pending Verification page.');
                 router.push('/pending-verification');
             }
+        } else {
+            logout();
         }
     }, []);
 
     useEffect(() => {
         const storedToken = localStorage.getItem('jwt_token');
         const storedUser = localStorage.getItem('user');
-        const storedUserObj = storedUser ? JSON.parse(storedUser) : null;
-        if (!storedToken && !storedUserObj) {
+        if (!storedToken && !storedUser) {
             setUser(null);
             setToken(null);
-            delete api.defaults.headers.common['Authorization'];
-            setAuthToken(null);
+            setAuthToken(null, null, null);
             console.log("No token found in localStorage, user is logged out.");
+            router.refresh();
         }
     }, [isConnected]);
 
@@ -114,16 +127,14 @@ export const useProvideAuth = () => {
             const signature = await signMessageAsync({ message: nonceToken });
 
             const verifyRes = await api.post('/auth/verify', { nonceToken, signature });
-            const { token: jwtToken, user: userData } = verifyRes.data.data;
+            const { token: jwtToken, user: userData, expiresAt } = verifyRes.data.data;
 
             setToken(jwtToken);
             setUser(userData.sanction_status);
             api.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
 
             // Store token in localStorage for persistence
-            localStorage.setItem('jwt_token', jwtToken);
-            localStorage.setItem('user', JSON.stringify(userData));
-            setAuthToken(jwtToken);
+            setAuthToken(jwtToken, expiresAt, userData);
             console.log(`The address of ${userData.wallet_address} has logged in as ${userData.role} successfully.`);
 
             if (userData.sanction_status !== 'Verified') {
@@ -149,9 +160,7 @@ export const useProvideAuth = () => {
     const logout = () => {
         setUser(null);
         setToken(null);
-        delete api.defaults.headers.common['Authorization'];
-        localStorage.removeItem('jwt_token');
-        localStorage.removeItem('user');
+        setAuthToken(null, null, null);
         disconnect();
         console.log("User logged out successfully.");
     };

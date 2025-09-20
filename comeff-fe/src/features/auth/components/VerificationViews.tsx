@@ -45,14 +45,11 @@ export const VerificationApproved = ({ role }: { role: string | null }) => {
 
 // State 4: Verification failed
 export const VerificationRejected = () => (
-  <div className="bg-destructive/10 border-l-4 border-destructive rounded-lg p-6 mb-8 text-center">
+  <div className="bg-destructive/10 border-l-4 border-destructive rounded-lg p-6 mb-8 text-left">
     <div className="flex items-center">
       <XCircle className="mr-3 h-20 w-20 text-destructive" />
       <div>
-        <h2 className="text-xl font-semibold text-destructive mb-1">Verification Action Required</h2>
-        <p className="text-destructive/90 mb-4">
-          We were unable to verify your identity. Your wallet address has been sanctioned.
-        </p>
+        <h2 className="ml-5 text-xl font-semibold text-destructive mb-1">Your wallet address has been sanctioned!!!</h2>
       </div>
     </div>
   </div>
