@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   setError: (error: string | null) => void;
+  verifySanctionStatus: () => Promise<any>;
 }
 
 // Create the context with a default undefined value

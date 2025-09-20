@@ -13,7 +13,7 @@ export const Header = () => {
         <header className="sticky top-0 z-50 w-full shadow-lg backdrop-blur-md">
             <div className="container h-16 mx-auto px-4 py-4 sm:px-6 flex justify-between items-center">
                 <div className="flex justify-between items-center shrink-0">
-                    <div className="flex h-8 w-8 rounded-lg bg-[linear-gradient(135deg,_hsl(158,64%,25%),_hsl(158,45%,45%))] items-center justify-center w-10 h-10">
+                    <div className="flex h-11 w-11 rounded-xl bg-[linear-gradient(135deg,_hsl(158,64%,25%),_hsl(158,45%,45%))] items-center justify-center w-10 h-10">
                         <Leaf className="text-white h-8 w-8" />
                     </div>
                     <span className="ml-2 text-xl font-bold text-green-700">CommEfficient</span>

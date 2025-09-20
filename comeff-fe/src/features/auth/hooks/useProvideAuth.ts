@@ -3,14 +3,7 @@ import { useState, useEffect, use } from 'react';
 import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { el } from 'date-fns/locale';
-
-interface User {
-    id: string;
-    role: 'Investor' | 'Project Creator';
-    wallet_address: string;
-    sanction_status: string;
-}
+import { el, fi, se } from 'date-fns/locale';
 
 interface RegisterFormData {
     full_name: string;
@@ -23,20 +16,21 @@ interface RegisterFormData {
 }
 
 const setAuthToken = (token: string | null) => {
-  if (token) {
-    localStorage.setItem('jwt_token', token);
-    document.cookie = `jwt_token=${token}; path=/; max-age=86400; SameSite=Lax;`;
-  } else {
-    localStorage.removeItem('jwt_token');
-    document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
-  }
+    if (token) {
+        localStorage.setItem('jwt_token', token);
+        document.cookie = `jwt_token=${token}; path=/; max-age=86400; SameSite=Lax;`;
+    } else {
+        localStorage.removeItem('jwt_token');
+        document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+    }
 };
 
 export const useProvideAuth = () => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<string | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
     const router = useRouter(); // <-- Import and use the router
 
     const { address, isConnected } = useAccount();
@@ -131,7 +125,7 @@ export const useProvideAuth = () => {
             localStorage.setItem('user', JSON.stringify(userData));
             setAuthToken(jwtToken);
             console.log(`The address of ${userData.wallet_address} has logged in as ${userData.role} successfully.`);
-            
+
             if (userData.sanction_status !== 'Verified') {
                 alert('Your account is pending verification.\nYou will be redirected to the Pending Verification page.');
                 router.push('/pending-verification');
@@ -162,5 +156,24 @@ export const useProvideAuth = () => {
         console.log("User logged out successfully.");
     };
 
-    return { user, token, register, login, logout, isLoading, error, setError };
+    const verifySanctionStatus = async () => {
+        if (!token) return;
+        setIsLoading(true);
+        try {
+            const sanctionResponse = await api.get('/sanctions/check');
+            const userData = sanctionResponse.data.data.isSanctioned;
+            console.log("Sanction status:", userData);
+            const updatedUser = userData ? "Rejected" : "Verified";
+            localStorage.setItem('user', JSON.stringify({ ...user, sanction_status: updatedUser }));
+            setUser(updatedUser);
+            console.log("user is:", updatedUser);
+        } catch (err) {
+            console.error("Failed to verify sanction status:", err);
+            logout();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return { user, token, register, login, logout, isLoading, error, setError, verifySanctionStatus };
 };
