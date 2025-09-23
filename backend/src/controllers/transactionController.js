@@ -40,3 +40,15 @@ export const getProjectTransactions = async (req, res) => {
         handleResponse(res, 500, 'Server error while retrieving project transactions.', { error: error.message });
     }
 };
+
+// @desc    Get all dividend distribution transactions
+// @route   GET /api/transactions/dividends
+export const getDividendTransactions = async (req, res) => {
+    try {
+        const transactions = await transactionModel.getTransactionsByType('RewardDeposit');
+        handleResponse(res, 200, 'Dividend transactions retrieved successfully.', transactions);
+    } catch (error) {
+        console.error('Get Dividend Transactions Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving dividend transactions.', { error: error.message });
+    }
+};

@@ -3,7 +3,7 @@ import heroImage from '@/assets/smart_building.png';
 import { Trees, StepForward, Shield, TrendingUp, Leaf } from "lucide-react";
 const Hero = () => {
     return (
-        <section className="relative overflow-hidden]">
+        <section className="relative overflow-hidden">
             <div className="absolute inset-0">
                 <img
                     src={heroImage.src}
@@ -64,7 +64,7 @@ const Hero = () => {
                             </p>
                         </div>
 
-                        <div className="flex flex-col items-center text-center">
+                        <div className="flex flex-col items-center text-center mb-8">
                             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-800">
                                 <Leaf className="h-10 w-10 text-white" />
                             </div>

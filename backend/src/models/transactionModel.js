@@ -60,9 +60,22 @@ const getTransactionsByUserId = async (user_onchain_id) => {
     return result.rows;
 };
 
+const getTransactionsByType = async (transaction_type) => {
+    const query = `
+        SELECT *
+        FROM transactions
+        WHERE transaction_type = $1
+        ORDER BY created_at DESC
+    `;
+    const result = await pool.query(query, [transaction_type]);
+    return result.rows;
+};
+
+
 export default {
     createTransaction,
     getTransactionByTxHash,
     getTransactionsByProjectId,
-    getTransactionsByUserId
+    getTransactionsByUserId,
+    getTransactionsByType
 };

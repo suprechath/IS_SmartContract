@@ -2,13 +2,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Leaf } from "lucide-react";
+import { Leaf, ShieldUser } from "lucide-react";
 import { LoginButton } from '@/components/LoginButton';
 import { useAuth } from '@/contexts/AuthProvider';
 
 
 export const Header = () => {
     const { token } = useAuth(); 
+    const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null;
     return (
         <header className="sticky top-0 z-50 w-full shadow-lg backdrop-blur-md">
             <div className="container h-16 mx-auto px-4 py-4 sm:px-6 flex justify-between items-center">
@@ -39,6 +40,12 @@ export const Header = () => {
                         <button className='hover:bg-[hsl(45_93%_55%)] hover:text-[hsl(210_12%_8%)] hover:rounded-lg px-4 py-1 text-lg font-medium text-green-700 transition-shadow]'>
                             <Link href="/register">Get Started</Link>
                         </button>
+                    )}
+                    {user?.role === 'Platform Operator' && (
+                        <Link href="/admin" className="border-transparent text-gray-500 hover:border-emerald-400 hover:text-emerald-600 inline-flex items-center px-1 pt-1 border-b-4 text-lg font-medium">
+                           <ShieldUser className="mr-2 h-5 w-5" />
+                           Admin Dashboard
+                        </Link>
                     )}
                     <LoginButton />
                 </div>

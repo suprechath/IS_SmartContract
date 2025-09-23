@@ -69,3 +69,15 @@ export const updateUserProfile = async (req, res) => {
     handleResponse(res, 500, 'Server error during profile update.', { error: error.message });
   }
 };
+
+// @desc Get all onchain users
+// @route GET /api/users/onchain
+export const getAllUsersOnchain = async (req, res) => {
+    try {
+        const users = await userModel.getAllUsersOnchain();
+        handleResponse(res, 200, 'Onchain users retrieved successfully', users);
+    } catch (error) {
+        console.error('Get All Onchain Users Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving onchain users.', error.message);
+    }
+};

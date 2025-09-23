@@ -131,11 +131,29 @@ const updateUser = async (onchainId, offchainData) => {
   return result.rows[0];
 };
 
+const getAllUsersOnchain = async () => {
+  const query = `
+    SELECT
+      uon.id,
+      uon.wallet_address,
+      uon.role,
+      uon.sanction_status,
+      uoff.full_name,
+      uoff.email,
+      uoff.identification_number
+    FROM users_onchain uon
+    JOIN users_offchain uoff ON uon.user_offchain_id = uoff.id
+  `;
+  const result = await pool.query(query);
+  return result.rows;
+};
+ 
 export default {
   registerUserServices,
   getUserByWalletAddress,
   getUserById,
   getFullUserProfileById, 
   updateSanctionStatus,
-  updateUser 
+  updateUser,
+  getAllUsersOnchain
 };
