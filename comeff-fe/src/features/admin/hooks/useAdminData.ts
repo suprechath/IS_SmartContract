@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api'; // Your centralized axios instance
 import type { Project, User, PlatformStats, Transactions } from '@/features/admin/types';
+import { useAuth } from '@/contexts/AuthProvider';
+
 
 // This function now lives inside the hook or can be in a utils file.
 const calculatePlatformStats = (projects: Project[], users: User[], tx: Transactions[]): PlatformStats => {
@@ -44,16 +46,18 @@ export const useAdminData = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [dividends, setDividends] = useState<Transactions[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
-  
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         const [projectsRes, usersRes, dividends] = await Promise.all([
-          api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active'), 
+          api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active'),
           api.get('/users/onchain'),
           api.get('transactions/dividends')
         ]);
@@ -62,18 +66,18 @@ export const useAdminData = () => {
         const fetchedUsers = usersRes.data.data;
         const fetchedDividends = dividends.data.data;
 
-        // console.log("Fetched Projects:", fetchedProjects);
-        // console.log("Fetched Users:", fetchedUsers);
-        // console.log("Fetched Dividends:", fetchedDividends);
+        console.log("Fetched Projects:", fetchedProjects);
+        console.log("Fetched Users:", fetchedUsers);
+        console.log("Fetched Dividends:", fetchedDividends);
 
         setProjects(fetchedProjects);
         setUsers(fetchedUsers);
         setDividends(fetchedDividends);
-        
+
         // Calculate stats after fetching
         const calculatedStats = calculatePlatformStats(fetchedProjects, fetchedUsers, fetchedDividends);
         setStats(calculatedStats);
-        
+
         setError(null);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch admin data.');
@@ -83,8 +87,10 @@ export const useAdminData = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
 
   return { projects, users, dividends, stats, loading, error };
 };

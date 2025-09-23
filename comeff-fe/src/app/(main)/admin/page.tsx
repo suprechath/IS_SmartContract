@@ -5,19 +5,34 @@ import { PlatformOverview } from "@/features/admin/components/PlatformOverview";
 // import { QuickActions } from "@/features/admin/components/QuickActions";
 // import { AdminTabs } from "@/features/admin/components/AdminTabs";
 import { useAdminData } from "@/features/admin/hooks/useAdminData";
+import { Loader2 } from "lucide-react";
 
 const AdminPage = () => {
   const {
     stats,
-//     // systemStatus,
-//     // projects,
-//     // users,
-//     // loading,
-//     // error
+    //     // systemStatus,
+    //     // projects,
+    //     // users,
+    loading,
+    error
   } = useAdminData();
 
-//   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
-//   if (error) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-40 w-40 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center text-destructive">
+        Error: {error}
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
