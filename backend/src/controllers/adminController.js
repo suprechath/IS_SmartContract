@@ -111,3 +111,14 @@ export const recordDeployment = async (req, res) => {
     }
 };
 
+// @desc    Retrieve all configuration values
+// @route   GET /api/admin/configs
+export const getAllConfig = async (req, res) => {
+    try {
+        const allConfig = await configModel.getAllConfigValue();
+        handleResponse(res, 200, 'All configuration values retrieved successfully.', allConfig);
+    } catch (error) {
+        console.error('Get All Config Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving all configuration values.', { error: error.message });
+    }
+};

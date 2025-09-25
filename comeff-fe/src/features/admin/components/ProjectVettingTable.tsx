@@ -17,6 +17,7 @@ import api from '@/lib/api';
 
 interface ProjectTableProps {
   projects: Project[];
+  onDataUpdate: () => void;
 }
 
 type ReviewAction = 'Approved' | 'Rejected';
@@ -58,7 +59,7 @@ const transformDetailedProjectData = (rawProject: any): Project => {
   };
 };
 
-export const ProjectVettingTable = ({ projects }: ProjectTableProps) => {
+export const ProjectVettingTable = ({ projects, onDataUpdate }: ProjectTableProps) => {
   const { projectSearch, setProjectSearch, reviewProject, exportData } = useAdminActions();
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -86,7 +87,7 @@ export const ProjectVettingTable = ({ projects }: ProjectTableProps) => {
   const handleConfirmReview = async () => {
     if (!selectedProject) return;
     // await reviewProject(selectedProject.id, reviewAction, rejectionReason);
-    await reviewProject(selectedProject.id, reviewAction);
+    await reviewProject(selectedProject.id, reviewAction, onDataUpdate);
     setSelectedProject(null);
     // setRejectionReason("");
     setReviewOpen(false);
@@ -107,16 +108,13 @@ export const ProjectVettingTable = ({ projects }: ProjectTableProps) => {
       console.log("Raw detailed project data:", response.data.data);
       // Use the transformer on the detailed data
       setDetailedProjectData(transformDetailedProjectData(response.data.data));
+      console.log("Updated detailedProjectData:", detailedProjectData)
     } catch (error) {
       console.error("Failed to fetch project details:", error);
     } finally {
       setDetailsLoading(false);
     }
   };
-
-  useEffect(() => {
-    console.log("Updated detailedProjectData:", detailedProjectData);
-  }, [detailedProjectData]);
 
   return (
     <>
@@ -213,17 +211,17 @@ export const ProjectVettingTable = ({ projects }: ProjectTableProps) => {
               This action will be logged.
             </DialogDescription>
           </DialogHeader>
-          {reviewAction === 'Rejected' && (
+          {/* {reviewAction === 'Rejected' && (
             <div className="grid gap-4 py-4">
-              {/* <Label htmlFor="rejection-reason">Reason for Rejection (Required)</Label>
+              <Label htmlFor="rejection-reason">Reason for Rejection (Required)</Label>
               <Textarea
                 id="rejection-reason"
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Provide a clear reason for the project creator."
-              /> */}
+              />
             </div>
-          )}
+          )} */}
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewOpen(false)}>Cancel</Button>
             <Button
@@ -284,7 +282,7 @@ export const ProjectVettingTable = ({ projects }: ProjectTableProps) => {
                 </div>
 
                 {/* --- FINANCIALS & IMPACT --- */}
-                <div className="grid grid-cols-3 gap-4 text ">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="p-3 border rounded-lg">
                     <div className="text-muted-foreground">Projected ROI</div>
                     <div className="text-lg font-bold">{detailedProjectData.projected_roi}%</div>

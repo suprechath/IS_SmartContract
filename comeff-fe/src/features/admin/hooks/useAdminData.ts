@@ -1,9 +1,9 @@
 // src/features/admin/hooks/useAdminData.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api'; // Your centralized axios instance
-import type { Project, User, PlatformStats, Transactions } from '@/features/admin/types';
+import type { Project, User, PlatformStats, Transactions, PlatformConfig } from '@/features/admin/types';
 import { useAuth } from '@/contexts/AuthProvider';
-
+import { set } from 'date-fns';
 
 // This function now lives inside the hook or can be in a utils file.
 const calculatePlatformStats = (projects: Project[], users: User[], tx: Transactions[]): PlatformStats => {
@@ -45,6 +45,7 @@ export const useAdminData = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [dividends, setDividends] = useState<Transactions[]>([]);
+  const [configs, setConfigs] = useState<PlatformConfig[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,45 +53,53 @@ export const useAdminData = () => {
 
   const { token } = useAuth();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // setLoading(true);
-        const [projectsRes, usersRes, dividends] = await Promise.all([
-          api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active'),
-          api.get('/users/onchain'),
-          api.get('transactions/dividends')
-        ]);
+  // useEffect(() => {
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      if (!token) { return null; }
+      const [projectsRes, usersRes, dividends, configs] = await Promise.all([
+        api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active'),
+        api.get('/users/onchain'),
+        api.get('transactions/dividends'),
+        api.get('/admin/configs')
+      ]);
 
-        const fetchedProjects = projectsRes.data.data;
-        const fetchedUsers = usersRes.data.data;
-        const fetchedDividends = dividends.data.data;
+      const fetchedProjects = projectsRes.data.data;
+      const fetchedUsers = usersRes.data.data;
+      const fetchedDividends = dividends.data.data;
+      const fetchedConfigs = configs.data.data;
 
-        // console.log("Fetched Projects:", fetchedProjects);
-        // console.log("Fetched Users:", fetchedUsers);
-        // console.log("Fetched Dividends:", fetchedDividends);
+      // console.log("Fetched Projects:", fetchedProjects);
+      // console.log("Fetched Users:", fetchedUsers);
+      // console.log("Fetched Dividends:", fetchedDividends);
+      console.log("Fetched Configs:", fetchedConfigs);
 
-        setProjects(fetchedProjects);
-        setUsers(fetchedUsers);
-        setDividends(fetchedDividends);
+      setProjects(fetchedProjects);
+      setUsers(fetchedUsers);
+      setDividends(fetchedDividends);
+      setConfigs(fetchedConfigs);
 
-        // Calculate stats after fetching
-        const calculatedStats = calculatePlatformStats(fetchedProjects, fetchedUsers, fetchedDividends);
-        setStats(calculatedStats);
+      // Calculate stats after fetching
+      const calculatedStats = calculatePlatformStats(fetchedProjects, fetchedUsers, fetchedDividends);
+      setStats(calculatedStats);
+      console.log("Fetch Data");
 
-        setError(null);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch admin data.');
-        console.error("Data fetching error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (token) {
-      fetchData();
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to fetch admin data.');
+      console.error("Data fetching error:", err);
+    } finally {
+      setLoading(false);
     }
-  }, [token]);
 
-  return { projects, users, dividends, stats, loading, error };
+  // }, [token]);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+  return { projects, users, dividends, configs, stats, loading, error, refetchData: fetchData };
 };

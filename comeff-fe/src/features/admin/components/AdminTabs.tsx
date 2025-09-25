@@ -4,14 +4,17 @@ import { FolderCheck, Users, Coins, Target, PieChart } from "lucide-react";
 import { ProjectVettingTable } from "./ProjectVettingTable";
 import { UserManagementTable } from "./UserManagementTable";
 import { PlaceholderCard } from "./PlaceholderCard";
-import type { Project, User } from "../types";
+import type { Project, User, PlatformConfig } from "../types";
+import { OneTimeDeployment } from "./OneTimeDeployment";
 
 interface AdminTabsProps {
     projects: Project[];
     users: User[];
+    configs: PlatformConfig[];
+    onDataUpdate: () => void;
 }
 
-export const AdminTabs = ({ projects, users }: AdminTabsProps) => {
+export const AdminTabs = ({ projects, users, configs, onDataUpdate }: AdminTabsProps) => {
     return (
         <Tabs defaultValue="projects" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3 h-16 p-2 bg-emerald-700/10 text-emerald-700/50 rounded-lg">
@@ -30,17 +33,13 @@ export const AdminTabs = ({ projects, users }: AdminTabsProps) => {
             </TabsList>
 
             <TabsContent value="projects">
-                <ProjectVettingTable projects={projects} />
+                <ProjectVettingTable projects={projects} onDataUpdate={onDataUpdate} />
             </TabsContent>
             <TabsContent value="users">
-                <UserManagementTable users={users} />
+                <UserManagementTable users={users} onDataUpdate={onDataUpdate} />
             </TabsContent>
             <TabsContent value="factoryContracts">
-                <PlaceholderCard
-                    icon={Target}
-                    title="Factory contracts Management"
-                    description="Manage and monitor factory contracts. (Feature coming soon)."
-                />
+                <OneTimeDeployment configs={configs} onDataUpdate={onDataUpdate} />
             </TabsContent>
         </Tabs>
     );

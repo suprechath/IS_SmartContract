@@ -77,3 +77,10 @@ export interface Transactions {
   platform_fee: number;
   created_at: string;
 }
+
+export interface PlatformConfig {
+  config_key: string;
+  config_value: string;
+  created_at: string;
+  updated_at: string;
+}

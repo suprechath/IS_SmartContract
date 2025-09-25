@@ -21,7 +21,17 @@ const getConfigValue = async (key) => {
     return null;
 };
 
+const getAllConfigValue = async () => {
+    const query = `SELECT * FROM platform_config;`;
+    const result = await pool.query(query);
+    if (result.rows.length > 0) {
+        return result.rows;
+    }
+    return null;
+};
+
 export default {
     setConfigValue,
-    getConfigValue
+    getConfigValue,
+    getAllConfigValue
 };

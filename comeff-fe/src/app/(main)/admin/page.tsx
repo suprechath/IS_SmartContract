@@ -10,8 +10,10 @@ const AdminPage = () => {
     stats,
     projects,
     users,
+    configs,
     loading,
-    error
+    error,
+    refetchData
   } = useAdminData();
 
   if (loading) {
@@ -40,7 +42,7 @@ const AdminPage = () => {
         </div>
 
         <PlatformOverview stats={stats} />
-        <AdminTabs projects={projects} users={users} />
+        <AdminTabs projects={projects} users={users} configs={configs} onDataUpdate={refetchData} />
       </main>
     </div>
   );

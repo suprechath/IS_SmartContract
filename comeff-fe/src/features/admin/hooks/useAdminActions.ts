@@ -9,6 +9,7 @@ export const useAdminActions = () => {
     const reviewProject = async (
         projectId: string,
         status: 'Approved' | 'Rejected',
+        onSuccess: () => void
     ) => {
         try {
             const payload = { projectId, status };
@@ -16,17 +17,17 @@ export const useAdminActions = () => {
             if (response.status === 200) {
                 alert(`Project has been ${status.toLowerCase()}.`);
             }
-            return response.data;
+            onSuccess();
         } catch (error: any) {
             console.error(`Failed to ${status.toLowerCase()} project`, error);
             alert(error.response?.data?.message || 'An unexpected error occurred.');
-            return null;
         }
     };
 
     const reviewUser = async (
         id: string,
         sanction_status: 'Verified' | 'Rejected',
+        onSuccess: () => void
     ) => {
         try {
             const payload = { id, sanction_status };
@@ -34,11 +35,10 @@ export const useAdminActions = () => {
             if (response.status === 200) {
                 alert(`User has been ${sanction_status.toLowerCase()}.`);
             }
-            return response.data;
+            onSuccess(); 
         } catch (error: any) {
-            console.error(`Failed to ${status.toLowerCase()} user`, error);
+            console.error(`Failed to ${sanction_status.toLowerCase()} user`, error);
             alert(error.response?.data?.message || 'An unexpected error occurred.');
-            return null;
         }
     };
 

@@ -3,7 +3,7 @@ import { verifyUser } from '../controllers/adminController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { reviewProjectSchema, recordFactorySchema, recordSchema } from '../middlewares/adminSchema.js';
 import { validate } from '../middlewares/validator.js';
-import { reviewProject, prepareFactoryDeployment, recordFactoryDeployment, recordDeployment} from '../controllers/adminController.js';
+import { reviewProject, prepareFactoryDeployment, recordFactoryDeployment, recordDeployment, getAllConfig} from '../controllers/adminController.js';
 
 const router = express.Router();
 
@@ -13,5 +13,6 @@ router.post('/projects/review', protect('Platform Operator'), validate(reviewPro
 router.post('/deploy-factory/prepare', protect('Platform Operator'), prepareFactoryDeployment);
 router.post('/deploy-factory/record', protect('Platform Operator'), validate(recordFactorySchema), recordFactoryDeployment);
 router.post('/deploy/record', protect('Platform Operator'), validate(recordSchema), recordDeployment);
+router.get('/configs', protect('Platform Operator'), getAllConfig);
 
 export default router;

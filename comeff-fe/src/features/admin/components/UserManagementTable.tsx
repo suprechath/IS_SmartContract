@@ -13,16 +13,16 @@ import type { User } from "../types";
 
 interface UserTableProps {
   users: User[];
+  onDataUpdate: () => void;
 }
 
 type ReviewAction = 'Verified' | 'Rejected';
 
-export const UserManagementTable = ({ users }: UserTableProps) => {
+export const UserManagementTable = ({ users, onDataUpdate }: UserTableProps) => {
   const { userSearch, setUserSearch, exportData, reviewUser } = useAdminActions();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [reviewAction, setReviewAction] = useState<ReviewAction>("Rejected");
   const [isReviewOpen, setReviewOpen] = useState(false);
-  const [localUsers, setLocalUsers] = useState(users);
 
   const filteredUsers = useMemo(() =>
     users.filter(user =>
@@ -40,10 +40,9 @@ export const UserManagementTable = ({ users }: UserTableProps) => {
   const handleConfirmReview = async () => {
     if (!selectedUser) return;
     console.log("Reviewing user:", selectedUser.id, "Action:", reviewAction);
-    await reviewUser(selectedUser.id, reviewAction);
+    await reviewUser(selectedUser.id, reviewAction, onDataUpdate);
     setSelectedUser(null);
     setReviewOpen(false);
-    onRefresh();
   };
 
   // const handleViewDetailsClick = async (user: Project) => {
