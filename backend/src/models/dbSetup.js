@@ -126,7 +126,11 @@ const setupQueries = `
   CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type);
 
   INSERT INTO platform_config (config_key, config_value)
-  VALUES ('PROJECT_FACTORY_ADDRESS', NULL)
+  VALUES
+    ('PROJECT_FACTORY_ADDRESS', NULL),
+    ('MOCK_USDC_CONTRACT_ADDRESS', NULL),
+    ('FUNDING_FEE', 500),
+    ('DIVIDEND_FEE', 300)
   ON CONFLICT (config_key) DO NOTHING;
 
   DO $$

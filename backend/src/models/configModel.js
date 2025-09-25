@@ -25,6 +25,7 @@ const getAllConfigValue = async () => {
     const query = `SELECT * FROM platform_config;`;
     const result = await pool.query(query);
     if (result.rows.length > 0) {
+        // console.log('All Config Values:', result.rows);
         return result.rows;
     }
     return null;

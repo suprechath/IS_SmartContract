@@ -1,9 +1,8 @@
 // src/features/admin/components/AdminTabs.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FolderCheck, Users, Coins, Target, PieChart } from "lucide-react";
+import { FolderCheck, Users, Target } from "lucide-react";
 import { ProjectVettingTable } from "./ProjectVettingTable";
 import { UserManagementTable } from "./UserManagementTable";
-import { PlaceholderCard } from "./PlaceholderCard";
 import type { Project, User, PlatformConfig } from "../types";
 import { OneTimeDeployment } from "./OneTimeDeployment";
 

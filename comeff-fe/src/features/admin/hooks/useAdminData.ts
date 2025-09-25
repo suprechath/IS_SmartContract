@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api'; // Your centralized axios instance
 import type { Project, User, PlatformStats, Transactions, PlatformConfig } from '@/features/admin/types';
 import { useAuth } from '@/contexts/AuthProvider';
-import { set } from 'date-fns';
 
 // This function now lives inside the hook or can be in a utils file.
 const calculatePlatformStats = (projects: Project[], users: User[], tx: Transactions[]): PlatformStats => {
@@ -70,9 +69,9 @@ export const useAdminData = () => {
       const fetchedDividends = dividends.data.data;
       const fetchedConfigs = configs.data.data;
 
-      // console.log("Fetched Projects:", fetchedProjects);
-      // console.log("Fetched Users:", fetchedUsers);
-      // console.log("Fetched Dividends:", fetchedDividends);
+      console.log("Fetched Projects:", fetchedProjects);
+      console.log("Fetched Users:", fetchedUsers);
+      console.log("Fetched Dividends:", fetchedDividends);
       console.log("Fetched Configs:", fetchedConfigs);
 
       setProjects(fetchedProjects);
@@ -94,7 +93,7 @@ export const useAdminData = () => {
     }
 
   // }, [token]);
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     fetchData();

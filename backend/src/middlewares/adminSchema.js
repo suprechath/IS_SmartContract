@@ -18,10 +18,10 @@ export const recordFactorySchema = Joi.object({
 export const recordSchema = Joi.object({
     recordKey: Joi.string().required(),
     address: Joi.string()
-        .pattern(/^0x[a-fA-F0-9]{40}$/)
+        // .pattern(/^0x[a-fA-F0-9]{40}$/)
         .required()
-        .messages({
-            'string.pattern.base': 'factoryAddress must be a valid Ethereum address.',
-            'any.required': 'factoryAddress is required.',
-        }),
+        // .messages({
+        //     'string.pattern.base': 'factoryAddress must be a valid Ethereum address.',
+        //     'any.required': 'factoryAddress is required.',
+        // }),
 });
