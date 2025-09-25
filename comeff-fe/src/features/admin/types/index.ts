@@ -10,7 +10,7 @@ export interface Project {
   title: string;
   cover_image_url: string;
   location: string;
-  tags: string[]; // We'll parse the JSON string into an array
+  tags: string[];
 
   // Status & Timestamps
   project_status: 'Pending' | 'Approved' | 'Rejected' | 'Funding' | 'Succeeded' | 'Failed' | 'Active';
@@ -32,6 +32,16 @@ export interface Project {
   usdc_contract_address: string | null;
   token_total_supply: number;
   tokens_minted: boolean;
+
+  // Additional Details
+  project_overview: string;
+  proposed_solution: string;
+  co2_reduction: number | null;
+  projected_payback_period_months: number;
+  projected_roi: number;
+  project_plan_url: string;
+  technical_specifications_urls: string[];
+  third_party_verification_urls: string[];
 }
 
 export interface User {
@@ -50,9 +60,9 @@ export interface PlatformStats {
   pendingKyc: number;
   totalValueLocked: number;
   totalProjects: number;
-  activeProjects: number;
+  pendingProjects: number;
   fundingProjects: number;
-  completedProjects: number;
+  activeProjects: number;
   dividendsDistributed: number;
 }
 
@@ -66,11 +76,4 @@ export interface Transactions {
   related_transaction_hash?: string;
   platform_fee: number;
   created_at: string;
-}
-
-export interface SystemStatus {
-  projectFactory: 'Operational' | 'Down';
-  rewardDistribution: 'Operational' | 'Down';
-  votingSystem: 'Operational' | 'Down';
-  kycProvider: 'Connected' | 'Disconnected';
 }

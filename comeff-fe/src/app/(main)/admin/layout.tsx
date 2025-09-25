@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null;
-    console.log("AdminLayout - User:", user);
+    // console.log("AdminLayout - User:", user);
 
     if (user?.role !== 'Platform Operator') {
       console.warn("Unauthorized access attempt to admin page. Redirecting...");

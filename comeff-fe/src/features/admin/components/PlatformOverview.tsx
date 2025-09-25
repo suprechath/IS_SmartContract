@@ -9,7 +9,7 @@ interface PlatformOverviewProps {
 }
 
 export const PlatformOverview = ({ stats }: PlatformOverviewProps) => {
-  console.log("PlatformOverview - stats:", stats);
+  // console.log("PlatformOverview - stats:", stats);
   if (!stats) {
     // You can return a loading skeleton here for better UX
     return (

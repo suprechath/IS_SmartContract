@@ -1,18 +1,15 @@
 // src/app/(main)/admin/page.tsx
 'use client';
 import { PlatformOverview } from "@/features/admin/components/PlatformOverview";
-// import { SystemHealth } from "@/features/admin/components/SystemHealth";
-// import { QuickActions } from "@/features/admin/components/QuickActions";
-// import { AdminTabs } from "@/features/admin/components/AdminTabs";
+import { AdminTabs } from "@/features/admin/components/AdminTabs";
 import { useAdminData } from "@/features/admin/hooks/useAdminData";
 import { Loader2 } from "lucide-react";
 
 const AdminPage = () => {
   const {
     stats,
-    //     // systemStatus,
-    //     // projects,
-    //     // users,
+    projects,
+    users,
     loading,
     error
   } = useAdminData();
@@ -43,9 +40,7 @@ const AdminPage = () => {
         </div>
 
         <PlatformOverview stats={stats} />
-        {/* <SystemHealth systemStatus={systemStatus} />
-        <QuickActions />
-        <AdminTabs projects={projects} users={users} /> */}
+        <AdminTabs projects={projects} users={users} />
       </main>
     </div>
   );

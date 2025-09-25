@@ -66,9 +66,9 @@ export const useAdminData = () => {
         const fetchedUsers = usersRes.data.data;
         const fetchedDividends = dividends.data.data;
 
-        console.log("Fetched Projects:", fetchedProjects);
-        console.log("Fetched Users:", fetchedUsers);
-        console.log("Fetched Dividends:", fetchedDividends);
+        // console.log("Fetched Projects:", fetchedProjects);
+        // console.log("Fetched Users:", fetchedUsers);
+        // console.log("Fetched Dividends:", fetchedDividends);
 
         setProjects(fetchedProjects);
         setUsers(fetchedUsers);
