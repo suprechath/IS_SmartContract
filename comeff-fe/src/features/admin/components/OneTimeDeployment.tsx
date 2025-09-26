@@ -1,13 +1,14 @@
 // src/features/admin/components/UserManagementTable.tsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { Edit } from "lucide-react";
+import { Edit, Loader2 } from "lucide-react";
 import type { PlatformConfig } from "../types";
 import api from '@/lib/api';
+import { useAdminActions } from '../hooks/useAdminActions';
 
 interface OneTimeDeployment {
   configs: PlatformConfig[];
@@ -27,6 +28,8 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
   const [inputValue, setInputValue] = useState("");
   const configMap = useMemo(() => configsToMap(configs), [configs]);
 
+  const { deployFactoryContract, receipt, isDeploying, deploymUSDCContract } = useAdminActions();
+
   const handleEdit = (type: string, data: any) => {
     setEditDialog({ open: true, type, data });
   };
@@ -37,7 +40,6 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
         recordKey: editDialog.data,
         address: inputValue
       }
-
       const response = await api.post("/admin/deploy/record", payload);
       if (response.status !== 200) throw new Error("Failed to update configuration");
 
@@ -48,6 +50,26 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
       console.error(error);
     }
   };
+
+  const removeValue = async (key: string) => {
+    try {
+      const response = await api.patch(`/admin/configs/${key}`);
+      if (response.status !== 200) throw new Error("Failed to remove configuration");
+      onDataUpdate();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const isValidEthAddress = (address: string | undefined) => {
+    return !!address && /^0x[a-fA-F0-9]{40}$/.test(address);
+  }
+
+  useEffect(() => {
+    if (receipt) {
+      onDataUpdate();
+    }
+  }, [receipt]);
 
   return (
     <>
@@ -63,21 +85,41 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
             <div className="p-3 border rounded-lg justify-between flex">
               <div>
                 <div className="text-primary font-bold text-lg">Platform Factory Contract</div>
-                {configMap["PROJECT_FACTORY_ADDRESS"] ? <div className="text-md text-muted-foreground font-bold">{configMap["PROJECT_FACTORY_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
+                {isValidEthAddress(configMap["PROJECT_FACTORY_ADDRESS"]) ? <div className="text-md text-muted-foreground font-bold">{configMap["PROJECT_FACTORY_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
               </div>
-              <Button variant="ghost" className="bg-gray-100 text-emerald-700 hover:text-emerald-950 w-10 h-10" onClick={() => handleEdit('Platform Factory Contract', "PROJECT_FACTORY_ADDRESS")}>
-                <Edit className="h-6 w-6" />
-              </Button>
-
+              {!isValidEthAddress(configMap["PROJECT_FACTORY_ADDRESS"]) ?
+                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={deployFactoryContract}>
+                  {isDeploying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deploying... Check Wallet
+                    </>
+                  ) : ("Deploy Factory Contract")}
+                </Button> :
+                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => removeValue("PROJECT_FACTORY_ADDRESS")}>
+                  <Edit className="h-6 w-6" /> Remove
+                </Button>}
             </div>
             <div className="p-3 border rounded-lg justify-between flex">
               <div>
                 <div className="text-primary font-bold text-lg">Mocked USDC</div>
-                {configMap["MOCK_USDC_CONTRACT_ADDRESS"] ? <div className="text-md text-muted-foreground font-bold">{configMap["MOCK_USDC_CONTRACT_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
+                {isValidEthAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ? <div className="text-md text-muted-foreground font-bold">{configMap["MOCK_USDC_CONTRACT_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
               </div>
-              <Button variant="ghost" className="bg-gray-100 text-emerald-700 hover:text-emerald-950 w-10 h-10" onClick={() => handleEdit('Mocked USDC Contract', "MOCK_USDC_CONTRACT_ADDRESS")}>
+              {!isValidEthAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ?
+                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={deploymUSDCContract}>
+                  {isDeploying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deploying... Check Wallet
+                    </>
+                  ) : ("Deploy Mocked USDC Contract")}
+                </Button> :
+                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => removeValue("PROJECT_FACTORY_ADDRESS")}>
+                  <Edit className="h-6 w-6" /> Remove
+                </Button>}
+              {/* <Button variant="ghost" className="bg-gray-100 text-emerald-700 hover:text-emerald-950 w-10 h-10" onClick={() => handleEdit('Mocked USDC Contract', "MOCK_USDC_CONTRACT_ADDRESS")}>
                 <Edit className="h-6 w-6" />
-              </Button>
+              </Button> */}
             </div>
             <div className="p-3 border rounded-lg justify-between flex">
               <div>

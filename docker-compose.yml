@@ -35,25 +35,25 @@ services:
     networks:
       - comm_efficient_network
   
-  api:
-    build:
-        context: . # Use root directory as context
-        dockerfile: backend/Dockerfile # Specify the Dockerfile location
-    container_name: api_endpoint
-    restart: always
-    ports:
-      - "5001:5001"
-    environment:
-      - NODE_ENV=development
-      - DB_HOST=DB
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - DB
-      - hardhat
-    networks:
-      - comm_efficient_network
-    command: npm run start
+  # api:
+  #   build:
+  #       context: . # Use root directory as context
+  #       dockerfile: backend/Dockerfile # Specify the Dockerfile location
+  #   container_name: api_endpoint
+  #   restart: always
+  #   ports:
+  #     - "5001:5001"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DB_HOST=DB
+  #   env_file:
+  #     - ./backend/.env
+  #   depends_on:
+  #     - DB
+  #     - hardhat
+  #   networks:
+  #     - comm_efficient_network
+  #   command: npm run start
 
   listener:
     build:
@@ -70,7 +70,7 @@ services:
     depends_on:
       - DB
       - hardhat
-      - api
+      # - api
     networks:
       - comm_efficient_network
     command: npm run start:listener
@@ -89,7 +89,7 @@ services:
     depends_on:
       - DB
       - hardhat
-      - api
+      # - api
     networks:
       - comm_efficient_network
     command: npm run start:keeper
