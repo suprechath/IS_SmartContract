@@ -31,8 +31,16 @@ const getAllConfigValue = async () => {
     return null;
 };
 
+const updateConfigValue = async (key) => {
+    console.log('Deleting config with key:', key);
+    const query = `UPDATE platform_config SET config_value = NULL, updated_at = NOW() WHERE config_key = $1 RETURNING *;`;
+    const result = await pool.query(query, [key]);
+    return result.rows[0];
+};
+
 export default {
     setConfigValue,
     getConfigValue,
-    getAllConfigValue
+    getAllConfigValue,
+    updateConfigValue
 };

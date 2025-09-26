@@ -10,8 +10,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectFactoryArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectFactory.sol/ProjectFactory.json');
-
+const mUSDCFactoryArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/MockedUSDC.sol/MockedUSCD.json');
 const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'utf8'));
+const mUSDCFactory = JSON.parse(fs.readFileSync(mUSDCFactoryArtifactPath, 'utf8'));
 
 
 // @route   POST /api/admin/verify-user
@@ -78,6 +79,26 @@ export const prepareFactoryDeployment = async (req, res) => {
     }
 };
 
+// @desc    Prepare the unsigned transaction for deploying the MockedUSDC contract
+// @route   POST /api/admin/deploy-mUSDC/prepare
+export const prepareUSDCDeployment = async (req, res) => {
+    const mUSDCAddress = await configModel.getConfigValue('MOCK_USDC_CONTRACT_ADDRESS');
+    if (mUSDCAddress) {
+        return handleResponse(res, 400, `A mUSDC contract address is already configured at ${mUSDCAddress}. To deploy a new one, please remove the existing address from the environment configuration.`);
+    }
+
+    try {
+        const MUSDC = new ethers.ContractFactory(mUSDCFactory.abi, mUSDCFactory.bytecode);
+        const unsignedTx = await MUSDC.getDeployTransaction();
+        handleResponse(res, 200, 'Unsigned factory deployment transaction prepared successfully.', {
+            unsignedTx
+        });
+    } catch (error) {
+        console.error('Prepare Factory Deployment Error:', error);
+        handleResponse(res, 500, 'Server error during factory deployment preparation.', error.message);
+    }
+};
+
 
 //@desc    Records the address of the newly deployed ProjectFactory contract
 //@route   POST /api/admin/deploy-factory/record
@@ -120,5 +141,20 @@ export const getAllConfig = async (req, res) => {
     } catch (error) {
         console.error('Get All Config Error:', error);
         handleResponse(res, 500, 'Server error while retrieving all configuration values.', { error: error.message });
+    }
+};
+
+// @desc    Delete a configuration key
+// @route   DELETE /api/admin/delete-config
+export const deleteConfigValue = async (req, res) => {
+    try {
+        const updatedConfig = await configModel.updateConfigValue(req.params.configKey);
+        if (!updatedConfig) {
+            return handleResponse(res, 404, 'Configuration key not found.');
+        }
+        handleResponse(res, 200, `Configuration key ${req.params.configKey} deleted successfully.`, updatedConfig);
+    } catch (error) {
+        console.error('Delete Config Error:', error);
+        handleResponse(res, 500, 'Server error while deleting configuration key.', { error: error.message });
     }
 };
