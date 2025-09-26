@@ -36,16 +36,16 @@ export const registerUser = async (req, res) => {
 // @desc Get user profile
 // @route GET /api/users/me
 export const getUserProfile = async (req, res) => {
-    try {
-        const user = await userModel.getFullUserProfileById(req.user.id);
-        if (!user) {
-            return handleResponse(res, 404, 'User not found.');
-        }
-        handleResponse(res, 200, 'User profile retrieved successfully', user);
-    } catch (error) {
-        console.error('Get User Profile Error:', error);
-        handleResponse(res, 500, 'Server error while retrieving user profile.', error.message);
+  try {
+    const user = await userModel.getFullUserProfileById(req.user.id);
+    if (!user) {
+      return handleResponse(res, 404, 'User not found.');
     }
+    handleResponse(res, 200, 'User profile retrieved successfully', user);
+  } catch (error) {
+    console.error('Get User Profile Error:', error);
+    handleResponse(res, 500, 'Server error while retrieving user profile.', error.message);
+  }
 };
 
 // @desc    Update user profile
@@ -73,11 +73,26 @@ export const updateUserProfile = async (req, res) => {
 // @desc Get all onchain users
 // @route GET /api/users/onchain
 export const getAllUsersOnchain = async (req, res) => {
-    try {
-        const users = await userModel.getAllUsersOnchain();
-        handleResponse(res, 200, 'Onchain users retrieved successfully', users);
-    } catch (error) {
-        console.error('Get All Onchain Users Error:', error);
-        handleResponse(res, 500, 'Server error while retrieving onchain users.', error.message);
+  try {
+    const users = await userModel.getAllUsersOnchain();
+    handleResponse(res, 200, 'Onchain users retrieved successfully', users);
+  } catch (error) {
+    console.error('Get All Onchain Users Error:', error);
+    handleResponse(res, 500, 'Server error while retrieving onchain users.', error.message);
+  }
+};
+
+// @desc Get user profile
+// @route GET /api/users/id/:userId
+export const getUserById = async (req, res) => {
+  try {
+    const user = await userModel.getFullUserProfileById(req.params.userId);
+    if (!user) {
+      return handleResponse(res, 404, 'User not found.');
     }
+    handleResponse(res, 200, 'User profile retrieved successfully', user);
+  } catch (error) {
+    console.error('Get User Profile Error:', error);
+    handleResponse(res, 500, 'Server error while retrieving user profile.', error.message);
+  }
 };

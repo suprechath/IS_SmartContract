@@ -7,9 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/co
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getStatusBadge, getRoleBadge } from "@/components/StatusBadge";
 
-import { Eye, FileSpreadsheet, Search, User as UserIcon, CheckCircle, XCircle } from "lucide-react";
+import { Eye, FileSpreadsheet, Search, User as UserIcon, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useAdminActions } from "../hooks/useAdminActions";
 import type { User } from "../types";
+import api from '@/lib/api';
+
 
 interface UserTableProps {
   users: User[];
@@ -23,6 +25,11 @@ export const UserManagementTable = ({ users, onDataUpdate }: UserTableProps) => 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [reviewAction, setReviewAction] = useState<ReviewAction>("Rejected");
   const [isReviewOpen, setReviewOpen] = useState(false);
+
+  const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [detailedUserData, setDetailedUserData] = useState<User | null>(null);
+  const [isDetailsLoading, setDetailsLoading] = useState<boolean>(false);
+
 
   const filteredUsers = useMemo(() =>
     users.filter(user =>
@@ -45,9 +52,24 @@ export const UserManagementTable = ({ users, onDataUpdate }: UserTableProps) => 
     setReviewOpen(false);
   };
 
-  // const handleViewDetailsClick = async (user: Project) => {
-
-  // };
+  const handleViewDetailsClick = async (user: User) => {
+    setSelectedUser(user);
+    setDetailsOpen(true);
+    setDetailsLoading(true);
+    setDetailedUserData(null);
+    try {
+      const response = await api.get(`/users/id/${user.id}`);
+      if (response.status !== 200) {
+        throw new Error(`Failed to fetch user details: ${response.statusText}`);
+      }
+      console.log("Raw detailed user data:", response.data.data);
+      setDetailedUserData(response.data.data);
+    } catch (error) {
+      console.error("Failed to fetch user details:", error);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -106,9 +128,8 @@ export const UserManagementTable = ({ users, onDataUpdate }: UserTableProps) => 
                   <TableCell>{getStatusBadge(user.sanction_status.toLowerCase())}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1">
-                      <Button variant="ghost" size="icon"
-                      // onClick={() => handleViewDetailsClick(project)}
-                      ><Eye className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleViewDetailsClick(user)}>
+                        <Eye className="h-4 w-4" /></Button>
                       {user.sanction_status === 'Pending' && (
                         <>
                           <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => handleReviewClick(user, 'Verified')}>
@@ -147,6 +168,78 @@ export const UserManagementTable = ({ users, onDataUpdate }: UserTableProps) => 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isDetailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto text-emerald-950 font-bold">
+          <DialogHeader>
+            <DialogTitle className="text-xl gap-10 flex items-center sticky top-0">
+              {detailedUserData?.full_name}
+              {detailedUserData?.sanction_status == "Pending" &&
+                <div>
+                  <Button variant="ghost" size="icon" className="text-green-600 bg-gray-200 hover:text-green-700 w-28" onClick={() => handleReviewClick(selectedUser, 'Verified')}>
+                    <CheckCircle className="h-16 w-16" /> Approve
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-red-600 bg-gray-200 hover:text-red-700 w-28 ml-5" onClick={() => handleReviewClick(selectedUser, 'Rejected')}>
+                    <XCircle className="h-16 w-16" /> Reject
+                  </Button>
+                </div>
+              }
+            </DialogTitle>
+            <DialogDescription>
+              User ID: {detailedUserData?.id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-md min-h-[200px]">
+            {isDetailsLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-40 w-40 animate-spin text-muted-foreground" />
+              </div>
+            ) : detailedUserData ? (
+              <div className="space-y-2 text-sm">
+
+                {/* {/* --- OVERVIEW SECTION --- */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-semibold text-base">Role</h4>
+                    {selectedUser && getRoleBadge(detailedUserData.role.toLowerCase().replace(/ /g, "_"))}
+                    {/* <p className="text-muted-foreground">{detailedUserData.role}</p> */}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-semibold text-base">Wallet address</h4>
+                    <p className="text-muted-foreground">{detailedUserData.wallet_address}</p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-base">Status</span>
+                    {selectedUser && getStatusBadge(detailedUserData.sanction_status.toLowerCase())}
+                  </div>
+                  <hr />
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-muted-foreground">Email</h4>
+                    <p className="text-muted-foreground">{detailedUserData.email}</p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-muted-foreground">Identification number</h4>
+                    <p className="text-muted-foreground">{detailedUserData.identification_number}</p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-muted-foreground">Date of Birth</h4>
+                    <p className="text-muted-foreground">{new Date(detailedUserData.date_of_birth).toISOString().slice(0, 10)}</p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-muted-foreground">Location address</h4>
+                    <p className="text-muted-foreground">{detailedUserData.address}</p>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">Could not load project details.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog >
     </>
 
 

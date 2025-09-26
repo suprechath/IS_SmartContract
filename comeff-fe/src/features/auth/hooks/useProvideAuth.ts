@@ -55,7 +55,7 @@ export const useProvideAuth = () => {
         const storedUser = localStorage.getItem('user');
         const storedUserObj = storedUser ? JSON.parse(storedUser) : null;
 
-        if (storedToken && storedUserObj && new Date().getTime() < new Date(storedExpiresAt).getTime()) {
+        if (storedToken && storedUserObj && storedExpiresAt && new Date().getTime() < new Date(storedExpiresAt).getTime()) {
             setToken(storedToken);
             setUser(storedUserObj.sanction_status);
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
