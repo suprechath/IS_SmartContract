@@ -9,6 +9,8 @@ import { Edit, Loader2 } from "lucide-react";
 import type { PlatformConfig } from "../types";
 import api from '@/lib/api';
 import { useAdminActions } from '../hooks/useAdminActions';
+import { isAddress } from "viem"; // address checker from viem
+import { is } from "date-fns/locale";
 
 interface OneTimeDeployment {
   configs: PlatformConfig[];
@@ -24,11 +26,19 @@ const configsToMap = (configs: PlatformConfig[]) => {
 };
 
 export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) => {
+  const {
+    deployFactoryContract, contractAddress, isDeploying,
+    deploymUSDCContract, recordDeployment, mintUSDC, mintHash } = useAdminActions();
   const [editDialog, setEditDialog] = useState({ open: false, type: '', data: null });
   const [inputValue, setInputValue] = useState("");
+  const [contractType, setContractType] = useState("");
   const configMap = useMemo(() => configsToMap(configs), [configs]);
 
-  const { deployFactoryContract, receipt, isDeploying, deploymUSDCContract } = useAdminActions();
+  const [formData, setFormData] = useState({ address: "", mint: "" });
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleEdit = (type: string, data: any) => {
     setEditDialog({ open: true, type, data });
@@ -51,6 +61,20 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
     }
   };
 
+  const handleDeployment = async (type: string) => {
+    setContractType(type);
+    console.log("Starting deployment for type:", type);
+    console.log("Current contractType state:", contractType);
+    // Call deployment function based on type
+    if (type === "PROJECT_FACTORY_ADDRESS") {
+      console.log("Deploying Factory Contract...");
+      await deployFactoryContract();
+    } else if (type === "MOCK_USDC_CONTRACT_ADDRESS") {
+      console.log("Deploying Mocked USDC Contract...");
+      await deploymUSDCContract();
+    }
+  };
+
   const removeValue = async (key: string) => {
     try {
       const response = await api.patch(`/admin/configs/${key}`);
@@ -61,15 +85,35 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
     }
   };
 
-  const isValidEthAddress = (address: string | undefined) => {
-    return !!address && /^0x[a-fA-F0-9]{40}$/.test(address);
-  }
+  const handleMint = async () => {
+    console.log("Minting USDC to address:", formData.address, "Amount:", formData.mint);
+    const recipientAddress = formData.address;
+    const amount = formData.mint;
+    const usdcAddress = configMap["MOCK_USDC_CONTRACT_ADDRESS"];
+
+    if (!isAddress(recipientAddress) || !amount || parseFloat(amount) <= 0) {
+      alert("Please check recipient and amount");
+      return;
+    }
+    await mintUSDC(usdcAddress as `0x${string}`, recipientAddress as `0x${string}`, amount);
+  };
 
   useEffect(() => {
-    if (receipt) {
+    if (contractAddress) {
+      console.log("Recording deployed contract address:", contractAddress);
+      recordDeployment(contractType, contractAddress);
+      setContractType("");
       onDataUpdate();
     }
-  }, [receipt]);
+  }, [contractAddress]);
+
+  useEffect(() => {
+    if (mintHash) {
+      console.log("Mint transaction sent! Hash:", mintHash);
+      setFormData({ address: '', mintAmount: '' });
+      alert('Mint successful!');
+    }
+  }, [mintHash]);
 
   return (
     <>
@@ -81,46 +125,8 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
               <CardDescription className="text-emerald-950">Manage and monitor platform's configuration</CardDescription>
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="p-3 border rounded-lg justify-between flex">
-              <div>
-                <div className="text-primary font-bold text-lg">Platform Factory Contract</div>
-                {isValidEthAddress(configMap["PROJECT_FACTORY_ADDRESS"]) ? <div className="text-md text-muted-foreground font-bold">{configMap["PROJECT_FACTORY_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
-              </div>
-              {!isValidEthAddress(configMap["PROJECT_FACTORY_ADDRESS"]) ?
-                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={deployFactoryContract}>
-                  {isDeploying ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deploying... Check Wallet
-                    </>
-                  ) : ("Deploy Factory Contract")}
-                </Button> :
-                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => removeValue("PROJECT_FACTORY_ADDRESS")}>
-                  <Edit className="h-6 w-6" /> Remove
-                </Button>}
-            </div>
-            <div className="p-3 border rounded-lg justify-between flex">
-              <div>
-                <div className="text-primary font-bold text-lg">Mocked USDC</div>
-                {isValidEthAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ? <div className="text-md text-muted-foreground font-bold">{configMap["MOCK_USDC_CONTRACT_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
-              </div>
-              {!isValidEthAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ?
-                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={deploymUSDCContract}>
-                  {isDeploying ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deploying... Check Wallet
-                    </>
-                  ) : ("Deploy Mocked USDC Contract")}
-                </Button> :
-                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => removeValue("PROJECT_FACTORY_ADDRESS")}>
-                  <Edit className="h-6 w-6" /> Remove
-                </Button>}
-              {/* <Button variant="ghost" className="bg-gray-100 text-emerald-700 hover:text-emerald-950 w-10 h-10" onClick={() => handleEdit('Mocked USDC Contract', "MOCK_USDC_CONTRACT_ADDRESS")}>
-                <Edit className="h-6 w-6" />
-              </Button> */}
-            </div>
             <div className="p-3 border rounded-lg justify-between flex">
               <div>
                 <div className="text-primary font-bold text-lg">Default Platform Fee</div>
@@ -140,10 +146,67 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
               </Button>
             </div>
           </div>
-
+          <div className="p-3 border rounded-lg justify-between flex">
+            <div>
+              <div className="text-primary font-bold text-lg">Platform Factory Contract</div>
+              {isAddress(configMap["PROJECT_FACTORY_ADDRESS"]) ? <div className="text-md text-muted-foreground font-bold">{configMap["PROJECT_FACTORY_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
+            </div>
+            {!isAddress(configMap["PROJECT_FACTORY_ADDRESS"]) ?
+              <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => handleDeployment("PROJECT_FACTORY_ADDRESS")}>
+                {isDeploying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deploying... Check Wallet
+                  </>
+                ) : ("Deploy Factory Contract")}
+              </Button> :
+              <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => removeValue("PROJECT_FACTORY_ADDRESS")}>
+                <Edit className="h-6 w-6" /> Remove
+              </Button>}
+          </div>
+          <div className="p-3 border rounded-lg grid gap-4 grid-cols-2  ">
+            <div>
+              <div className="text-primary font-bold text-lg">Mocked USDC</div>
+              {isAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ? <div className="text-md text-muted-foreground font-bold">{configMap["MOCK_USDC_CONTRACT_ADDRESS"]}</div> : <div className="text-lg font-bold">Not Deployed</div>}
+              {isAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) &&
+                <div className="flex mt-4">
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    placeholder={`Enter recipient address for minting USDC`}
+                  />
+                  <Input
+                    value={formData.mint}
+                    onChange={(e) => handleInputChange("mint", e.target.value)}
+                    placeholder={`Enter minted USDC amount`}
+                    className="ml-2"
+                  />
+                  <Button className="ml-2" onClick={handleMint} disabled={!isAddress(formData.address) || !formData.mint}>
+                    Mint
+                  </Button>
+                </div>
+              }
+            </div>
+            {!isAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ?
+              <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => handleDeployment("MOCK_USDC_CONTRACT_ADDRESS")}>
+                {isDeploying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deploying... Check Wallet
+                  </>
+                ) : ("Deploy Mocked USDC Contract")}
+              </Button> :
+              <div className="justify-self-end gap-4 flex">
+                <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => removeValue("MOCK_USDC_CONTRACT_ADDRESS")}>
+                  <Edit className="h-6 w-6" /> Remove
+                </Button>
+                <Button variant="ghost" className="bg-gray-100 text-emerald-700 hover:text-emerald-950 w-10 h-10" onClick={() => handleEdit('Mocked USDC', "MOCK_USDC_CONTRACT_ADDRESS")}>
+                  <Edit className="h-6 w-6" />
+                </Button>
+              </div>}
+          </div>
         </CardHeader>
       </Card>
-
 
       {/* Edit Dialog */}
       <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog({ ...editDialog, open })}>

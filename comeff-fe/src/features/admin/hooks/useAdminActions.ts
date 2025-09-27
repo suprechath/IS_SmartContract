@@ -1,17 +1,17 @@
 // src/features/admin/hooks/useAdminActions.ts
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
-
+import { useSendTransaction, useWaitForTransactionReceipt, useWriteContract} from 'wagmi';
+import { parseUnits } from 'viem';
+import { abi as mUSDCAbi } from '@/abi/MockedUSDC.sol/MockedUSCD.json';
 
 export const useAdminActions = () => {
     const [projectSearch, setProjectSearch] = useState("");
     const [userSearch, setUserSearch] = useState("");
 
     const { data: hash, error, isPending, sendTransaction } = useSendTransaction();
-    const {
-        data: receipt,
-    } = useWaitForTransactionReceipt({ hash });
+    const { data: mintHash, writeContract } = useWriteContract();
+    const { data: receipt } = useWaitForTransactionReceipt({ hash: hash || mintHash });
 
     const reviewProject = async (
         projectId: string,
@@ -92,6 +92,41 @@ export const useAdminActions = () => {
         }
     };
 
+    const recordDeployment = async (contractType: string, contractAddress: string) => {
+        try {
+            console.log(`Recording deployment for ${contractType} at address ${contractAddress}...`);
+            let response;
+            if (contractType === "PROJECT_FACTORY_ADDRESS") {
+                response = await api.post("/admin/deploy-factory/record", { factoryAddress: contractAddress });
+            } else if (contractType === "MOCK_USDC_CONTRACT_ADDRESS") {
+                const payload = { recordKey: contractType, address: contractAddress };
+                response = await api.post("/admin/deploy/record", payload);
+            }
+            if (response && response.status === 200) {
+                console.log(`${contractType} address recorded successfully.`);
+            } else {
+                console.error(`Failed to record ${contractType} address.`);
+            }
+        } catch (error) {
+            console.error(`Error recording ${contractType} address:`, error);
+        }
+    };
+
+    const mintUSDC = async (tokenAddress: `0x${string}`, recipientAddress: `0x${string}`, amount: string) => {
+        try {
+            const amountInSmallestUnit = parseUnits(amount, 6); // Assuming 6 decimals for USDC
+            writeContract({
+                address: tokenAddress,
+                abi: mUSDCAbi,
+                functionName: 'mint',
+                args: [recipientAddress, amountInSmallestUnit],
+            });
+        } catch (e) {
+            console.error("Error preparing mint transaction:", e);
+            alert("Failed to prepare mint transaction. See console for details.");
+        }
+    };
+
     useEffect(() => {
         if (hash) {
             console.log('Transaction sent! Hash:', hash);
@@ -99,11 +134,11 @@ export const useAdminActions = () => {
         if (receipt) {
             console.log('Transaction confirmed! Receipt:', receipt);
             console.log('Deployed Contract Address:', receipt.contractAddress);
-            // api.post("/admin/deploy-factory/record", {factoryAddress: receipt.contractAddress});
         }
-    }, [hash, receipt]);
-
-
+        if (mintHash) {
+             console.log('Mint transaction sent! Hash:', mintHash);
+        }
+    }, [hash, receipt, mintHash]);
 
     return {
         projectSearch,
@@ -115,7 +150,11 @@ export const useAdminActions = () => {
         exportData,
         deployFactoryContract,
         receipt,
+        contractAddress: receipt?.contractAddress,
         isDeploying: isPending,
         deploymUSDCContract,
+        recordDeployment,
+        mintUSDC,
+        mintHash
     };
 };

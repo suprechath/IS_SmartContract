@@ -88,8 +88,9 @@ export const prepareUSDCDeployment = async (req, res) => {
     }
 
     try {
+        const deployerAddress = req.user.wallet_address;
         const MUSDC = new ethers.ContractFactory(mUSDCFactory.abi, mUSDCFactory.bytecode);
-        const unsignedTx = await MUSDC.getDeployTransaction();
+        const unsignedTx = await MUSDC.getDeployTransaction(deployerAddress ,deployerAddress);
         handleResponse(res, 200, 'Unsigned factory deployment transaction prepared successfully.', {
             unsignedTx
         });
