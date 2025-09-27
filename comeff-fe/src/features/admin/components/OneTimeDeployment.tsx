@@ -10,7 +10,6 @@ import type { PlatformConfig } from "../types";
 import api from '@/lib/api';
 import { useAdminActions } from '../hooks/useAdminActions';
 import { isAddress } from "viem"; // address checker from viem
-import { is } from "date-fns/locale";
 
 interface OneTimeDeployment {
   configs: PlatformConfig[];
@@ -27,8 +26,9 @@ const configsToMap = (configs: PlatformConfig[]) => {
 
 export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) => {
   const {
-    deployFactoryContract, contractAddress, isDeploying,
-    deploymUSDCContract, recordDeployment, mintUSDC, mintHash } = useAdminActions();
+    deployFactoryContract, contractAddress, isDeploying, patchConfigValue, removeConfigValue,
+    deploymUSDCContract, recordDeployment, mintUSDC, mintHash, 
+  } = useAdminActions();
   const [editDialog, setEditDialog] = useState({ open: false, type: '', data: null });
   const [inputValue, setInputValue] = useState("");
   const [contractType, setContractType] = useState("");
@@ -46,13 +46,8 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
 
   const handleSave = async () => {
     try {
-      const payload = {
-        recordKey: editDialog.data,
-        address: inputValue
-      }
-      const response = await api.post("/admin/deploy/record", payload);
-      if (response.status !== 200) throw new Error("Failed to update configuration");
-
+      if (!editDialog.data) throw new Error("No data to edit");
+      await patchConfigValue(editDialog.data, inputValue);
       setEditDialog({ open: false, type: '', data: null });
       setInputValue("");
       onDataUpdate();
@@ -77,8 +72,7 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
 
   const removeValue = async (key: string) => {
     try {
-      const response = await api.patch(`/admin/configs/${key}`);
-      if (response.status !== 200) throw new Error("Failed to remove configuration");
+      removeConfigValue(key);
       onDataUpdate();
     } catch (error) {
       console.error(error);
@@ -188,7 +182,7 @@ export const OneTimeDeployment = ({ configs, onDataUpdate }: OneTimeDeployment) 
               }
             </div>
             {!isAddress(configMap["MOCK_USDC_CONTRACT_ADDRESS"]) ?
-              <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-30 h-10 " onClick={() => handleDeployment("MOCK_USDC_CONTRACT_ADDRESS")}>
+              <Button variant="ghost" className="bg-emerald-600/20 text-emerald-700 hover:text-emerald-950 w-auto h-10 justify-self-end" onClick={() => handleDeployment("MOCK_USDC_CONTRACT_ADDRESS")}>
                 {isDeploying ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

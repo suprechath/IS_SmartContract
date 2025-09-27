@@ -1,7 +1,7 @@
 // src/features/admin/hooks/useAdminActions.ts
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { useSendTransaction, useWaitForTransactionReceipt, useWriteContract} from 'wagmi';
+import { useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { parseUnits } from 'viem';
 import { abi as mUSDCAbi } from '@/abi/MockedUSDC.sol/MockedUSCD.json';
 
@@ -112,6 +112,30 @@ export const useAdminActions = () => {
         }
     };
 
+    const patchConfigValue = async (key: string, value: string) => {
+        try {
+            const payload = {
+                recordKey: key,
+                address: value
+            }
+            const response = await api.post("/admin/deploy/record", payload);
+            if (response.status !== 200) throw new Error("Failed to update configuration");
+            console.log("Configuration updated successfully");
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const removeConfigValue = async (key: string) => {
+        try {
+            const response = await api.patch(`/admin/configs/${key}`);
+            if (response.status !== 200) throw new Error("Failed to remove configuration");
+            console.log("Configuration removed successfully");
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const mintUSDC = async (tokenAddress: `0x${string}`, recipientAddress: `0x${string}`, amount: string) => {
         try {
             const amountInSmallestUnit = parseUnits(amount, 6); // Assuming 6 decimals for USDC
@@ -136,7 +160,7 @@ export const useAdminActions = () => {
             console.log('Deployed Contract Address:', receipt.contractAddress);
         }
         if (mintHash) {
-             console.log('Mint transaction sent! Hash:', mintHash);
+            console.log('Mint transaction sent! Hash:', mintHash);
         }
     }, [hash, receipt, mintHash]);
 
@@ -155,6 +179,8 @@ export const useAdminActions = () => {
         deploymUSDCContract,
         recordDeployment,
         mintUSDC,
-        mintHash
+        mintHash,
+        patchConfigValue,
+        removeConfigValue
     };
 };
