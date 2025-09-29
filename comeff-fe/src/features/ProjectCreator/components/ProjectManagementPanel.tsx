@@ -1,20 +1,25 @@
 // src/features/dashboard/components/ProjectManagementPanel.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-
-import { Clock, Link2, TrendingUp, CheckCircle } from "lucide-react";
+import { Clock, Link2, TrendingUp, CheckCircle, Loader2 } from "lucide-react";
 
 import { Project, ProjectStatus } from '@/features/ProjectCreator/types';
 
+
 interface ProjectManagementPanelProps {
   project: Project;
+  onDeployContracts: (projectId: string) => void;
+  isDeploying: boolean;
+  estimateDeploymentCost: (projectId: string) => void;
+  isEstimating: boolean;
+  estimatedCost: string | null;
   onWithdrawFunds: (projectId: string) => void;
   onDepositReward: (projectId: string, amount: number) => void;
   onPostUpdate: (projectId: string, updateText: string) => void;
@@ -38,7 +43,17 @@ const getStatusBadgeVariant = (
   }
 };
 
-export const ProjectManagementPanel = ({ project, onWithdrawFunds, onDepositReward, onPostUpdate }: ProjectManagementPanelProps) => {
+export const ProjectManagementPanel = ({
+  project, onDeployContracts, isDeploying, estimateDeploymentCost, isEstimating, estimatedCost,
+  onWithdrawFunds, onDepositReward, onPostUpdate, }: ProjectManagementPanelProps
+) => {
+
+  useEffect(() => {
+    if (project.project_status === "Approved" && !project.management_contract_address) {
+      estimateDeploymentCost(project.id);
+    }
+  }, [project.project_status]); //project.id, project.project_status
+
   const [rewardAmount, setRewardAmount] = useState("");
   const [updateText, setUpdateText] = useState("");
 
@@ -78,41 +93,6 @@ export const ProjectManagementPanel = ({ project, onWithdrawFunds, onDepositRewa
           {project.project_status}</Badge>
       </CardHeader>
       <CardContent >
-        {/* Render different views based on project status */}
-        {/* {project.project_status === 'Succeeded' && (
-          <Button onClick={() => onWithdrawFunds(project.id)} size="lg" className="w-full">
-            Withdraw Funds
-          </Button>
-        )}
-        {project.project_status === 'Active' && (
-          <div className="space-y-4">
-            <div>
-              <Label>USDC Amount</Label>
-              <Input
-                type="number"
-                placeholder="Enter reward amount"
-                value={rewardAmount}
-                onChange={(e) => setRewardAmount(e.target.value)}
-              />
-              <Button onClick={handleDeposit} className="w-full mt-2">
-                Deposit Reward
-              </Button>
-            </div>
-            <div>
-              <Label>Post an Update</Label>
-              <Textarea
-                placeholder="Share progress with your investors..."
-                value={updateText}
-                onChange={(e) => setUpdateText(e.target.value)}
-              />
-              <Button onClick={handleUpdate} variant="outline" className="w-full mt-2">
-                Post Update
-              </Button>
-            </div>
-          </div>
-        )} */}
-        {/* ... other status views ... */}
-
         <Tabs defaultValue="action" className="h-[600px] overflow-y-auto">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="action">Project Actions</TabsTrigger>
@@ -170,17 +150,43 @@ export const ProjectManagementPanel = ({ project, onWithdrawFunds, onDepositRewa
                       {/* NOTE: Gas estimation would require a more complex setup, this is a placeholder */}
                       <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                         <div>
-                          <p className="font-medium">Estimated Deployment Cost</p>
-                          <p className="text-sm text-muted-foreground">Gas fees for contract deployment</p>
+                          <p className="text-lg font-medium">Estimated Deployment Cost</p>
+                          <p className="text-xs text-muted-foreground">Network gas fees for project contract deployment</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-semibold">~0.05 OP</p>
-                          <p className="text-xs text-muted-foreground">Network fees may vary</p>
+                          {isEstimating && (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <p className="text-md font-semibold">Estimating...</p>
+                            </div>
+                          )}
+                          {estimatedCost && !isEstimating && (
+                            <>
+                              <p className="text-lg font-semibold">~{parseFloat(estimatedCost).toFixed(5)}</p>
+                              <p className="text-xs text-muted-foreground">Network fees may vary</p>
+                            </>
+                          )}
                         </div>
+                      </div>
+
+                      {/* Deployment Actions */}
+                      <div className="space-y-4">
+
+                        <Button size="lg" className="w-full" onClick={() => onDeployContracts(project.id)} disabled={isDeploying || isEstimating}>
+                          {isDeploying ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Deploying... Check Wallet
+                            </>
+                          ) : "Deploy Smart Contracts"}
+                        </Button>
+
+                        <p className="text-xs text-center text-muted-foreground">
+                          Once deployed, your fundraising campaign will begin automatically
+                        </p>
                       </div>
                     </div>
                   ) : (
-                    // Shows a confirmation if contracts ARE deployed
                     <div className="text-center p-6 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
                       <CheckCircle className="h-12 w-12 mx-auto mb-4 text-blue-600" />
                       <h3 className="text-lg font-semibold mb-2">Contracts Deployed!</h3>
@@ -189,46 +195,139 @@ export const ProjectManagementPanel = ({ project, onWithdrawFunds, onDepositRewa
                       </p>
                     </div>
                   )}
-
-                  {/* Gas Fee Estimation */}
-                  <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg mb-6">
-                    <div>
-                      <p className="font-medium">Estimated Deployment Cost</p>
-                      <p className="text-sm text-muted-foreground">Gas fees for contract deployment</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold">~0.05 MATIC</p>
-                      <p className="text-xs text-muted-foreground">≈ $0.03 USD</p>
-                    </div>
-                  </div>
-
-                  {/* Deployment Actions */}
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3 p-4 border rounded-lg">
-                      <div className="h-2 w-2 rounded-full bg-green-500 mt-2"></div>
-                      <div className="flex-1">
-                        <p className="font-medium">Wallet Connected</p>
-                        <p className="text-sm text-muted-foreground">0x1234...5678</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-4 border rounded-lg">
-                      <div className="h-2 w-2 rounded-full bg-green-500 mt-2"></div>
-                      <div className="flex-1">
-                        <p className="font-medium">Sufficient Balance</p>
-                        <p className="text-sm text-muted-foreground">0.25 MATIC available</p>
-                      </div>
-                    </div>
-
-                    <Button size="lg" className="w-full" onClick={() => console.log("Deploying contract...")}>
-                      Deploy Smart Contract
-                    </Button>
-
-                    <p className="text-xs text-center text-muted-foreground">
-                      Once deployed, your fundraising campaign will begin automatically
-                    </p>
-                  </div>
                 </Card>
+              </div>
+            )}
+            {project.project_status === "Rejected" && (
+              <div className="space-y-6">
+                <div className="text-center p-6 border rounded-lg bg-red-50 dark:bg-red-950/20">
+                  <div className="h-12 w-12 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xl">✕</span>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Project Not Approved</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Unfortunately, your project did not meet our approval criteria at this time.
+                  </p>
+                  <div className="space-y-4">
+                    <Button variant="outline" className="w-full">
+                      Submit Revised Project
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {project.project_status === "Funding" && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Real-time Funding Tracker</h3>
+                  <Progress value={(project.total_contributions / project.funding_usdc_goal) * 100} className="h-4 mb-2" />
+                  <div className="flex justify-between text-sm text-muted-foreground mb-4">
+                    <span>${project.total_contributions.toLocaleString()} raised</span>
+                    <span>{Math.round((project.total_contributions / project.funding_usdc_goal) * 100)}%</span>
+                  </div>
+                  <div className="text-center">
+                    {/* <p className="text-2xl font-bold">{project.investors} investors</p> */}
+                    <p className="text-sm text-muted-foreground">
+                      End{" "}
+                      {new Date(
+                        new Date(project.updated_at).getTime() + project.funding_duration_second * 1000
+                      ).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Recent Investors</h4>
+                  {/* <div className="space-y-2">
+                    {mockInvestors.map((investor, index) => (
+                      <div key={index} className="flex justify-between text-sm">
+                        <span className="font-mono">{investor.address}</span>
+                        <span>${investor.amount.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div> */}
+                </div>
+              </div>
+            )}
+            {project.project_status === "Succeeded" && (
+              <div className="space-y-6">
+                <div className="text-center p-6 border rounded-lg">
+                  <h3 className="text-lg font-semibold mb-2">Funds Ready to Withdraw</h3>
+                  <p className="text-3xl font-bold text-green-600 mb-4">
+                    ${project.total_contributions.toLocaleString()}
+                  </p>
+                  <Button
+                    // onClick={handleWithdrawFunds} 
+                    size="lg" className="w-full">
+                    Withdraw Funds
+                  </Button>
+                </div>
+              </div>
+            )}
+            {project.project_status === "Active" && (
+              <div className="space-y-6">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-4">Deposit Reward</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">USDC Amount</label>
+                      <Input
+                        type="number"
+                        placeholder="Enter reward amount"
+                        value={rewardAmount}
+                        onChange={(e) => setRewardAmount(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      // onClick={handleDepositReward} 
+                      className="w-full">
+                      Deposit Reward
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-4">Post Update</h3>
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="Share progress updates with your investors..."
+                      value={updateText}
+                      onChange={(e) => setUpdateText(e.target.value)}
+                    />
+                    <Button
+                      // onClick={handlePostUpdate} 
+                      variant="outline" className="w-full">
+                      Post Update
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {project.project_status === "Failed" && (
+              <div className="space-y-6">
+                <div className="text-center p-6 border rounded-lg bg-red-50 dark:bg-red-950/20">
+                  <div className="h-12 w-12 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xl">✕</span>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Funding Goal Not Met</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Unfortunately, this project did not reach its funding goal by the deadline.
+                  </p>
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded bg-muted/50">
+                      <p className="text-sm">
+                        <strong>Final Amount Raised:</strong> ${project.total_contributions.toLocaleString()}
+                      </p>
+                      <p className="text-sm">
+                        <strong>Goal:</strong> ${project.funding_usdc_goal.toLocaleString()}
+                      </p>
+                      <p className="text-sm">
+                        <strong>Investors:</strong> 
+                        {/* {project.investors}  */}
+                        (funds will be allowed to withdraw)
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </TabsContent>

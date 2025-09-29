@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Plus } from "lucide-react";
 
 import { Project, ProjectStatus } from "@/features/ProjectCreator/types";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -33,11 +34,15 @@ const getStatusBadgeVariant = (
     }
 };
 
-export const ProjectList = ({ projects, selectedProject, onSelectProject, }: ProjectListProps) => {
+export const ProjectList = ({ projects, selectedProject, onSelectProject }: ProjectListProps) => {
+
     return (
         <Card className="h-full overflow-y-auto">
-            <CardHeader>
+            <CardHeader className="flex items-center justify-between">
                 <CardTitle className="text-primary text-lg font-bold">My Projects</CardTitle>
+                <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" /> Create Project
+                </Button>
             </CardHeader>
             <CardContent>
                 <Table>

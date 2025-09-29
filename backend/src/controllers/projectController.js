@@ -34,7 +34,7 @@ export const createProject = async (req, res) => {
 // @route   GET /api/projects
 export const getProjects = async (req, res) => {
     const publicStatuses = ['Pending', 'Approved', 'Rejected', 'Funding', 'Succeeded', 'Failed', 'Active'];
-    let requestedStatuses = req.query.status; 
+    let requestedStatuses = req.query.status;
     //http://localhost:5001/api/projects?status=Succeeded || http://localhost:5001/api/projects?status=Funding&status=Active
     let statusesToQuery = [];
 
@@ -103,7 +103,7 @@ export const updateProject = async (req, res) => {
         if (project.project_status !== 'Pending') {
             return handleResponse(res, 400, `Project cannot be updated. It is in '${project.project_status}' status.`);
         }
-        
+
         const { onchainData, offchainData } = separateProjectData(req.body);
         console.log('Onchain Data to update:', onchainData);
         console.log('Offchain Data to update:', offchainData);
@@ -143,7 +143,7 @@ export const prepareCreateProject = async (req, res) => {
 
         const creator = await userModel.getUserById(project.user_onchain_id);
         const creatorWallet = creator.wallet_address;
-        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
+        const USDC_CONTRACT_ADDRESS = await configModel.getConfigValue('MOCK_USDC_CONTRACT_ADDRESS');
         console.log('USDC_CONTRACT_ADDRESS:', USDC_CONTRACT_ADDRESS);
 
         const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
@@ -152,7 +152,7 @@ export const prepareCreateProject = async (req, res) => {
             ethers.encodeBytes32String(project.id.substring(0, 31)),
             creator.wallet_address,
             project.title,
-            project.id.substring(0, 4).toUpperCase(),
+            "EP" + Array.from({ length: 4 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join(''),
             ethers.parseUnits(project.funding_usdc_goal.toString(), 6),
             project.funding_duration_second,
             USDC_CONTRACT_ADDRESS,
@@ -185,7 +185,7 @@ export const onboard = async (req, res) => {
             return handleResponse(res, 400, 'Project contracts have already been recorded.');
         }
 
-        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
+        const USDC_CONTRACT_ADDRESS = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
         const updatedProject = await projectModel.updateProject(projectId, {
             token_contract_address: tokenContractAddress,
             management_contract_address: managementContractAddress,

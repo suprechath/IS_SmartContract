@@ -1,5 +1,5 @@
 // src/features/dashboard/hooks/useCreatorData.ts
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, use } from 'react';
 import { useAccount } from 'wagmi';
 import api from '@/lib/api';
 import { Project } from '@/features/ProjectCreator/types';
@@ -12,33 +12,34 @@ export const useCreatorData = () => {
 
   const { address } = useAccount();
 
-  useEffect(() => {
-    const fetchCreatorProjects = async () => {
-      if (!address) {
-        setIsLoading(false);
-        return;
+  const fetchCreatorProjects = useCallback(async () => {
+    if (!address) {
+      setProjects([]);
+      setSelectedProject(null);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await api.get('/projects/my');
+      const fetchedProjects: Project[] = response.data.data;
+      setProjects(fetchedProjects);
+
+      if (fetchedProjects.length > 0) {
+        setSelectedProject(fetchedProjects[0]);
       }
-
-      try {
-        setIsLoading(true);
-        const response = await api.get('/projects/my');
-        const fetchedProjects: Project[] = response.data.data;
-        setProjects(fetchedProjects);
-
-        if (fetchedProjects.length > 0) {
-          setSelectedProject(fetchedProjects[0]);
-        }
-      } catch (err) {
-        setError('Failed to fetch your projects.');
-        console.error("Error fetching creator projects:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-
-    fetchCreatorProjects();
+    } catch (err) {
+      setError('Failed to fetch your projects.');
+      console.error("Error fetching creator projects:", err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [address]);
+
+  useEffect(() => {
+    fetchCreatorProjects();
+  }, [fetchCreatorProjects]);
 
   // Use useMemo to prevent recalculating on every render
   const summaryStats = useMemo(() => {
@@ -57,5 +58,6 @@ export const useCreatorData = () => {
     isLoading,
     error,
     summaryStats,
+    fetchCreatorProjects
   };
 };

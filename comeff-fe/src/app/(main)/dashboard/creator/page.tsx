@@ -12,10 +12,19 @@ import { useCreatorActions } from '@/features/ProjectCreator/hooks/useCreatorAct
 
 export default function CreatorDashboardPage() {
     const {
-        projects, selectedProject, setSelectedProject, isLoading, error, summaryStats,
+        projects, selectedProject, setSelectedProject, isLoading, error, summaryStats, fetchCreatorProjects,
     } = useCreatorData();
 
-    const { handleWithdrawFunds, handleDepositReward, handlePostUpdate,} = useCreatorActions();
+    const {
+        handleWithdrawFunds,
+        handleDepositReward,
+        handlePostUpdate,
+        isDeploying,
+        isEstimating,
+        estimatedCost,
+        handleDeployContracts,
+        estimateDeploymentCost,
+    } = useCreatorActions(fetchCreatorProjects);
 
     if (isLoading) {
         return <DashboardLoadingSkeleton />; // Or a simple "Loading..." message
@@ -46,6 +55,11 @@ export default function CreatorDashboardPage() {
                     {selectedProject ? (
                         <ProjectManagementPanel
                             project={selectedProject}
+                            onDeployContracts={handleDeployContracts}
+                            isDeploying={isDeploying}
+                            estimateDeploymentCost={estimateDeploymentCost}
+                            isEstimating={isEstimating}
+                            estimatedCost={estimatedCost}
                             onWithdrawFunds={handleWithdrawFunds}
                             onDepositReward={handleDepositReward}
                             onPostUpdate={handlePostUpdate}
