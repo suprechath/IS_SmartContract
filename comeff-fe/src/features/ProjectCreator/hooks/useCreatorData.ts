@@ -1,5 +1,5 @@
 // src/features/dashboard/hooks/useCreatorData.ts
-import { useState, useEffect, useMemo, useCallback, use } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import api from '@/lib/api';
 import { Project } from '@/features/ProjectCreator/types';
@@ -9,6 +9,7 @@ export const useCreatorData = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProjectTX, setSelectedProjectTX] = useState<any[]>([]); // Placeholder for transaction data
 
   const { address } = useAccount();
 
@@ -41,6 +42,24 @@ export const useCreatorData = () => {
     fetchCreatorProjects();
   }, [fetchCreatorProjects]);
 
+  useEffect(() => {
+    const fetchProjectTransactions = async (projectId: number) => {
+      try {
+        const response = await api.get(`/transactions/project/${projectId}`);
+        setSelectedProjectTX(response.data.data);
+        console.log("Fetched transactions:", response.data.data);
+      } catch (err) {
+        console.error("Error fetching project transactions:", err);
+      }
+    };
+
+    if (selectedProject) {
+      fetchProjectTransactions(selectedProject.id);
+    } else {
+      setSelectedProjectTX([]);
+    }
+  }, [selectedProject]);
+
   // Use useMemo to prevent recalculating on every render
   const summaryStats = useMemo(() => {
     const totalFundsRaised = projects
@@ -58,6 +77,7 @@ export const useCreatorData = () => {
     isLoading,
     error,
     summaryStats,
-    fetchCreatorProjects
+    fetchCreatorProjects,
+    selectedProjectTX
   };
 };

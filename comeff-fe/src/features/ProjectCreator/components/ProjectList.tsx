@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Users, Plus } from "lucide-react";
+import { Users } from "lucide-react";
 
 import { Project, ProjectStatus } from "@/features/ProjectCreator/types";
 import { cn, formatCurrency } from "@/lib/utils";

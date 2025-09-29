@@ -23,6 +23,7 @@ interface ProjectManagementPanelProps {
   onWithdrawFunds: (projectId: string) => void;
   onDepositReward: (projectId: string, amount: number) => void;
   onPostUpdate: (projectId: string, updateText: string) => void;
+  transactions: any[];
 }
 
 const getStatusBadgeVariant = (
@@ -45,7 +46,7 @@ const getStatusBadgeVariant = (
 
 export const ProjectManagementPanel = ({
   project, onDeployContracts, isDeploying, estimateDeploymentCost, isEstimating, estimatedCost,
-  onWithdrawFunds, onDepositReward, onPostUpdate, }: ProjectManagementPanelProps
+  onWithdrawFunds, onDepositReward, onPostUpdate, transactions}: ProjectManagementPanelProps
 ) => {
 
   useEffect(() => {
@@ -397,7 +398,7 @@ export const ProjectManagementPanel = ({
             </div>
           </TabsContent>
           <TabsContent value="transactions">
-            {/* ... transaction history ... */}
+            
           </TabsContent>
         </Tabs>
       </CardContent>

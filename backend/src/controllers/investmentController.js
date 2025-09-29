@@ -43,7 +43,7 @@ export const investmentCheck = async (req, res) => {
         if (amountInWei + totalContributions > fundingGoal) {
             return handleResponse(res, 400, 'Investment amount exceeds the remaining funding goal., The maximum you can invest is ' + ethers.formatUnits(remainingGoal, 6) + ' tokens.');
         }
-        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('USDC_CONTRACT_ADDRESS');
+        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('MOCK_USDC_CONTRACT_ADDRESS');
         // console.log('USDC_CONTRACT_ADDRESS:', USDC_CONTRACT_ADDRESS);
         // console.log('amount', amountInWei);
 

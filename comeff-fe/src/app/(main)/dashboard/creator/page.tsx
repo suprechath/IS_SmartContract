@@ -1,7 +1,5 @@
 'use client';
 
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useState } from "react";
@@ -17,7 +15,7 @@ import { CreateProjectDialog } from "@/features/ProjectCreator/components/Create
 
 export default function CreatorDashboardPage() {
     const {
-        projects, selectedProject, setSelectedProject, isLoading, error, summaryStats, fetchCreatorProjects,
+        projects, selectedProject, setSelectedProject, isLoading, error, summaryStats, fetchCreatorProjects, selectedProjectTX
     } = useCreatorData();
 
     const {
@@ -66,6 +64,7 @@ export default function CreatorDashboardPage() {
                             onWithdrawFunds={handleWithdrawFunds}
                             onDepositReward={handleDepositReward}
                             onPostUpdate={handlePostUpdate}
+                            transactions={selectedProjectTX}
                         />
                     ) : (
                         <div className="text-center py-10">Select a project to manage.</div>

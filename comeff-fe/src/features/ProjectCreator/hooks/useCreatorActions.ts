@@ -192,11 +192,11 @@ export const useCreatorActions = (onActionComplete: () => void) => {
             console.log(`✅ Management Owner: ${owner}`);
           }
 
-          // await api.post('/projects/deploy/onboard', {
-          //   projectId: activeProjectId,
-          //   tokenContractAddress: tokenContract,
-          //   managementContractAddress: managementContract
-          // });
+          await api.post('/projects/deploy/onboard', {
+            projectId: activeProjectId,
+            tokenContractAddress: tokenContract,
+            managementContractAddress: managementContract
+          });
 
           alert("🎉🎉🎉 Deployment Complete! 🎉🎉🎉")
         } catch (error: any) {

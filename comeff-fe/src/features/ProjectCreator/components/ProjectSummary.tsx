@@ -1,7 +1,7 @@
 // src/features/dashboard/components/ProjectSummary.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Building2, Clock } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 interface ProjectSummaryProps {
   totalFundsRaised: number;

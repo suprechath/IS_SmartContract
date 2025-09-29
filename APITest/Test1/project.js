@@ -94,6 +94,9 @@ const invest = async () => {
             }
         });
         const { unsignedTx, management_contract_address, usdc_address, amount } = investResponse.data.data;
+        console.log("Investment config:", investResponse.data.data);
+        updateStatus('Unsigned transaction received from backend.');
+        updateStatus('Please confirm the investment transaction in your wallet...');
 
         const usdcContract = new ethers.Contract(usdc_address, ProjectToken.abi, signer);
         const amountInWei = ethers.parseUnits(amount.toString(), 6);
@@ -216,6 +219,7 @@ const reward = async () => {
                 Authorization: `Bearer ${localStorage.getItem("jwt_token")}`
             }
         });
+        console.log("Project for reward:", projectRes.data.data);
         const signerAddress = await signer.getAddress();
         const mgmtContract = new ethers.Contract(projectRes.data.data.management_contract_address, ProjectManagement.abi, signer);
         const rewardTx = await mgmtContract.claimReward();
