@@ -4,11 +4,16 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { useState } from "react";
+
 import { ProjectSummary } from '@/features/ProjectCreator/components/ProjectSummary';
 import { ProjectList } from '@/features/ProjectCreator/components/ProjectList';
 import { ProjectManagementPanel } from '@/features/ProjectCreator/components/ProjectManagementPanel';
 import { useCreatorData } from '@/features/ProjectCreator/hooks/useCreatorData';
 import { useCreatorActions } from '@/features/ProjectCreator/hooks/useCreatorActions';
+import { CreateProjectDialog } from "@/features/ProjectCreator/components/CreateProjectDialog";
+
+
 
 export default function CreatorDashboardPage() {
     const {
@@ -16,15 +21,11 @@ export default function CreatorDashboardPage() {
     } = useCreatorData();
 
     const {
-        handleWithdrawFunds,
-        handleDepositReward,
-        handlePostUpdate,
-        isDeploying,
-        isEstimating,
-        estimatedCost,
-        handleDeployContracts,
-        estimateDeploymentCost,
+        handleWithdrawFunds, handleDepositReward, handlePostUpdate, isDeploying,
+        isEstimating, estimatedCost, handleDeployContracts, estimateDeploymentCost,
     } = useCreatorActions(fetchCreatorProjects);
+
+    const [isCreateProjectOpen, setCreateProjectOpen] = useState(false);
 
     if (isLoading) {
         return <DashboardLoadingSkeleton />; // Or a simple "Loading..." message
@@ -50,6 +51,8 @@ export default function CreatorDashboardPage() {
                         projects={projects}
                         selectedProject={selectedProject}
                         onSelectProject={setSelectedProject}
+                        setCreateProject={setCreateProjectOpen}
+                        isOpen={isCreateProjectOpen}
                     />
 
                     {selectedProject ? (
@@ -67,8 +70,12 @@ export default function CreatorDashboardPage() {
                     ) : (
                         <div className="text-center py-10">Select a project to manage.</div>
                     )}
-
                 </div>
+                <CreateProjectDialog
+                    isOpen={isCreateProjectOpen}
+                    setIsOpen={setCreateProjectOpen}
+                    onProjectCreated={fetchCreatorProjects}
+                />
             </main>
         </div>
     )

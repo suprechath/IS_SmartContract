@@ -17,6 +17,6 @@ router.post('/deploy-mUSDC/prepare', protect('Platform Operator'), prepareUSDCDe
 router.post('/deploy-factory/record', protect('Platform Operator'), validate(recordFactorySchema), recordFactoryDeployment);
 router.post('/deploy/record', protect('Platform Operator'), validate(recordSchema), recordDeployment);
 router.patch('/configs/:configKey', protect('Platform Operator'), deleteConfigValue);
-router.get('/configs', protect('Platform Operator'), getAllConfig);
+router.get('/configs', getAllConfig);
 
 export default router;

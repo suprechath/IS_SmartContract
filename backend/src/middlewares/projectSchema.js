@@ -23,6 +23,9 @@ export const createProjectSchema = Joi.object({
     }),
     platform_fee_percentage: Joi.number().integer().min(0).max(10000).optional().default(500), // Default to 5%
     reward_fee_percentage: Joi.number().integer().min(0).max(10000).optional().default(300), // Default to 3%
+    usdc_contract_address: Joi.string()
+        .pattern(/^0x[a-fA-F0-9]{40}$/)
+        .optional()
 });
 
 export const updateProjectSchema = Joi.object({

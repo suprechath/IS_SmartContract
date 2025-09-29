@@ -9,11 +9,14 @@ import { Users, Plus } from "lucide-react";
 
 import { Project, ProjectStatus } from "@/features/ProjectCreator/types";
 import { cn, formatCurrency } from "@/lib/utils";
+import { CreateProjectDialog } from "@/features/ProjectCreator/components/CreateProjectDialog";
 
 interface ProjectListProps {
     projects: Project[];
     selectedProject: Project | null;
     onSelectProject: (project: Project) => void;
+    setCreateProject: (isOpen: boolean) => void;
+    isOpen: boolean;
 }
 
 const getStatusBadgeVariant = (
@@ -34,15 +37,16 @@ const getStatusBadgeVariant = (
     }
 };
 
-export const ProjectList = ({ projects, selectedProject, onSelectProject }: ProjectListProps) => {
+export const ProjectList = ({ projects, selectedProject, onSelectProject, setCreateProject, isOpen }: ProjectListProps) => {
 
     return (
         <Card className="h-full overflow-y-auto">
             <CardHeader className="flex items-center justify-between">
                 <CardTitle className="text-primary text-lg font-bold">My Projects</CardTitle>
-                <Button className="flex items-center gap-2">
+                <CreateProjectDialog isOpen={isOpen} setIsOpen={setCreateProject} onProjectCreated={() => {}} />
+                {/* <Button className="flex items-center gap-2">
                     <Plus className="h-4 w-4" /> Create Project
-                </Button>
+                </Button> */}
             </CardHeader>
             <CardContent>
                 <Table>

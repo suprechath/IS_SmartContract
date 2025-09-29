@@ -20,6 +20,8 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   const [isOnboarding, setIsOnboarding] = useState(false);
   const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: deployTxHash, });
 
+  const [isCreating, setIsCreating] = useState(false);
+
   // In a real app, you would configure useContractWrite here for each action
   // For example: const { write: withdraw } = useContractWrite({...});
 
@@ -212,6 +214,34 @@ export const useCreatorActions = (onActionComplete: () => void) => {
     }
   }, [isConfirmed, receipt]);
 
+  const createProject = async (projectData: any) => {
+    setIsCreating(true);
+    console.log("Creating project with data:", projectData);
+    const configs = await api.get('/admin/configs');
+    const usdcConfig = configs.data.data.find((config: any) => config.config_key === 'MOCK_USDC_CONTRACT_ADDRESS');
+    const platformFeeConfig = configs.data.data.find((config: any) => config.config_key === 'FUNDING_FEE');
+    const rewardFeeConfig = configs.data.data.find((config: any) => config.config_key === 'DIVIDEND_FEE');
+    const payload = {
+      ...projectData,
+      usdc_contract_address: usdcConfig.config_value,
+      platform_fee_percentage: platformFeeConfig.config_value,
+      reward_fee_percentage: rewardFeeConfig.config_value
+     };
+    try {
+      const response = await api.post('/projects', payload);
+      if (response.status === 201) {
+        alert('Project created successfully!');
+        return true;
+      }
+    } catch (error: any) {
+      console.error("Failed to create project:", error);
+      alert(`Error: ${error.response?.data?.message || 'Could not create project.'}`);
+      return false;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return {
     handleWithdrawFunds,
     handleDepositReward,
@@ -221,5 +251,7 @@ export const useCreatorActions = (onActionComplete: () => void) => {
     estimatedCost,
     handleDeployContracts,
     estimateDeploymentCost,
+    createProject,
+    isCreating,
   };
 };

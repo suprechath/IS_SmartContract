@@ -22,6 +22,8 @@ const ProjectFactory = JSON.parse(fs.readFileSync(projectFactoryArtifactPath, 'u
 export const createProject = async (req, res) => {
     try {
         const { onchainData, offchainData } = separateProjectData(req.body);
+        console.log('Onchain Data:', onchainData);
+        console.log('Offchain Data:', offchainData);
         const newProject = await projectModel.createProject(onchainData, offchainData, req.user.id);
         handleResponse(res, 201, 'Project created successfully', newProject);
     } catch (error) {
