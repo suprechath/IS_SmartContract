@@ -84,6 +84,7 @@ services:
     environment:
       - NODE_ENV=development
       - DB_HOST=DB
+      - network_rpc_url=http://hardhat:8545
     env_file:
       - ./backend/.env
     depends_on:

@@ -9,6 +9,7 @@ import { Users } from "lucide-react";
 import { Project, ProjectStatus } from "@/features/ProjectCreator/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { CreateProjectDialog } from "@/features/ProjectCreator/components/CreateProjectDialog";
+import { formatUnits } from 'viem';
 
 interface ProjectListProps {
     projects: Project[];
@@ -80,12 +81,12 @@ export const ProjectList = ({ projects, selectedProject, onSelectProject, setCre
                                         <div className="space-y-1">
                                             <Progress
                                                 value={
-                                                    (project.total_contributions / project.funding_usdc_goal) * 100
+                                                    (Number(formatUnits(project.total_contributions,6)) / project.funding_usdc_goal) * 100
                                                 }
                                                 className="h-3"
                                             />
                                             <div className="text-xs text-muted-foreground">
-                                                {formatCurrency(project.total_contributions)} /{" "}
+                                                {formatCurrency(Number(formatUnits(project.total_contributions,6)))} /{" "}
                                                 {formatCurrency(project.funding_usdc_goal)}
                                             </div>
                                         </div>
@@ -93,7 +94,7 @@ export const ProjectList = ({ projects, selectedProject, onSelectProject, setCre
                                     <TableCell>
                                         <div className="flex items-center justify-center gap-2">
                                             <Users className="h-4 w-4 text-muted-foreground" />
-                                            <span>{project.investments?.length ?? 0}</span>
+                                            <span>{project.contributor_count ?? 0}</span>
                                         </div>
                                     </TableCell>
                                 </TableRow>

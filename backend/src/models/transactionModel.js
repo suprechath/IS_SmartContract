@@ -40,10 +40,10 @@ const getTransactionByTxHash = async (transaction_hash) => {
 
 const getTransactionsByProjectId = async (project_onchain_id) => {
     const query = `
-        SELECT *
-        FROM transactions
-        WHERE project_onchain_id = $1
-        ORDER BY created_at DESC
+        SELECT tx.*, uo.wallet_address, uo.role
+        FROM transactions tx
+        join users_onchain uo on tx.user_onchain_id = uo.id
+        WHERE tx.project_onchain_id = $1
     `;
     const result = await pool.query(query, [project_onchain_id]);
     return result.rows;

@@ -1,6 +1,7 @@
 // src/features/dashboard/hooks/useCreatorData.ts
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAccount } from 'wagmi';
+import { formatUnits } from 'viem';
 import api from '@/lib/api';
 import { Project } from '@/features/ProjectCreator/types';
 
@@ -48,6 +49,7 @@ export const useCreatorData = () => {
         const response = await api.get(`/transactions/project/${projectId}`);
         setSelectedProjectTX(response.data.data);
         console.log("Fetched transactions:", response.data.data);
+        console.log(selectedProjectTX);
       } catch (err) {
         console.error("Error fetching project transactions:", err);
       }
@@ -62,9 +64,9 @@ export const useCreatorData = () => {
 
   // Use useMemo to prevent recalculating on every render
   const summaryStats = useMemo(() => {
-    const totalFundsRaised = projects
+    const totalFundsRaised = formatUnits(BigInt(projects
       .filter(p => ['Funding', 'Succeeded', 'Active'].includes(p.project_status))
-      .reduce((sum, p) => sum + (Number(p.total_contributions) || 0), 0);
+      .reduce((sum, p) => sum + (Number(p.total_contributions) || 0), 0)),6);
     const projectsInFunding = projects.filter(p => p.project_status === 'Funding').length;
     const activeProjects = projects.filter(p => p.project_status === 'Active').length;
     return { totalFundsRaised, projectsInFunding, activeProjects };

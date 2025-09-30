@@ -95,10 +95,12 @@ const getOnchainProjectById = async (projectId) => {
 
 const getProjectsByCreatorId = async (creatorId) => {
     const query = `
-        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url
+        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url, COUNT(DISTINCT tx.user_onchain_id) AS contributor_count
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        LEFT JOIN transactions tx ON tx.project_onchain_id = pon.id AND tx.transaction_type = 'Investment'
         WHERE pon.user_onchain_id = $1
+        GROUP BY pon.id, poff.title, poff.tags, poff.location, poff.cover_image_url
     `;
     const result = await pool.query(query, [creatorId]);
     return result.rows;
@@ -124,7 +126,7 @@ const updateProject = async (projectId, onchainData, offchainData) => {
         console.log('Filtered Offchain Data:', filteredOffchainData);
         console.log('Filtered Onchain Data:', filteredOnchainData);
 
-        const offchainResult = await client.query('SELECT project_offchain_id FROM project_onchain WHERE id = $1',[projectId]);
+        const offchainResult = await client.query('SELECT project_offchain_id FROM project_onchain WHERE id = $1', [projectId]);
         if (offchainResult.rows.length === 0) {
             throw new Error(`Project with ID ${projectId} not found.`);
         }

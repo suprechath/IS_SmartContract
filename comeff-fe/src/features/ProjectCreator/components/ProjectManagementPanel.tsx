@@ -7,10 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { Clock, Link2, TrendingUp, CheckCircle, Loader2 } from "lucide-react";
+import { Clock, Link2, TrendingUp, CheckCircle, Loader2, ExternalLink } from "lucide-react";
 
 import { Project, ProjectStatus } from '@/features/ProjectCreator/types';
+import { getTXStatusBadge } from '@/components/StatusBadge';
+import { formatUnits } from 'viem';
+
 
 
 interface ProjectManagementPanelProps {
@@ -46,7 +50,7 @@ const getStatusBadgeVariant = (
 
 export const ProjectManagementPanel = ({
   project, onDeployContracts, isDeploying, estimateDeploymentCost, isEstimating, estimatedCost,
-  onWithdrawFunds, onDepositReward, onPostUpdate, transactions}: ProjectManagementPanelProps
+  onWithdrawFunds, onDepositReward, onPostUpdate, transactions }: ProjectManagementPanelProps
 ) => {
 
   useEffect(() => {
@@ -219,12 +223,12 @@ export const ProjectManagementPanel = ({
             )}
             {project.project_status === "Funding" && (
               <div className="space-y-6">
-                <div>
+                <div className="text-center p-6 border rounded-lg">
                   <h3 className="text-lg font-semibold mb-4">Real-time Funding Tracker</h3>
-                  <Progress value={(project.total_contributions / project.funding_usdc_goal) * 100} className="h-4 mb-2" />
+                  <Progress value={(Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100} className="h-4 mb-2" />
                   <div className="flex justify-between text-sm text-muted-foreground mb-4">
-                    <span>${project.total_contributions.toLocaleString()} raised</span>
-                    <span>{Math.round((project.total_contributions / project.funding_usdc_goal) * 100)}%</span>
+                    <span>${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()} raised</span>
+                    <span>{((Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100).toFixed(2)} %</span>
                   </div>
                   <div className="text-center">
                     {/* <p className="text-2xl font-bold">{project.investors} investors</p> */}
@@ -235,18 +239,6 @@ export const ProjectManagementPanel = ({
                       ).toLocaleString()}</p>
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Recent Investors</h4>
-                  {/* <div className="space-y-2">
-                    {mockInvestors.map((investor, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span className="font-mono">{investor.address}</span>
-                        <span>${investor.amount.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div> */}
-                </div>
               </div>
             )}
             {project.project_status === "Succeeded" && (
@@ -254,7 +246,7 @@ export const ProjectManagementPanel = ({
                 <div className="text-center p-6 border rounded-lg">
                   <h3 className="text-lg font-semibold mb-2">Funds Ready to Withdraw</h3>
                   <p className="text-3xl font-bold text-green-600 mb-4">
-                    ${project.total_contributions.toLocaleString()}
+                    ${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()}
                   </p>
                   <Button
                     // onClick={handleWithdrawFunds} 
@@ -316,15 +308,14 @@ export const ProjectManagementPanel = ({
                   <div className="space-y-4">
                     <div className="p-4 border rounded bg-muted/50">
                       <p className="text-sm">
-                        <strong>Final Amount Raised:</strong> ${project.total_contributions.toLocaleString()}
+                        <strong>Final Amount Raised:</strong> ${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()}
                       </p>
                       <p className="text-sm">
                         <strong>Goal:</strong> ${project.funding_usdc_goal.toLocaleString()}
                       </p>
                       <p className="text-sm">
-                        <strong>Investors:</strong> 
-                        {/* {project.investors}  */}
-                        (funds will be allowed to withdraw)
+                        <strong>Investors: </strong>
+                        funds will be allowed to withdraw
                       </p>
                     </div>
                   </div>
@@ -358,11 +349,11 @@ export const ProjectManagementPanel = ({
                 <span className="text-muted-foreground font-semibold">Funding Progress</span>
                 <div className="mt-2">
                   <Progress value={
-                    project ? (project.total_contributions / project.funding_usdc_goal) * 100 : 0
+                    project ? (Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100 : 0
                   } />
                   <div className="text-lg text-muted-foreground font-semibold mt-2">
                     <span className="font-medium text-primary">
-                      ${project?.total_contributions.toLocaleString()}
+                      ${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()}
                     </span> / ${project?.funding_usdc_goal.toLocaleString()}
                   </div>
                 </div>
@@ -382,7 +373,7 @@ export const ProjectManagementPanel = ({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground font-semibold">Total Token Supply</span>
-                <span className="text-md mt-1 font-semibold">{project?.token_total_supply || 'Not Found'}</span>
+                <span className="text-md mt-1 font-semibold">{Number(formatUnits(BigInt(project.total_contributions),6)) || 'Not Found'}</span>
               </div>
               <hr />
               <div className="flex justify-between items-center">
@@ -398,7 +389,35 @@ export const ProjectManagementPanel = ({
             </div>
           </TabsContent>
           <TabsContent value="transactions">
-            
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className='text-center'>Type</TableHead>
+                  <TableHead className='text-center'>Amount(USDC)</TableHead>
+                  <TableHead className='text-center'>Date</TableHead>
+                  <TableHead className='text-center'>Who</TableHead>
+                  <TableHead className='text-center'>Hash</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className='text-center'>
+                {transactions.map((tx) => (
+                  <TableRow key={tx.transaction_hash}>
+                    <TableCell className='w-[100px]'>{getTXStatusBadge(tx.transaction_type)}</TableCell>
+                    <TableCell className='w-[50px]'>{Number(formatUnits(BigInt(tx.usdc_amount), 6)).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(tx.created_at).toLocaleString()}</TableCell>
+                    <TableCell>...{tx.wallet_address.substring(tx.wallet_address.length - 4)}</TableCell>
+                    <TableCell><a
+                      href={`https://optimistic.etherscan.io/tx/${tx.transaction_hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="items-center gap-1 text-blue-500 hover:underline justify-self-center flex"
+                    >
+                      <ExternalLink size={16} />
+                    </a></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </TabsContent>
         </Tabs>
       </CardContent>

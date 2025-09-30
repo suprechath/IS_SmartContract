@@ -29,3 +29,17 @@ export const getRoleBadge = (role: string) => {
     const config = roleConfig[role] || { label: role, className: "bg-gray-100 text-gray-800" };
     return <Badge className={`${config.className} hover:${config.className}`}>{config.label}</Badge>;
 };
+
+export const getTXStatusBadge = (status: string) => {
+    const statusConfig = {
+      Investment: { label: "Investment", className: "bg-green-100 text-green-800" },
+      Withdrawal: { label: "Withdrawal", className: "bg-yellow-100 text-yellow-800" },
+      RewardDeposit: { label: "RewardDeposit", className: "bg-blue-950 text-blue-100" },
+      RewardClaim: { label: "RewardClaim", className: "bg-indigo-100 text-indigo-800" },
+      Refund: { label: "Refund", className: "bg-red-100 text-red-800" },
+    };
+
+    //@ts-ignore
+    const config = statusConfig[status] || { label: status, className: "bg-gray-100 text-gray-800" };
+    return <Badge className={`${config.className} hover:${config.className}`}>{config.label}</Badge>;
+};
