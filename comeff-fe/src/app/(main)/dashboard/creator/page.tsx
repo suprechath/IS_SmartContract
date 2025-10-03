@@ -15,12 +15,14 @@ import { CreateProjectDialog } from "@/features/ProjectCreator/components/Create
 
 export default function CreatorDashboardPage() {
     const {
-        projects, selectedProject, setSelectedProject, isLoading, error, summaryStats, fetchCreatorProjects, selectedProjectTX
+        projects, selectedProject, setSelectedProject, isLoading, error, summaryStats, 
+        fetchCreatorProjects, selectedProjectTX
     } = useCreatorData();
 
     const {
         handleWithdrawFunds, handleDepositReward, handlePostUpdate, isDeploying,
-        isEstimating, estimatedCost, handleDeployContracts, estimateDeploymentCost,
+        isEstimating, estimatedCost, handleDeployContracts, estimateDeploymentCost, 
+        handleMintTokens
     } = useCreatorActions(fetchCreatorProjects);
 
     const [isCreateProjectOpen, setCreateProjectOpen] = useState(false);
@@ -61,6 +63,7 @@ export default function CreatorDashboardPage() {
                             estimateDeploymentCost={estimateDeploymentCost}
                             isEstimating={isEstimating}
                             estimatedCost={estimatedCost}
+                            onMintTokens={handleMintTokens}
                             onWithdrawFunds={handleWithdrawFunds}
                             onDepositReward={handleDepositReward}
                             onPostUpdate={handlePostUpdate}

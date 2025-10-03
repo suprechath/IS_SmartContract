@@ -24,6 +24,7 @@ interface ProjectManagementPanelProps {
   estimateDeploymentCost: (projectId: string) => void;
   isEstimating: boolean;
   estimatedCost: string | null;
+  onMintTokens: (projectId: string) => void;
   onWithdrawFunds: (projectId: string) => void;
   onDepositReward: (projectId: string, amount: number) => void;
   onPostUpdate: (projectId: string, updateText: string) => void;
@@ -50,7 +51,7 @@ const getStatusBadgeVariant = (
 
 export const ProjectManagementPanel = ({
   project, onDeployContracts, isDeploying, estimateDeploymentCost, isEstimating, estimatedCost,
-  onWithdrawFunds, onDepositReward, onPostUpdate, transactions }: ProjectManagementPanelProps
+  onMintTokens, onWithdrawFunds, onDepositReward, onPostUpdate, transactions }: ProjectManagementPanelProps
 ) => {
 
   useEffect(() => {
@@ -64,6 +65,12 @@ export const ProjectManagementPanel = ({
 
   console.log("Rendering ProjectManagementPanel for project:", project);
 
+  const handleMintTokens = () => {
+    onMintTokens(project.id);
+  }
+  const handleWithdrawFunds = () => {
+    onWithdrawFunds(project.id);
+  };
   const handleDeposit = () => {
     if (rewardAmount) {
       onDepositReward(project.id, parseFloat(rewardAmount));
@@ -86,7 +93,7 @@ export const ProjectManagementPanel = ({
             {(Array.isArray(project.tags) ? project.tags : (project.tags || '').split(','))
               .map((tag: string, idx: number) => (
                 <Badge key={idx} className="text-xs px-2 py-1 bg-primary/10 text-secondary ml-2">
-                  {tag.trim().replace(/^{"/, "").replace(/"}$/, "")}
+                  {tag.trim().replace(/^{"/, "").replace(/"}$/, "").replace(/"/, "")}
                 </Badge>
               ))}
           </CardTitle>
@@ -225,10 +232,10 @@ export const ProjectManagementPanel = ({
               <div className="space-y-6">
                 <div className="text-center p-6 border rounded-lg">
                   <h3 className="text-lg font-semibold mb-4">Real-time Funding Tracker</h3>
-                  <Progress value={(Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100} className="h-4 mb-2" />
+                  <Progress value={(Number(formatUnits(BigInt(project.total_contributions), 6)) / project.funding_usdc_goal) * 100} className="h-4 mb-2" />
                   <div className="flex justify-between text-sm text-muted-foreground mb-4">
-                    <span>${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()} raised</span>
-                    <span>{((Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100).toFixed(2)} %</span>
+                    <span>${Number(formatUnits(BigInt(project.total_contributions), 6)).toLocaleString()} raised</span>
+                    <span>{((Number(formatUnits(BigInt(project.total_contributions), 6)) / project.funding_usdc_goal) * 100).toFixed(2)} %</span>
                   </div>
                   <div className="text-center">
                     {/* <p className="text-2xl font-bold">{project.investors} investors</p> */}
@@ -244,14 +251,17 @@ export const ProjectManagementPanel = ({
             {project.project_status === "Succeeded" && (
               <div className="space-y-6">
                 <div className="text-center p-6 border rounded-lg">
-                  <h3 className="text-lg font-semibold mb-2">Funds Ready to Withdraw</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-primary">Congratulations!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Your project has successfully met its funding goal. <br />You can now mint tokens for your investors.
+                  </p>
                   <p className="text-3xl font-bold text-green-600 mb-4">
-                    ${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()}
+                    ${Number(formatUnits(BigInt(project.total_contributions), 6)).toLocaleString()}
                   </p>
                   <Button
-                    // onClick={handleWithdrawFunds} 
+                    onClick={handleMintTokens}
                     size="lg" className="w-full">
-                    Withdraw Funds
+                    Mint Project Tokens
                   </Button>
                 </div>
               </div>
@@ -259,10 +269,20 @@ export const ProjectManagementPanel = ({
             {project.project_status === "Active" && (
               <div className="space-y-6">
                 <div className="p-4 border rounded-lg">
-                  <h3 className="font-semibold mb-4">Deposit Reward</h3>
+                  <h3 className="font-bold mb-4 text-secondary"> Withdraw Funds</h3>
+                  <div className="space-y-4">
+                    <Button
+                      onClick={handleWithdrawFunds}
+                      className="w-full bg-secondary text-white hover:bg-secondary/90">
+                      Withdraw Available Funds
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-bold mb-4 text-primary">Deposit Reward</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">USDC Amount</label>
+                      <label className="text-sm font-medium text-primary">USDC Amount</label>
                       <Input
                         type="number"
                         placeholder="Enter reward amount"
@@ -274,22 +294,6 @@ export const ProjectManagementPanel = ({
                       // onClick={handleDepositReward} 
                       className="w-full">
                       Deposit Reward
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-semibold mb-4">Post Update</h3>
-                  <div className="space-y-4">
-                    <Textarea
-                      placeholder="Share progress updates with your investors..."
-                      value={updateText}
-                      onChange={(e) => setUpdateText(e.target.value)}
-                    />
-                    <Button
-                      // onClick={handlePostUpdate} 
-                      variant="outline" className="w-full">
-                      Post Update
                     </Button>
                   </div>
                 </div>
@@ -308,7 +312,7 @@ export const ProjectManagementPanel = ({
                   <div className="space-y-4">
                     <div className="p-4 border rounded bg-muted/50">
                       <p className="text-sm">
-                        <strong>Final Amount Raised:</strong> ${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()}
+                        <strong>Final Amount Raised:</strong> ${Number(formatUnits(BigInt(project.total_contributions), 6)).toLocaleString()}
                       </p>
                       <p className="text-sm">
                         <strong>Goal:</strong> ${project.funding_usdc_goal.toLocaleString()}
@@ -349,11 +353,11 @@ export const ProjectManagementPanel = ({
                 <span className="text-muted-foreground font-semibold">Funding Progress</span>
                 <div className="mt-2">
                   <Progress value={
-                    project ? (Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100 : 0
+                    project ? (Number(formatUnits(BigInt(project.total_contributions), 6)) / project.funding_usdc_goal) * 100 : 0
                   } />
                   <div className="text-lg text-muted-foreground font-semibold mt-2">
                     <span className="font-medium text-primary">
-                      ${Number(formatUnits(BigInt(project.total_contributions),6)).toLocaleString()}
+                      ${Number(formatUnits(BigInt(project.total_contributions), 6)).toLocaleString()}
                     </span> / ${project?.funding_usdc_goal.toLocaleString()}
                   </div>
                 </div>
@@ -373,7 +377,7 @@ export const ProjectManagementPanel = ({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground font-semibold">Total Token Supply</span>
-                <span className="text-md mt-1 font-semibold">{Number(formatUnits(BigInt(project.total_contributions),6)) || 'Not Found'}</span>
+                <span className="text-md mt-1 font-semibold">{Number(formatUnits(BigInt(project.token_total_supply), 6)) || 'Not Found'}</span>
               </div>
               <hr />
               <div className="flex justify-between items-center">

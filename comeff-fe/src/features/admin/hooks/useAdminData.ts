@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api'; // Your centralized axios instance
 import type { Project, User, PlatformStats, Transactions, PlatformConfig } from '@/features/admin/types';
 import { useAuth } from '@/contexts/AuthProvider';
+import { formatUnits } from 'viem';
 
 // This function now lives inside the hook or can be in a utils file.
 const calculatePlatformStats = (projects: Project[], users: User[], tx: Transactions[]): PlatformStats => {
@@ -23,9 +24,11 @@ const calculatePlatformStats = (projects: Project[], users: User[], tx: Transact
 
   // Financial stats
   const dividendsDistributed = tx.reduce((acc, t) => acc + t.USDC_amount, 0);
-  const totalValueLocked = projects.reduce((acc, p) => acc + p.total_contributions, 0);
-
-
+  const totalValueLocked = projects.reduce((acc, p) => {
+    const contributionInUsdc = parseFloat(formatUnits(BigInt(p.total_contributions), 6));
+    return acc + contributionInUsdc;
+  }, 0);
+  
   return {
     totalUsers,
     kycApproved,
@@ -92,7 +95,7 @@ export const useAdminData = () => {
       setLoading(false);
     }
 
-  // }, [token]);
+    // }, [token]);
   }, [token]);
 
   useEffect(() => {

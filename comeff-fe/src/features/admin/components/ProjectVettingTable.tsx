@@ -14,6 +14,7 @@ import { useAdminActions } from "../hooks/useAdminActions";
 import { getStatusBadge } from "@/components/StatusBadge";
 import type { Project } from "../types";
 import api from '@/lib/api';
+import { formatUnits } from "viem";
 
 interface ProjectTableProps {
   projects: Project[];
@@ -160,7 +161,7 @@ export const ProjectVettingTable = ({ projects, onDataUpdate }: ProjectTableProp
             <TableBody>
               {filteredProjects.map((project) => {
                 const fundingPercentage = project.funding_usdc_goal > 0
-                  ? (project.total_contributions / project.funding_usdc_goal) * 100
+                  ? (Number(formatUnits(BigInt(project.total_contributions),6)) / project.funding_usdc_goal) * 100
                   : 0;
                 return (
                   <TableRow key={project.id}>
@@ -174,7 +175,7 @@ export const ProjectVettingTable = ({ projects, onDataUpdate }: ProjectTableProp
                         <Progress value={fundingPercentage} />
                         <div className="text-xs text-muted-foreground">
                           <span className="font-medium text-primary">
-                            {project.total_contributions.toLocaleString()}
+                            {formatUnits(BigInt(project.total_contributions),6).toLocaleString()}
                           </span> / {project.funding_usdc_goal.toLocaleString()}
                         </div>
                       </div>
@@ -340,11 +341,11 @@ export const ProjectVettingTable = ({ projects, onDataUpdate }: ProjectTableProp
                     <span className="text-muted-foreground">Funding Progress</span>
                     <div className="mt-2">
                       <Progress value={
-                        selectedProject ? (selectedProject.total_contributions / selectedProject.funding_usdc_goal) * 100 : 0
+                        selectedProject ? (Number(formatUnits(BigInt(selectedProject.total_contributions),6)) / selectedProject.funding_usdc_goal) * 100 : 0
                       } />
                       <div className="text-lg text-muted-foreground mt-2">
                         <span className="font-medium text-primary">
-                          ${selectedProject?.total_contributions.toLocaleString()}
+                          ${Number(formatUnits(BigInt(selectedProject?.total_contributions),6)).toLocaleString()}
                         </span> / ${selectedProject?.funding_usdc_goal.toLocaleString()}
                       </div>
                     </div>
