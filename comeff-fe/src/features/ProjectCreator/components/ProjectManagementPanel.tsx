@@ -67,7 +67,7 @@ export const ProjectManagementPanel = ({
 
   const handleMintTokens = () => {
     onMintTokens(project.id);
-  }
+  };
   const handleWithdrawFunds = () => {
     onWithdrawFunds(project.id);
   };
@@ -220,11 +220,6 @@ export const ProjectManagementPanel = ({
                   <p className="text-muted-foreground mb-4">
                     Unfortunately, your project did not meet our approval criteria at this time.
                   </p>
-                  <div className="space-y-4">
-                    <Button variant="outline" className="w-full">
-                      Submit Revised Project
-                    </Button>
-                  </div>
                 </div>
               </div>
             )}
@@ -291,7 +286,7 @@ export const ProjectManagementPanel = ({
                       />
                     </div>
                     <Button
-                      // onClick={handleDepositReward} 
+                      onClick={handleDeposit} 
                       className="w-full">
                       Deposit Reward
                     </Button>

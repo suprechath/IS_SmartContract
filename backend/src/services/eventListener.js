@@ -285,6 +285,12 @@ const attachListenersToContract = async (project) => {
             await handleRewardDeposited(project.id, totalAmount, platformFee, { log: event });
         }
         console.log(`[Backfill] Finished processing ${pastDepositEvents.length} past 'Deposit' events.`)
+        const pastWithdrawEvents = await mgmtContract.queryFilter('FundsWithdrawn', fromBlock, 'latest');
+        for (const event of pastWithdrawEvents) {
+            const [creatorAmount, platformFee] = event.args;
+            await handleFundsWithdrawn(project.id, creatorAmount, platformFee, { log: event });
+        }
+        console.log(`[Backfill] Finished processing ${pastWithdrawEvents.length} past 'Withdraw' events.`)
 
         // const mgmtContract = new ethers.Contract(mgmtContractAddress, ProjectManagement.abi, provider);
         monitoredContracts.set(mgmtContractAddress, { contract: mgmtContract, project });
@@ -310,6 +316,7 @@ const findAndAttachToNewProjects = async () => {
     try {
         const projectsToMonitor = await projectModel.getProjectsByStatus(['Funding', 'Succeeded', 'Active']);
         projectsToMonitor.forEach(attachListenersToContract);
+        console.log(`✅ Monitoring ${monitoredContracts.size} contracts across ${projectsToMonitor.length} projects.`);
     } catch (error) {
         console.error('Error during project polling:', error.message);
     }

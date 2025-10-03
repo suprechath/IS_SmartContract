@@ -3,10 +3,12 @@ import api from '@/lib/api';
 import ProjectFactoryABI from '../../../abi/ProjectFactory.sol/ProjectFactory.json';
 import ProjectTokenABI from '../../../abi/ProjectToken.sol/ProjectToken.json';
 import ProjectManagementABI from '../../../abi/ProjectManagement.sol/ProjectManagement.json';
+import MockedUSDCABI from '../../../abi/MockedUSDC.sol/MockedUSCD.json';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { usePublicClient, useWalletClient, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'; // useWalletClient is for sending the tx
-import { formatEther, parseEventLogs, getContract, formatUnits } from 'viem';
+import { formatEther, parseEventLogs, getContract, formatUnits, parseUnits } from 'viem';
+import { set } from 'date-fns';
 
 export const useCreatorActions = (onActionComplete: () => void) => {
   const publicClient = usePublicClient();
@@ -26,11 +28,17 @@ export const useCreatorActions = (onActionComplete: () => void) => {
 
   // --- Minting State ---
   const [mintTxHash, setMintTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const { data: mintReceipt, isLoading: isConfirmingMint, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintTxHash });
+  const { data: mintReceipt, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintTxHash });
 
   // --- Withdraw Funds State ---\
   const [withdrawTxHash, setWithdrawTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const { data: withdrawReceipt, isLoading: isConfirmingWithdraw, isSuccess: isWithdrawConfirmed } = useWaitForTransactionReceipt({ hash: withdrawTxHash });
+  const { data: withdrawReceipt, isSuccess: isWithdrawConfirmed } = useWaitForTransactionReceipt({ hash: withdrawTxHash });
+
+  // --- Deposit Reward State ---
+  const [depositPayload, setDepositPayload] = useState(null);
+  const [approveTxHash, setApproveTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [depositTxHash, setDepositTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const { data: depositReceipt, isSuccess: isDepositConfirmed } = useWaitForTransactionReceipt({ hash: depositTxHash });
 
   const createProject = async (projectData: any) => {
     setIsCreating(true);
@@ -306,12 +314,85 @@ export const useCreatorActions = (onActionComplete: () => void) => {
 
   const handleDepositReward = async (projectId: string, amount: number) => {
     console.log(`Action: Depositing ${amount} USDC reward for project:`, projectId);
-    // TODO: Implement smart contract call (approve USDC, then call deposit)
-    alert({
-      title: "Deposit Initiated",
-      description: `Your transaction to deposit rewards has been submitted.`,
-    });
+    if (amount <= 0 || isNaN(amount) || !projectId) {
+      alert("Please enter a valid amount greater than 0.");
+      return;
+    }
+    const depositRes = await api.post('/deposits', { projectId, amount });
+    // console.log("Deposit response:", depositRes);
+    const { management_contract_address, usdc_address } = depositRes.data.data;
+    setDepositPayload(depositRes.data.data);
+    const amountInWei = parseUnits(amount.toString(), 6); // USDC uses 6 decimals
+    console.log(`Depositing ${amount} USDC (${amountInWei} in wei) to management contract at ${management_contract_address}`);
+    try {
+      alert("Please approve the USDC spending in your wallet.");
+      const approveTxHash = await writeContractAsync({
+        address: usdc_address,
+        abi: MockedUSDCABI.abi,
+        functionName: 'approve',
+        args: [management_contract_address, amountInWei],
+      });
+      console.log("Approval transaction hash:", approveTxHash);
+      if (!approveTxHash) {
+        alert("Approval transaction failed to send.");
+        return;
+      }
+      setApproveTxHash(approveTxHash);
+    } catch (error: any) {
+      console.error("Error during the approval step:", error);
+      alert("Approval Failed: " + (error.response?.data?.message || error.message || "An unexpected error occurred."));
+    }
   };
+
+  useEffect(() => {
+    const depositReward = async () => {
+      if (!depositPayload) {
+        console.error("No deposit payload available.");
+        return;
+      }
+      console.log("Deposit Payload:", depositPayload);
+      if (!walletClient) {
+        alert("Wallet not connected. Please connect your wallet.");
+        return;
+      }
+      try {
+        alert("Approval confirmed! Now sending the deposit transaction. Please confirm in your wallet.");
+        const { unsignedTx } = depositPayload;
+        // console.log("Received unsigned mint transaction:", unsignedTx);
+        const txHash = await walletClient.sendTransaction({
+          to: unsignedTx.to,
+          data: unsignedTx.data,
+        });
+        console.log("Deposit transaction hash:", txHash);
+        if (!txHash) {
+          alert("Deposit transaction failed to send.");
+          return;
+        }
+        setDepositTxHash(txHash);
+        alert("Deposit transaction sent! Please wait for confirmation.");
+      } catch (error: any) {
+        console.error("Deposit transaction failed:", error);
+        alert(`Deposit Failed: ${error.response?.data?.message || error.message || "An unexpected error occurred."}`);
+        return;
+      } finally {
+        setApproveTxHash(undefined);
+        setDepositPayload(null);
+      }
+    }
+    if (approveTxHash) {
+      depositReward();
+    }
+  }, [approveTxHash, onActionComplete]);
+
+  useEffect(() => {
+    if (isDepositConfirmed && depositReceipt) {
+      console.log("Deposit Transaction Confirmed!", depositReceipt);
+      alert("✅ Reward deposit successful!");
+      setApproveTxHash(undefined);
+      setDepositTxHash(undefined);
+      onActionComplete(); // Refresh project data to show updated balances
+    }
+  }, [isDepositConfirmed, depositReceipt, onActionComplete]);
 
   const handlePostUpdate = async (projectId: string, updateText: string) => {
     console.log(`Action: Posting update for project ${projectId}:`, updateText);
