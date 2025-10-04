@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { formatUnits } from 'viem';
 
-import { MapPin, HeartHandshake } from 'lucide-react';
 import { Project } from '../types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { getStatusBadge } from '@/components/StatusBadge';
+import { useProvideAuth } from '@/features/auth/hooks/useProvideAuth';
 
+import { MapPin, HeartHandshake } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { getStatusBadge } from '@/components/StatusBadge';
 
 interface ProjectCardProps {
   project: Project;
@@ -15,10 +15,20 @@ interface ProjectCardProps {
 
 export const ProjectCard = ({ project }: ProjectCardProps) => {
   const fundingPercentage = (Number(formatUnits(BigInt(project.total_contributions), 6)) / project.funding_usdc_goal) * 100;
+  const { token } = useProvideAuth();
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!token) {
+      e.preventDefault();
+      alert("You must be logged in to view project details.");
+    }
+  };
 
   return (
-    <Link href={`/projects/${project.id}`} passHref>
-      <Card className="hover:shadow-xl hover:scale-110 transition-shadow duration-300 h-full flex flex-col">
+    <Link href={token ? `/projects/${project.id}` : '#'} passHref>
+      <Card className="hover:shadow-xl hover:scale-110 transition-shadow duration-300 h-full flex flex-col"
+        onClick={handleCardClick}
+      >
         <div className="relative h-48 overflow-hidden rounded-t-lg bg-muted">
           {project.cover_image_url ? (
             <img

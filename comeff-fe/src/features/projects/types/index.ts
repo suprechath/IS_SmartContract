@@ -1,27 +1,11 @@
 export type ProjectStatus = 'Pending' | 'Approved' | 'Rejected' | 'Funding' | 'Succeeded' | 'Failed' | 'Active';
 
-// export interface Project {
-//   id: string; // Or number, depending on your DB
-//   creator_id: string;
-//   title: string;
-//   description: string;
-//   funding_usdc_goal: number;
-//   current_funding: number; // Assuming this comes from the API
-//   deadline: string; // ISO 8601 date string
-//   status: ProjectStatus;
-//   management_contract_address: string;
-//   token_contract_address: string;
-//   location: string; // Assuming this is part of the project data
-//   targetROI: number; // Assuming this is part of the project data
-//   image_url?: string; // Optional image for the project card
-// }
-
 export interface Project {
     id: string;
     user_onchain_id: string;
     project_offchain_id: string;
     funding_usdc_goal: number;
-    funding_duration_seconds: number;
+    funding_duration_second: number;
     management_contract_address: string | null;
     token_contract_address: string | null;
     usdc_contract_address: string | null;
@@ -46,4 +30,5 @@ export interface Project {
     third_party_verification_urls: string[];
     created_at: string;
     updated_at: string;
+    contributor_count: number;
 }

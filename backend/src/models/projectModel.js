@@ -73,10 +73,12 @@ const getProjectsByStatus = async (statuses) => {
 
 const getProjectById = async (projectId) => {
     const query = `
-        SELECT pon.*, poff.*
+        SELECT pon.*, poff.*, COUNT(DISTINCT tx.user_onchain_id) AS contributor_count
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        LEFT JOIN transactions tx ON tx.project_onchain_id = pon.id AND tx.transaction_type = 'Investment'
         WHERE pon.id = $1
+        GROUP BY pon.id, poff.id
     `;
     const result = await pool.query(query, [projectId]);
     return result.rows[0];
