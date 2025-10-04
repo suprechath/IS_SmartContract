@@ -146,4 +146,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  .shadow-elegant {
+    box-shadow: 0 4px 20px -2px hsl(var(--primary) / 0.15);
+  }
+  
+  .shadow-card {
+    box-shadow: 0 2px 10px -2px hsl(var(--foreground) / 0.08);
+  }
 }

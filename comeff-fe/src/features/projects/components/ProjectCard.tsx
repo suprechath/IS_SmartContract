@@ -1,65 +1,85 @@
-"use client";
-
 import Link from 'next/link';
+import { formatUnits } from 'viem';
+
+import { MapPin, HeartHandshake } from 'lucide-react';
 import { Project } from '../types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { getStatusBadge } from '@/components/StatusBadge';
+
 
 interface ProjectCardProps {
   project: Project;
 }
 
-// A placeholder for status styling
-const getStatusVariant = (status: string) => {
-  switch (status) {
-    case 'active': return 'default';
-    case 'successful': return 'success';
-    case 'completed': return 'secondary';
-    default: return 'outline';
-  }
-};
-
 export const ProjectCard = ({ project }: ProjectCardProps) => {
-  const fundingPercentage = (project.current_funding / project.funding_goal) * 100;
+  const fundingPercentage = (Number(formatUnits(BigInt(project.total_contributions), 6)) / project.funding_usdc_goal) * 100;
 
   return (
     <Link href={`/projects/${project.id}`} passHref>
-      <Card className="hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-        <CardHeader>
-          {/* You can add an Image component here */}
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-lg font-bold">{project.title}</CardTitle>
-            <Badge variant={getStatusVariant(project.status)}>{project.status}</Badge>
+      <Card className="hover:shadow-xl hover:scale-110 transition-shadow duration-300 h-full flex flex-col">
+        <div className="relative h-48 overflow-hidden rounded-t-lg bg-muted">
+          {project.cover_image_url ? (
+            <img
+              src={project.cover_image_url}
+              alt={project.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+              <span className="text-muted-foreground font-medium">Project Image</span>
+            </div>
+          )}
+          <div className="absolute top-2 right-2">
+            {getStatusBadge(project.project_status.toLocaleLowerCase())}
+          </div>
+        </div>
+        <CardHeader className="space-y-3">
+          <div className="space-y-2">
+            <CardTitle className="font-heading text-xl leading-tight group-hover:text-primary transition-colors">
+              {project.title}
+            </CardTitle>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4 mr-1.5" />
+              {project.location}
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-grow">
-          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-            {project.description}
-          </p>
-          <div>
-            <div className="flex justify-between items-end mb-1">
-              <span className="text-sm font-medium text-foreground">
-                ${project.current_funding.toLocaleString()}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Goal: ${project.funding_goal.toLocaleString()}
-              </span>
+
+        <CardContent className="space-y-4">
+          {/* Funding Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Funding Progress</span>
+              <span className="font-semibold">{fundingPercentage.toFixed(1)}%</span>
             </div>
-            <Progress value={fundingPercentage} className="w-full" />
+            <Progress value={fundingPercentage} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>${Number(formatUnits(BigInt(project.total_contributions), 6))} raised</span>
+              <span>${project.funding_usdc_goal} goal</span>
+            </div>
+          </div>
+
+          {/* Key Metrics */}
+          <div className="grid grid-cols-3 gap-3 border-border/50">
+            <div className="text-center">
+              <div className="text-lg font-bold text-accent">{project.projected_roi}%</div>
+              <div className="text-xs text-muted-foreground">Projected ROI</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-primary">{project.projected_payback_period_months}</div>
+              <div className="text-xs text-muted-foreground">Payback (months)</div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center text-lg font-bold text-foreground">
+                <HeartHandshake className="w-4 h-4 mr-1" />
+                <span className="text-sm">{project.co2_reduction}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">Emission Reduction</div>
+            </div>
           </div>
         </CardContent>
-        <CardFooter className="grid grid-cols-2 gap-4 text-sm">
-          <div className="text-center">
-            <div className="font-bold">{project.targetROI}%</div>
-            <div className="text-xs text-muted-foreground">Target ROI</div>
-          </div>
-           <div className="text-center">
-            {/* Logic to calculate time remaining */}
-            <div className="font-bold">15 Days</div>
-            <div className="text-xs text-muted-foreground">Remaining</div>
-          </div>
-        </CardFooter>
       </Card>
     </Link>
   );

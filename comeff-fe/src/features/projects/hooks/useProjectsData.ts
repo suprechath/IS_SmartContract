@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, use } from 'react';
 import { Project } from '../types';
 import api from '@/lib/api';
-import { set } from 'date-fns';
 
 export interface ProjectFilters {
   searchQuery?: string;
@@ -15,19 +14,22 @@ export const useProjects = (filters: ProjectFilters) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchAllProjects = useMemo(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const projectResponse = await api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active');
-      setAllProjects(projectResponse.data.data);
-      setSelectedProjects(allProjects);
-    } catch (err: any) {
-      console.error("Data fetching error:", err);
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
+  // const fetchAllProjects = useMemo(async () => {
+  useEffect(() => {
+    const fetchAllProjects = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const projectResponse = await api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active');
+        // console.log("Fetched projects:", projectResponse.data.data);
+        setAllProjects(projectResponse.data.data);
+      } catch (err: any) {
+        console.error("Data fetching error:", err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }; fetchAllProjects();
   }, []);
 
   useEffect(() => {
@@ -73,10 +75,10 @@ export const useProjects = (filters: ProjectFilters) => {
       }
       setSelectedProjects(filtered);
       setIsLoading(false);
-      // console.log("Filtered projects:", selectedProjects);
+      console.log("Filtered projects:", selectedProjects);
     };
     applyFilters();
-  }, [filters]);
+  }, [allProjects, filters]);
 
   return { allProjects, selectedProjects, isLoading, error };
 };

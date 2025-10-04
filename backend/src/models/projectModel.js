@@ -62,7 +62,7 @@ const createProject = async (onchainData, offchainData, userOnchainId) => {
 
 const getProjectsByStatus = async (statuses) => {
     const query = `
-        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url, poff.projected_roi
+        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url, poff.projected_roi, poff.co2_reduction, poff.projected_payback_period_months
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
         WHERE pon.project_status = ANY($1::project_status[])

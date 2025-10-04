@@ -3,17 +3,22 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 
+import { EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import ProjectStat from '@/features/projects/components/ProjectStat';
 import { FilterControls } from '@/features/projects/components/FilterControls';
+import { ProjectCard } from '@/features/projects/components/ProjectCard';
 
 import { useProjectStat } from '@/features/projects/hooks/useProjectStat';
 import { useProjects, ProjectFilters } from '@/features/projects/hooks/useProjectsData';
 
 export default function ProjectsPage() {
     const { projectStats, isLoadingStat } = useProjectStat(); //Statistics at the top
+    // --- Pagination State ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
 
     // --- Filter State Management ---
     const [filters, setFilters] = useState<ProjectFilters>({
@@ -30,6 +35,7 @@ export default function ProjectsPage() {
 
     const handleFilterChange = (key: keyof ProjectFilters, value: string) => {
         setFilters(prev => ({ ...prev, [key]: value }));
+        setCurrentPage(1);
     };
 
     const clearAllFilters = () => {
@@ -43,9 +49,27 @@ export default function ProjectsPage() {
 
     const { allProjects, selectedProjects, isLoading, error } = useProjects(filters); // Fetch projects based on filters
 
+    // Pagination calculations
+    const totalPages = Math.ceil(selectedProjects.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentProjects = selectedProjects.slice(startIndex, endIndex);
+
+
     if (isLoadingStat) {
         return <DashboardLoadingSkeleton />;
     }
+    if (isLoading) {
+        // Skeleton loading state
+        return (
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <Skeleton key={index} className="h-96 w-full" />
+                ))}
+            </div>
+        );
+    }
+
     return (
         <div>
             {/* Assuming a global Navigation component in the main layout */}
@@ -90,6 +114,56 @@ export default function ProjectsPage() {
                     </p>
                 </div>
 
+                {(selectedProjects.length > 0) ? (
+                    <>
+                        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                            {currentProjects.map((project) => (
+                                <ProjectCard key={project.id} project={project} />
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center space-x-2 mb-12">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Previous
+                                </Button>
+
+                                <div className="flex space-x-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                        <Button
+                                            key={page}
+                                            variant={currentPage === page ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(page)}
+                                            className="w-10"
+                                        >
+                                            {page}
+                                        </Button>
+                                    ))}
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                    <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <NoProjectsState clearAllFilters={clearAllFilters} />
+                )}
 
             </div>
         </div >
@@ -113,3 +187,20 @@ const DashboardLoadingSkeleton = () => (
         </div>
     </div>
 );
+
+const NoProjectsState = ({ clearAllFilters }: { clearAllFilters: () => void }) => (
+    <div className="text-center">
+        <div className="mx-auto space-y-4">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                <EyeOff className="w-16 h-16 text-red-900" />
+            </div>
+            <h3 className="text-2xl font-bold text-red-900">No projects match your current filters</h3>
+            <p className="text-muted-foreground">
+                Try adjusting your search criteria to see more projects.
+            </p>
+            <Button variant="outline" onClick={clearAllFilters} className="border-2">
+                Clear All Filters
+            </Button>
+        </div>
+    </div>
+)

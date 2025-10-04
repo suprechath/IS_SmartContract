@@ -38,7 +38,7 @@ export interface Project {
     location: string;
     cover_image_url: string;
     tags: string[];
-    CO2_reduction: number | null;
+    co2_reduction: number | null;
     projected_roi: number;
     projected_payback_period_months: number;
     project_plan_url: string;
