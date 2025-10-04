@@ -8,8 +8,8 @@
   :root {
     --spacing-8: 2rem;
     /* Core brand colors */
-    --background: 0 0% 100%;
-    --foreground: 210 12% 16%;
+    --background: 0 0% 96.1%; /* #f5f5f5 - Clean neutral background */
+    --foreground: 0 0% 12.9%; /* #212121 - Dark charcoal text */
 
     --card: 0 0% 100%;
     --card-foreground: 210 12% 16%;
@@ -84,8 +84,8 @@
   }
 
   .dark {
-    --background: 210 12% 8%;
-    --foreground: 0 0% 98%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
     --card: 210 12% 10%;
     --card-foreground: 0 0% 98%;
