@@ -28,7 +28,7 @@ const calculatePlatformStats = (projects: Project[], users: User[], tx: Transact
     const contributionInUsdc = parseFloat(formatUnits(BigInt(p.total_contributions), 6));
     return acc + contributionInUsdc;
   }, 0);
-  
+
   return {
     totalUsers,
     kycApproved,
@@ -60,6 +60,7 @@ export const useAdminData = () => {
     try {
       setLoading(true);
       if (!token) { return null; }
+      await new Promise(resolve => setTimeout(resolve, 300)); // delay to get token
       const [projectsRes, usersRes, dividends, configs] = await Promise.all([
         api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active'),
         api.get('/users/onchain'),

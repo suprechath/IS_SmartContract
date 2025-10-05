@@ -9,13 +9,14 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('jwt_token');
+    // console.log('JWT Token:', token);
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
-    return config;
+  }
+  return config;
 });
 
 export default api;

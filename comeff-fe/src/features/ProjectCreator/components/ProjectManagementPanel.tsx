@@ -97,7 +97,7 @@ export const ProjectManagementPanel = ({
                 </Badge>
               ))}
           </CardTitle>
-          <a href="/" className="flex items-center text-primary hover:underline mt-1 text-sm"><Link2 className="h-4 w-4 mr-2" /> Project ID: {project.id}</a>
+          <a href={`/projects/${project.id}`} className="flex items-center text-primary hover:underline mt-1 text-sm"><Link2 className="h-4 w-4 mr-2" /> Project ID: {project.id}</a>
         </div>
         <Badge
           variant={getStatusBadgeVariant(project.project_status)}

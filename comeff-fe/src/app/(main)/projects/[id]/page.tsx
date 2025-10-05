@@ -43,6 +43,7 @@ export default function ProjectDetailsPage() {
     const params = useParams();
     const projectId = params.id as string;
     const { project, loading, error } = useProjectID(projectId);
+    // console.log('Project (page):', project);
 
     // Add validation for projectId
     if (!projectId) {

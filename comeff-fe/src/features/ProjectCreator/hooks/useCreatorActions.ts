@@ -251,7 +251,7 @@ export const useCreatorActions = (onActionComplete: () => void) => {
     if (isMintConfirmed && mintReceipt) {
       console.log("Minting Transaction Confirmed!", mintReceipt);
       alert("✅ Token minting successful!");
-      setIsMinting(false);
+      // setIsMinting(false);
       setMintTxHash(undefined);
       onActionComplete(); // Refresh project data to show updated token counts
     }

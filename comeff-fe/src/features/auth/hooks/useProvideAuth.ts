@@ -75,7 +75,7 @@ export const useProvideAuth = () => {
             setUser(null);
             setToken(null);
             setAuthToken(null, null, null);
-            alert("No token found in localStorage, user is logged out.");
+            // alert("No token found in localStorage, user is logged out.");
             router.refresh();
         }
     }, [isConnected]);

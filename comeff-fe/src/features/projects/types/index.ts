@@ -31,4 +31,5 @@ export interface Project {
     created_at: string;
     updated_at: string;
     contributor_count: number;
+    onchain_id: string; 
 }

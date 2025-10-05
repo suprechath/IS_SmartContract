@@ -20,6 +20,7 @@ export const useProjects = (filters: ProjectFilters) => {
       try {
         setIsLoading(true);
         setError(null);
+        await new Promise(resolve => setTimeout(resolve, 200)); // delay to get token
         const projectResponse = await api.get('/projects?status=Pending&status=Approved&status=Rejected&status=Funding&status=Succeeded&status=Failed&status=Active');
         // console.log("Fetched projects:", projectResponse.data.data);
         setAllProjects(projectResponse.data.data);
@@ -75,7 +76,7 @@ export const useProjects = (filters: ProjectFilters) => {
       }
       setSelectedProjects(filtered);
       setIsLoading(false);
-      console.log("Filtered projects:", selectedProjects);
+      // console.log("Filtered projects:", selectedProjects);
     };
     applyFilters();
   }, [allProjects, filters]);
