@@ -13,7 +13,6 @@ import { useInvestorTable } from '@/features/Investor/hooks/useInvestorTable';
 
 import { useInvestmentManagementPanelData } from "@/features/Investor/hooks/useInvestmentPanelData";
 import { InvestorManagementPanel } from "@/features/Investor/components/InvestorManagementPanel";
-import { useInvestorActions } from "@/features/Investor/hooks/useInvestorActions";
 
 import { Project, ProjectWithBalance } from '@/features/Investor/types';
 
@@ -29,22 +28,17 @@ export default function InvestorDashboardPage() {
 
     const { 
         projectDetail, isLoading: isPanelLoading, error: panelError, 
-        selectedProjectTX, setSelectedProjectTX
+        selectedProjectTX,
     } = useInvestmentManagementPanelData({
         projectId: selectedProject?.onchain_id || null,
-    });
-
-
-    const { handleClaimRewards, isClaiming } = useInvestorActions(() => {
-        fetchInvestorProjects();
     });
 
 
     if (isInvestorDataLoading || isTableDataLoading || isPanelLoading) {
         return <DashboardLoadingSkeleton />;
     }
-    if (investorDataError) {
-        return <div className="text-center py-10 text-destructive">{investorDataError}</div>;
+    if (investorDataError || panelError) {
+        return <div className="text-center py-10 text-destructive">{investorDataError || panelError}</div>;
     }
 
     return (
@@ -71,9 +65,6 @@ export default function InvestorDashboardPage() {
                             selectedProject={selectedProject as ProjectWithBalance} // Pass the selected project, not the array
                             project={projectDetail as Project}
                             transactions={selectedProjectTX as any[]}
-                            // onClaimRewards={handleClaimRewards}
-                            // isClaiming={isClaiming}
-                            // onClearSelection={() => setSelectedProject(null)}
                         />
                     ) : (
                         <Card className="h-full flex items-center justify-center bg-secondary/50">
@@ -84,11 +75,6 @@ export default function InvestorDashboardPage() {
                     )}
 
                 </div>
-                {/* <CreateProjectDialog
-                    isOpen={isCreateProjectOpen}
-                    setIsOpen={setCreateProjectOpen}
-                    onProjectCreated={fetchCreatorProjects}
-                /> */}
             </main>
         </div>
     )

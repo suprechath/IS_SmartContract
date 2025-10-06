@@ -1,50 +1,48 @@
-import { useState } from 'react';
-import { useWriteContract } from 'wagmi';
-import ProjectManagementABI from '../../../abi/ProjectManagement.sol/ProjectManagement.json';
-import { BaseError } from 'viem';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { Address } from 'viem';
+import { useEffect } from 'react';
 
-export const useInvestorActions = (onActionSuccess?: () => void) => {
-    const [isClaiming, setIsClaiming] = useState(false);
-    const { writeContractAsync } = useWriteContract();
+import ProjectManagementABI  from '@/abi/ProjectManagement.sol/ProjectManagement.json';
 
-    const handleClaimRewards = async (managementContractAddress: string) => {
-        setIsClaiming(true);
-        // toast.loading("Sending transaction to claim rewards...");
+export const useInvestorActions = () => {
+  const {
+    data: hash,
+    error: writeError,
+    isPending: isClaiming,
+    writeContract,
+  } = useWriteContract();
 
-        try {
-            const hash = await writeContractAsync({
-                address: managementContractAddress as `0x${string}`,
-                abi: ProjectManagementABI.abi,
-                functionName: 'claimReward',
-                args: [], // Your contract's claimReward() might not need arguments.
-            });
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: receiptError,
+  } = useWaitForTransactionReceipt({
+    hash,
+  });
 
-            // toast.success("Claim transaction successful!", {
-            //     description: "Your rewards are on the way to your wallet.",
-            //     action: {
-            //         label: "View Tx",
-            //         onClick: () => window.open(`https://optimism-sepolia.etherscan.io/tx/${hash}`, '_blank'),
-            //     },
-            // });
+  useEffect(() => {
+    if (isConfirmed) {
+      alert('Rewards claimed successfully!');
+      window.location.reload();
+    }
+    if (writeError || receiptError) {
+        alert(`Error: ${writeError?.message || receiptError?.message}`); // Simple alert for user feedback
+    }
+  }, [isConfirmed, writeError, receiptError]);
 
-            // If a success callback is provided, call it.
-            if (onActionSuccess) {
-                onActionSuccess();
-            }
+  const claimRewards = (contractAddress: Address) => {
+    writeContract({
+      address: contractAddress,
+      abi: ProjectManagementABI.abi,
+      functionName: 'claimReward',
+    });
+  };
 
-        } catch (error) {
-            console.error("Failed to claim rewards:", error);
-            const errorMessage = error instanceof BaseError ? error.shortMessage : "An unexpected error occurred.";
-            // toast.error("Failed to claim rewards", {
-            //     description: errorMessage,
-            // });
-        } finally {
-            setIsClaiming(false);
-        }
-    };
-
-    return {
-        isClaiming,
-        handleClaimRewards,
-    };
+  return {
+    claimRewards,
+    isClaiming: isClaiming || isConfirming,
+    isConfirmed,
+    error: writeError || receiptError,
+    hash,
+  };
 };

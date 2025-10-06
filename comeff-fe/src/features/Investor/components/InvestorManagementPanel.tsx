@@ -9,6 +9,8 @@ import { Link2, ExternalLink, Coins } from "lucide-react";
 import { ProjectWithBalance, Project, ProjectStatus } from "@/features/Investor/types";
 import { getTXStatusBadge } from "@/components/StatusBadge";
 import { InvestModal } from "@/features/projects/components/InvestModal";
+import { useInvestorActions } from '../hooks/useInvestorActions';
+
 
 import { formatUnits } from "viem";
 import { useState } from "react";
@@ -43,6 +45,8 @@ interface InvestorManagementPanelProps {
 
 export const InvestorManagementPanel = ({ selectedProject, project, transactions }: InvestorManagementPanelProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false); // <-- Add state for modal
+
+    const { claimRewards, isClaiming } = useInvestorActions();
 
     if (!selectedProject || !project || !transactions) {
         return null; // Or a fallback UI
@@ -135,14 +139,13 @@ export const InvestorManagementPanel = ({ selectedProject, project, transactions
                                             <p className="text-sm text-muted-foreground">Transfer your earned USDC to your wallet.</p>
                                         </div>
                                         <Button
-                                            // onClick={() => onClaimRewards(project.management_contract_address)}
-                                            // disabled={!canClaim || isClaiming}
-                                            disabled={!canClaim}
+                                            onClick={() => claimRewards(project.management_contract_address)}
+                                            disabled={!canClaim || isClaiming}
                                             size="lg"
                                         >
                                             <Coins className="mr-2 h-4 w-4" />
                                             Claim Rewards
-                                            {/* {isClaiming ? 'Claiming...' : 'Claim Rewards'} */}
+                                            {isClaiming ? 'Claiming...' : 'Claim Rewards'}
                                         </Button>
                                     </div>
                                 </div>
