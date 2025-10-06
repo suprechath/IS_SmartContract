@@ -66,7 +66,7 @@ export const InvestmentSidebar = ({ project }: InvestmentSidebarProps) => {
 
                         {/* CTA */}
                         <div className="space-y-3">
-                            <Button size="lg" className="w-full" disabled={project.project_status !== 'Funding'}
+                            <Button size="lg" className="w-full hover:scale-105" disabled={project.project_status !== 'Funding'}
                                 onClick={() => setIsModalOpen(true)}
                             >
                                 Invest Now

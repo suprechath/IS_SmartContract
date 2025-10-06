@@ -261,4 +261,16 @@ export const getOnchainProjectIds = async (req, res) => {
     }
 };
 
+// @desc    Get investments of the logged-in user
+// @route   GET /api/projects/myInvestments
+export const myInvestment = async (req, res) => {
+    try {
+        const investments = await projectModel.getMyInvestments(req.user.id);
+        handleResponse(res, 200, 'User investments retrieved successfully', investments);
+    } catch (error) {
+        console.error('Get My Investments Error:', error);
+        handleResponse(res, 500, 'Server error while retrieving user investments.', error.message);
+    }
+};
+
 

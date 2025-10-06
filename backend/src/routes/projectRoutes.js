@@ -2,7 +2,7 @@ import express from 'express';
 import { 
     createProject, getProjects, getProjectById, getMyProjects, updateProject, 
     prepareCreateProject, onboard, prepareMintTokens, 
-    getProjectIds, getOnchainProjectIds
+    getProjectIds, getOnchainProjectIds, myInvestment
 } from '../controllers/projectController.js';
     // prepareProjectTokenDeployment,prepareProjectMgmtDeployment, onboard, 
 import { protect } from '../middlewares/authMiddleware.js';
@@ -24,5 +24,6 @@ router.post('/deploy/onboard', protect('Project Creator'), validate(onboardSchem
 
 router.post('/mint/prepare', protect('Project Creator'), validate(prepareMintTokensSchema), prepareMintTokens);
 
+router.get('/myInvestments', protect('Investor'), myInvestment); //GET /api/projects/myInvestments 
 
 export default router;

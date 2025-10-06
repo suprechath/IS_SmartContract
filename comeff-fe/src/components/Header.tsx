@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Leaf, ShieldUser, ClipboardList} from "lucide-react";
+import { Leaf, ShieldUser, ClipboardList, Coins} from "lucide-react";
 import { LoginButton } from '@/components/LoginButton';
 import { useAuth } from '@/contexts/AuthProvider';
 
@@ -50,6 +50,11 @@ export const Header = () => {
                     {user?.role === 'Project Creator' && (
                         <button className='hover:bg-[hsl(45_93%_55%)] hover:text-[hsl(210_12%_8%)] hover:rounded-lg px-4 py-1 text-lg font-medium text-green-700 transition-shadow]'>
                             <Link href="/dashboard/creator" className='flex gap-2'> <ClipboardList /> Dashboard</Link>
+                        </button>
+                    )}
+                    {user?.role === 'Investor' && (
+                        <button className='hover:bg-[hsl(45_93%_55%)] hover:text-[hsl(210_12%_8%)] hover:rounded-lg px-4 py-1 text-lg font-medium text-green-700 transition-shadow]'>
+                            <Link href="/dashboard/investor" className='flex gap-2'> <Coins /> Dashboard</Link>
                         </button>
                     )}
                     <LoginButton />

@@ -194,6 +194,27 @@ const getProjectIdsAndTitles = async () => {
     return result.rows;
 };
 
+const getMyInvestments = async (investorOnchainId) => {
+    const query = `
+        SELECT
+            pon.id AS project_onchain_id,
+            poff.id AS project_offchain_id,
+            poff.title AS project_title,
+            pon.project_status,
+            pon.token_contract_address,
+            pon.management_contract_address,
+            pon.usdc_contract_address,
+            tx.*
+        FROM transactions tx
+        JOIN project_onchain pon ON tx.project_onchain_id = pon.id
+        JOIN project_offchain poff ON pon.project_offchain_id = poff.id
+        WHERE tx.user_onchain_id = $1
+        ORDER BY poff.title;
+    `;
+    const result = await pool.query(query, [investorOnchainId]);
+    return result.rows;
+};
+
 export default {
     createProject,
     getProjectsByStatus,
@@ -201,5 +222,6 @@ export default {
     getOnchainProjectById,
     getProjectsByCreatorId,
     updateProject,
-    getProjectIdsAndTitles
+    getProjectIdsAndTitles,
+    getMyInvestments
 };

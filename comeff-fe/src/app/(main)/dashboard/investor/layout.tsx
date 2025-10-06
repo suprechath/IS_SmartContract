@@ -1,17 +1,16 @@
-// src/app/(main)/dashboard/creator/layout.tsx
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function CreatorLayout({ children }: { children: React.ReactNode }) {
+export default function InvestorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
     const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null;
     console.log('User role:', user?.role);
-    if (user?.role !== 'Project Creator') {
-      console.warn("Unauthorized access attempt to project creator page. Redirecting...");
+    if (user?.role !== 'Investor') {
+      console.warn("Unauthorized access attempt to investor page. Redirecting...");
       router.push('/');
     } 
   }, []);
