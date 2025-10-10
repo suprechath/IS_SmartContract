@@ -52,7 +52,7 @@ export const InvestorManagementPanel = ({ selectedProject, project, transactions
         return null; // Or a fallback UI
     }
 
-    const canClaim = typeof selectedProject.rewardsAvailable === 'number' && selectedProject.rewardsAvailable > 0;
+    const canClaim = Number(selectedProject.rewardsAvailable) > 0;
 
     return (
         <Card>
@@ -127,7 +127,7 @@ export const InvestorManagementPanel = ({ selectedProject, project, transactions
                                     <h1 className="font-bold mb-4 text-primary text-center text-xl"> Claim reward</h1>
                                     <div className="flex justify-between items-center mt-4">
                                         <span className="text-muted-foreground">My Project Tokens</span>
-                                        <span className="font-mono text-lg font-semibold">{Number(selectedProject.tokenBalance).toLocaleString()}</span>
+                                        <span className="font-mono text-lg font-semibold">{Number(formatUnits(BigInt(selectedProject.tokenBalance),6)).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center mt-4">
                                         <span className="text-muted-foreground">Available Rewards (USDC)</span>

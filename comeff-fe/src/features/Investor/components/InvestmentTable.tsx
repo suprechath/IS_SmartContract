@@ -50,7 +50,7 @@ export const InvestmentTable = ({ projects, selectedProject, onSelectProject }: 
                                     <TableCell>{getStatusBadge(project.project_status.toLowerCase())}</TableCell>
                                     <TableCell>
                                         <div className="space-y-1">
-                                            {project.tokenBalance}
+                                            {formatUnits(BigInt(project.tokenBalance),6)}
                                         </div>
                                     </TableCell>
                                     <TableCell>
