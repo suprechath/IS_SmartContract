@@ -13,7 +13,11 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
     if (user?.role !== 'Project Creator') {
       console.warn("Unauthorized access attempt to project creator page. Redirecting...");
       router.push('/');
-    } 
+    } else if (user?.sanction_status !== 'Verified') {
+      alert("Your account is pending verification. \nYou will be redirected to the pending verification page.");
+      console.warn("User not approved. Redirecting to pending verification page...");
+      router.push('/pending-verification');
+    }
   }, []);
 
   return <>{children}</>;

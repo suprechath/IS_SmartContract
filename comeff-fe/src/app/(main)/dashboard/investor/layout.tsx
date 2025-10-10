@@ -12,7 +12,11 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
     if (user?.role !== 'Investor') {
       console.warn("Unauthorized access attempt to investor page. Redirecting...");
       router.push('/');
-    } 
+    } else if (user?.sanction_status !== 'Verified') {
+      alert("Your account is not verified.\nPlease complete the verification process.");
+      console.warn("User not verified. Redirecting to pending verification page...");
+      router.push('/pending-verification');
+    }
   }, []);
 
   return <>{children}</>;

@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Hourglass, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { useProvideAuth } from "../hooks/useProvideAuth";
 
 interface VerificationProps {
   role: 'Investor' | 'Project Creator' | null;
@@ -24,6 +25,7 @@ export const VerificationNotStarted = ({ role, onBeginVerification, isLoading }:
 
 // Verified
 export const VerificationApproved = ({ role }: { role: string | null }) => {
+  const { logout } = useProvideAuth();
   const router = useRouter();
   return (
     <div className="bg-success/30 border-l-4 border-success rounded-lg p-6 mb-8 text-center">
@@ -34,12 +36,12 @@ export const VerificationApproved = ({ role }: { role: string | null }) => {
           <p className="text-emerald-700 mb-4">
             Welcome! Your account is fully active. You can now {role === 'Investor' ? 'invest in projects' : 'create your first project'}.
           </p>
-          <Button size="lg" className="w-full sm:w-auto" onClick={() => router.push('/dashboard')}>
-            Go to Dashboard
+          <Button size="lg" className="w-full sm:w-auto" onClick={() => {logout(); router.push('/');}}>
+            Please re-login to continue.
           </Button>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
