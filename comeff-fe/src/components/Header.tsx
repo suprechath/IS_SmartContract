@@ -9,7 +9,10 @@ import { useAuth } from '@/contexts/AuthProvider';
 
 export const Header = () => {
     const { token } = useAuth();
-    const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null;
+    let user = null;
+    if (typeof window !== "undefined") {
+        user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null;
+    }
     return (
         <header className="sticky top-0 z-50 w-full shadow-lg backdrop-blur-md">
             <div className="container h-16 mx-auto px-4 py-4 sm:px-6 flex justify-between items-center">
