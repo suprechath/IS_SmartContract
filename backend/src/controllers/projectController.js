@@ -273,4 +273,42 @@ export const myInvestment = async (req, res) => {
     }
 };
 
+// @desc    Manually sync a project's on-chain data with the database
+// @route   POST /api/projects/:id/sync
+export const syncProjectOnchainData = async (req, res) => {
+    const { id: projectId } = req.params;
+
+    try {
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project || !project.management_contract_address) {
+            return handleResponse(res, 404, 'Project not found or it is not yet deployed on-chain.');
+        }
+
+        const provider = new ethers.JsonRpcProvider(process.env.NETWORK_RPC_URL);
+        const contract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+
+        // Fetch the latest data directly from the smart contract
+        const onchainTotal = await contract.totalContributions();
+        const onchainState = await contract.currentState();
+
+        // const formattedTotal = ethers.formatUnits(onchainTotal, 6);
+        const mapStateToString = ['Funding', 'Succeeded', 'Failed', 'Active'];
+        const onchainStatus = mapStateToString[onchainState];
+
+        // Prepare the data for the database update
+        const onchainDataToUpdate = {
+            total_contributions: onchainTotal,
+            project_status: onchainStatus
+        };
+
+        // Update the database with the fresh on-chain data
+        const updatedProject = await projectModel.updateProject(projectId, onchainDataToUpdate, {});
+
+        handleResponse(res, 200, 'Project data successfully synced with the blockchain.', updatedProject);
+
+    } catch (error) {
+        console.error('Sync Project Error:', error);
+        handleResponse(res, 500, 'Server error during project synchronization.', error.message);
+    }
+};
 

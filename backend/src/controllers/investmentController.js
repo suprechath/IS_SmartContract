@@ -34,7 +34,7 @@ export const investmentCheck = async (req, res) => {
 
         const deadline = await contract.deadline();
         if (Date.now() / 1000 > deadline) {
-            await projectModel.updateProject(projectId, { project_status: 'Failed' },{});
+            await projectModel.updateProject(projectId, { project_status: 'Failed' }, {});
             return handleResponse(res, 400, 'The funding deadline for this project has passed.');
         }
 
@@ -46,7 +46,7 @@ export const investmentCheck = async (req, res) => {
         if (amountInWei + totalContributions > fundingGoal) {
             return handleResponse(res, 400, 'Investment amount exceeds the remaining funding goal., The maximum you can invest is ' + ethers.formatUnits(remainingGoal, 6) + ' tokens.');
         }
-        const USDC_CONTRACT_ADDRESS  = await configModel.getConfigValue('MOCK_USDC_CONTRACT_ADDRESS');
+        const USDC_CONTRACT_ADDRESS = await configModel.getConfigValue('MOCK_USDC_CONTRACT_ADDRESS');
         // console.log('USDC_CONTRACT_ADDRESS:', USDC_CONTRACT_ADDRESS);
         // console.log('amount', amountInWei);
 
@@ -92,7 +92,7 @@ export const confirmInvestment = async (req, res) => {
             if (log.address.toLowerCase() === project.management_contract_address.toLowerCase()) {
                 try {
                     decodedLog = contractInterface.parseLog(log);
-                } catch (e) {console.error('Log parsing error:', e);}
+                } catch (e) { console.error('Log parsing error:', e); }
                 if (decodedLog && decodedLog.name === 'Invested') {
                     break;
                 }
@@ -108,11 +108,16 @@ export const confirmInvestment = async (req, res) => {
         //convert at frontend
         // const formattedTotal = ethers.formatUnits(onchainTotal, 6);
         // console.log('Updated total contributions from contract:', formattedTotal);
+        const onchainState = await contract.currentState();
+        const mapStateToString = ['Funding', 'Succeeded', 'Failed', 'Active'];
+        const onchainStatus = mapStateToString[onchainState];
 
         // Update the project's total contributions in your database
-        await projectModel.updateProject(projectId, { total_contributions: onchainTotal }, {});
-        
-        // (Recommended) Log the transaction in a dedicated transactions table
+        await projectModel.updateProject(projectId, { 
+            total_contributions: onchainTotal,
+            project_status: onchainStatus
+        }, {});
+
         // const amountInvested = ethers.formatUnits(decodedLog.args[1], 6);
         await transactionModel.createTransaction({
             project_onchain_id: projectId,

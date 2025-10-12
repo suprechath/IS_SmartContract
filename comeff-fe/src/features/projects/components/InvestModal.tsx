@@ -5,7 +5,6 @@ import { parseUnits, isAddress, formatUnits, parseEventLogs } from "viem";
 import { Project } from "../types";
 import api from "@/lib/api";
 import MockedUSDCABI from '../../../abi/MockedUSDC.sol/MockedUSCD.json';
-import ProjectManagementABI from '../../../abi/ProjectManagement.sol/ProjectManagement.json';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Project } from "../types";
 
 import { InvestModal } from './InvestModal';
+import api from '@/lib/api';
 
 interface InvestmentSidebarProps {
     project: Project;
@@ -26,6 +27,20 @@ export const InvestmentSidebar = ({ project }: InvestmentSidebarProps) => {
 
     const [isModalOpen, setIsModalOpen] = useState(false); // <-- Add state for modal
     // console.log('Project (Inv sidebar):', project);
+
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSync = async (projectId : any) => {
+        setIsSyncing(true);
+        try {
+            await api.post(`/projects/${projectId}/sync`);
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to sync project data:", error);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     return (
         <>
@@ -70,6 +85,11 @@ export const InvestmentSidebar = ({ project }: InvestmentSidebarProps) => {
                                 onClick={() => setIsModalOpen(true)}
                             >
                                 Invest Now
+                            </Button>
+                            <Button size="lg" className="w-full hover:scale-105"
+                            onClick={() => handleSync(project.onchain_id)}
+                            >
+                                {isSyncing ? 'Syncing...' : 'Refresh Data'}
                             </Button>
                         </div>
                     </CardContent>
