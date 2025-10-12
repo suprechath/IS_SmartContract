@@ -8,6 +8,7 @@ import configModel from '../models/configModel.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { on } from 'events';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectTokenArtifactPath = path.resolve(__dirname, '../../../contracts/artifacts/contracts/ProjectToken.sol/ProjectToken.json');
@@ -312,3 +313,64 @@ export const syncProjectOnchainData = async (req, res) => {
     }
 };
 
+// @desc    Confirm a successful token mint transaction and update the database
+// @route   POST /api/projects/:id/confirm-mint
+export const confirmMintTransaction = async (req, res) => {
+    const { id: projectId } = req.params;
+    const { transactionHash } = req.body;
+
+    try {
+        const provider = new ethers.JsonRpcProvider(process.env.NETWORK_RPC_URL);
+        const receipt = await provider.getTransactionReceipt(transactionHash);
+
+        if (!receipt || receipt.status !== 1) {
+            return handleResponse(res, 400, 'Mint transaction failed or not found.');
+        }
+
+        const project = await projectModel.getOnchainProjectById(projectId);
+        if (!project) {
+            return handleResponse(res, 404, 'Project not found.');
+        }
+
+        const contractInterface = new ethers.Interface(ProjectManagement.abi);
+        const mintEvent = receipt.logs
+            .map(log => {
+                try {
+                    return contractInterface.parseLog(log);
+                } catch (e) {
+                    return null;
+                }
+            })
+            .find(parsedLog => parsedLog && parsedLog.name === 'TokensMinted');
+
+        if (!mintEvent) {
+            return handleResponse(res, 400, 'TokensMinted event not found in transaction logs.');
+        }
+
+        // For maximum data integrity, get the total supply directly from the token contract
+        const tokenContract = new ethers.Contract(project.token_contract_address, ProjectToken.abi, provider);
+        const onchainTotalSupply = await tokenContract.totalSupply();
+
+        const projectMgmtContract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+        const projectState = await projectMgmtContract.currentState();
+        const allTokensMinted = await projectMgmtContract.areTokensMinted();
+        const totalMintedTokens = await projectMgmtContract.totalMintedToken();
+
+        const mapStateToString = ['Funding', 'Succeeded', 'Failed', 'Active'];
+        const updatedStatus = mapStateToString[projectState];
+        const totalSupply = (onchainTotalSupply>totalMintedTokens)?onchainTotalSupply:totalMintedTokens;
+
+        // Update the project status and tokens minted flag in the database
+        await projectModel.updateProject(projectId, {
+            project_status: updatedStatus,
+            tokens_minted: allTokensMinted,
+            token_total_supply: totalSupply
+        }, {});
+
+        handleResponse(res, 200, 'Token minting confirmed and recorded successfully.');
+
+    } catch (error) {
+        console.error('Confirm Mint Error:', error);
+        handleResponse(res, 500, 'Server error during mint confirmation.', error.message);
+    }
+};

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAccount, useWriteContract, useSendTransaction, usePublicClient } from "wagmi";
-import { parseUnits, isAddress, formatUnits, parseEventLogs } from "viem";
+import { parseUnits, isAddress, formatUnits } from "viem";
 
 import { Project } from "../types";
 import api from "@/lib/api";

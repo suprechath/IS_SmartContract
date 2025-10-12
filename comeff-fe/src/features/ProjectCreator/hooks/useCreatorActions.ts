@@ -27,8 +27,8 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: deployTxHash, });
 
   // --- Minting State ---
-  const [mintTxHash, setMintTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const { data: mintReceipt, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintTxHash });
+  // const [mintTxHash, setMintTxHash] = useState<`0x${string}` | undefined>(undefined);
+  // const { data: mintReceipt, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintTxHash });
 
   // --- Withdraw Funds State ---\
   const [withdrawTxHash, setWithdrawTxHash] = useState<`0x${string}` | undefined>(undefined);
@@ -225,6 +225,10 @@ export const useCreatorActions = (onActionComplete: () => void) => {
       alert("Wallet not connected");
       return;
     }
+    if (!publicClient) {
+      alert("Blockchain client not available");
+      return;
+    }
 
     try {
       const response = await api.post('/projects/mint/prepare', {
@@ -239,39 +243,21 @@ export const useCreatorActions = (onActionComplete: () => void) => {
         data: unsignedTx.data,
       });
 
-      setMintTxHash(txHash);
-      alert("Token minting transaction sent! Please wait for confirmation.");
+      const mintReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      console.log("Minting Transaction Confirmed!", mintReceipt);
+
+      await api.post(`/projects/${projectId}/confirm-mint`, {
+        transactionHash: mintReceipt.transactionHash,
+      });
+      console.log("Minting transaction successfully recorded on the backend.");
+
+      alert("✅ Token minting successful!");
+      onActionComplete();
     } catch (error: any) {
       console.error("Token minting failed:", error);
       alert(`Token Minting Failed: ${error.response?.data?.message || error.message || "An unexpected error occurred."}`);
     }
   };
-
-  useEffect(() => {
-    const recordMintTransaction = async () => {
-      if (isMintConfirmed && mintReceipt) {
-        console.log("Minting Transaction Confirmed!", mintReceipt);
-        try {
-          await api.post('/transactions/record', {
-            project_onchain_id: activeProjectId,
-            USDC_amount: 0, // Or the actual amount if applicable
-            transaction_type: 'TokenMint', // A specific type for minting
-            transaction_hash: mintReceipt.transactionHash,
-          });
-          console.log("Minting transaction successfully recorded on the backend.");
-        } catch (apiError: any) {
-          // Handle potential API errors
-          console.error("Failed to record minting transaction:", apiError);
-          // Optionally, show an error to the user
-          alert("Your token mint was successful, but there was an issue saving it to your transaction history.");
-        }
-        alert("✅ Token minting successful!");
-        setMintTxHash(undefined);
-        onActionComplete(); // Refresh project data to show updated token counts
-      }
-    };
-    recordMintTransaction();
-  }, [isMintConfirmed, mintReceipt, onActionComplete]);
 
   const handleWithdrawFunds = async (projectId: string) => {
     console.log("Action: Withdrawing funds for project:", projectId);

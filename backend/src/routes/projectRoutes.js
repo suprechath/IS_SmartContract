@@ -2,7 +2,7 @@ import express from 'express';
 import { 
     createProject, getProjects, getProjectById, getMyProjects, updateProject, 
     prepareCreateProject, onboard, prepareMintTokens, 
-    getProjectIds, getOnchainProjectIds, myInvestment, syncProjectOnchainData
+    getProjectIds, getOnchainProjectIds, myInvestment, syncProjectOnchainData, confirmMintTransaction
 } from '../controllers/projectController.js';
     // prepareProjectTokenDeployment,prepareProjectMgmtDeployment, onboard, 
 import { protect } from '../middlewares/authMiddleware.js';
@@ -24,6 +24,7 @@ router.post('/deploy/onchain', protect('Project Creator'), validate(prepareOncha
 router.post('/deploy/onboard', protect('Project Creator'), validate(onboardSchema), onboard); // POST /api/projects/deploy/onboard
 
 router.post('/mint/prepare', protect('Project Creator'), validate(prepareMintTokensSchema), prepareMintTokens);
+router.post('/:id/confirm-mint', protect('Project Creator'), confirmMintTransaction);
 
 router.get('/myInvestments', protect('Investor'), myInvestment); //GET /api/projects/myInvestments 
 
