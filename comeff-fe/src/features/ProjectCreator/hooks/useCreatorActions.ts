@@ -5,10 +5,9 @@ import ProjectTokenABI from '../../../abi/ProjectToken.sol/ProjectToken.json';
 import ProjectManagementABI from '../../../abi/ProjectManagement.sol/ProjectManagement.json';
 import MockedUSDCABI from '../../../abi/MockedUSDC.sol/MockedUSCD.json';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { usePublicClient, useWalletClient, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'; // useWalletClient is for sending the tx
 import { formatEther, parseEventLogs, getContract, formatUnits, parseUnits } from 'viem';
-import { set } from 'date-fns';
 
 export const useCreatorActions = (onActionComplete: () => void) => {
   const publicClient = usePublicClient();
@@ -16,7 +15,7 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   const [isEstimating, setIsEstimating] = useState(false);
   const [estimatedCost, setEstimatedCost] = useState<string | null>(null);
 
-  const { writeContractAsync, data: txHash, isPending: isSubmitting } = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
 
   // --- Deployment State ---
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -25,14 +24,6 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   const [isOnboarding, setIsOnboarding] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: deployTxHash, });
-
-  // --- Minting State ---
-  // const [mintTxHash, setMintTxHash] = useState<`0x${string}` | undefined>(undefined);
-  // const { data: mintReceipt, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintTxHash });
-
-  // --- Withdraw Funds State ---\
-  const [withdrawTxHash, setWithdrawTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const { data: withdrawReceipt, isSuccess: isWithdrawConfirmed } = useWaitForTransactionReceipt({ hash: withdrawTxHash });
 
   // --- Deposit Reward State ---
   const [depositPayload, setDepositPayload] = useState(null);
@@ -252,6 +243,7 @@ export const useCreatorActions = (onActionComplete: () => void) => {
       console.log("Minting transaction successfully recorded on the backend.");
 
       alert("✅ Token minting successful!");
+      window.open(`https://sepolia-optimism.etherscan.io/tx/${mintReceipt.transactionHash}`, '_blank');
       onActionComplete();
     } catch (error: any) {
       console.error("Token minting failed:", error);
@@ -260,16 +252,16 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   };
 
   const handleWithdrawFunds = async (projectId: string) => {
-    console.log("Action: Withdrawing funds for project:", projectId);
+    if (!publicClient) {
+      alert("Wallet not connected");
+      return;
+    }
     const projectRes = await api.get(`projects/onchain/id/${projectId}`);
-    console.log("Fetched on-chain project data:", projectRes.data);
     if (!projectRes.data.data.management_contract_address) {
       alert("Error fetching project on-chain data: " + projectRes.data.message);
       throw new Error("Could not find the smart contract address for this project.");
     }
     const managementContractAddress = projectRes.data.data.management_contract_address;
-    console.log("Management Contract Address:", managementContractAddress);
-    console.log("USDC Contract Address:", projectRes.data.data.usdc_contract_address);
 
     try {
       const usdcBalance = await publicClient.readContract({
@@ -288,31 +280,50 @@ export const useCreatorActions = (onActionComplete: () => void) => {
       });
       const contractUSDCBalance = Number(formatUnits(usdcBalance as bigint, 6));
       console.log("On-chain Contract USDC Balance:", contractUSDCBalance);
-      console.log("Funding Goal:", projectRes.data.data.funding_usdc_goal);
       if (projectRes.data.data.funding_usdc_goal - contractUSDCBalance >= 100) {
         alert("Raised fund was already withdrawn.");
-        return;
+        throw new Error("Raised fund was already withdrawn.");
       }
+
       const txHash = await writeContractAsync({
         address: managementContractAddress,
         abi: ProjectManagementABI.abi,
         functionName: 'withdrawFunds',
       });
-      setWithdrawTxHash(txHash);
-      alert("Your withdrawal transaction has been submitted. Please wait for confirmation.");
+      console.log("Withdrawal transaction hash:", txHash);
+
+      const withdrawReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      // const withdrawReceipt = await publicClient.getTransactionReceipt({ hash: "0x0051c6d4de12eb763aaadf8c74f6d592acd80a889cfdf6836c2691f74934d0fd" });
+      console.log("Withdrawal Transaction Confirmed!", withdrawReceipt);
+      if (withdrawReceipt.status !== 'success') {
+        throw new Error("Transaction failed.");
+      }
+
+      const logs = parseEventLogs({
+        abi: ProjectManagementABI.abi,
+        logs: withdrawReceipt.logs,
+        eventName: 'FundsWithdrawn', // replace with your event name
+      });
+      const creatorAmount = logs[0]?.args?.creatorAmount ?? 0;
+      const platformFee = logs[0]?.args?.platformFee ?? 0;
+      // console.log("Parsed 'FundsWithdrawn' Logs:", logs);
+      // console.log("Creator Amount:", Number(formatUnits(creatorAmount, 6)));
+      // console.log("Platform Fee:", Number(formatUnits(platformFee, 6)));
+      await api.post('/transactions/record', {
+        project_onchain_id: projectRes.data.data.id,
+        USDC_amount: creatorAmount.toString(),
+        transaction_type: "Withdrawal",
+        transaction_hash: withdrawReceipt.transactionHash.toString(),
+        platform_fee: platformFee.toString()
+      });
+
+      alert(`✅ ${contractUSDCBalance} USDC have withdrawn successful!`);
+      window.open(`https://sepolia-optimism.etherscan.io/tx/${withdrawReceipt.transactionHash}`, '_blank');
+      onActionComplete();
     } catch (error) {
       console.error("Failed to fetch on-chain USDC balance:", error);
     }
   };
-
-  useEffect(() => {
-    if (isWithdrawConfirmed && withdrawReceipt) {
-      console.log("Withdrawal Transaction Confirmed!", withdrawReceipt);
-      alert("✅ Withdrawal successful!");
-      setWithdrawTxHash(undefined);
-      onActionComplete(); // Refresh project data to show updated balances
-    }
-  }, [isWithdrawConfirmed, withdrawReceipt, onActionComplete]);
 
   const handleDepositReward = async (projectId: string, amount: number) => {
     console.log(`Action: Depositing ${amount} USDC reward for project:`, projectId);
