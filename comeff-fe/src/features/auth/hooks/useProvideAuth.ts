@@ -142,6 +142,7 @@ export const useProvideAuth = () => {
                 router.push('/pending-verification');
             }
 
+            window.location.reload();
             return { success: true, user: userData };
 
         } catch (err: any) {
@@ -151,6 +152,7 @@ export const useProvideAuth = () => {
             }
             const errorMessage = err.response?.data?.message || 'An unknown error occurred during login.';
             setError(errorMessage);
+            alert('Login failed: ' + errorMessage);
             return { success: false, error: errorMessage };
         } finally {
             setIsLoading(false);

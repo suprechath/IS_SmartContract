@@ -236,7 +236,7 @@ export const InvestorManagementPanel = ({ selectedProject, project, transactions
                                         <TableCell>{new Date(tx.created_at).toLocaleString()}</TableCell>
                                         <TableCell>...{tx.wallet_address.substring(tx.wallet_address.length - 4)}</TableCell>
                                         <TableCell><a
-                                            href={`https://optimistic.etherscan.io/tx/${tx.transaction_hash}`}
+                                            href={`https://sepolia-optimism.etherscan.io/tx/${tx.transaction_hash}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="items-center gap-1 text-blue-500 hover:underline justify-self-center flex"

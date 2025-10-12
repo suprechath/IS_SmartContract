@@ -13,7 +13,7 @@ const offchainKeys = [
     'location',
     'cover_image_url',
     'tags',
-    'CO2_reduction',
+    'co2_reduction',
     'projected_roi',
     'projected_payback_period_months',
     'project_plan_url',

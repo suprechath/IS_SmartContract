@@ -139,10 +139,10 @@ const setupQueries = `
   BEGIN
     INSERT INTO users_offchain (full_name, date_of_birth, address, identification_number, email, kyc_status)
     VALUES (
-      'HH0 Admin',
+      'Platform Operator',
       '2000-01-01',
       'Admin',
-      '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      '0xa4759E5f5a7B95B347e6d542427982c4DbA34ED1',
       'admin@buildingyield.com',
       'Verified'
     )
@@ -154,7 +154,7 @@ const setupQueries = `
       INSERT INTO users_onchain (user_offchain_id, wallet_address, role, sanction_status)
       VALUES (
         offchain_user_id,
-        '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+        '0xa4759E5f5a7B95B347e6d542427982c4DbA34ED1',
         'Platform Operator',
         'Verified'
       )

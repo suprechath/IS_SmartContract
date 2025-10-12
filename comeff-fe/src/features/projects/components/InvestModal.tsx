@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useAccount, useWriteContract, useSendTransaction } from "wagmi";
-import { parseUnits, isAddress, formatUnits } from "viem";
+import { useAccount, useWriteContract, useSendTransaction, usePublicClient } from "wagmi";
+import { parseUnits, isAddress, formatUnits, parseEventLogs } from "viem";
 
 import { Project } from "../types";
 import api from "@/lib/api";
 import MockedUSDCABI from '../../../abi/MockedUSDC.sol/MockedUSCD.json';
+import ProjectManagementABI from '../../../abi/ProjectManagement.sol/ProjectManagement.json';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export const InvestModal = ({ project, isOpen, onClose }: InvestModalProps) => {
 
     const availableFunding = project.funding_usdc_goal - Number(formatUnits(BigInt(project.total_contributions), 6));
 
-
+    const publicClient = usePublicClient();
 
     const { address } = useAccount();
     const { writeContractAsync } = useWriteContract();
@@ -56,6 +57,9 @@ export const InvestModal = ({ project, isOpen, onClose }: InvestModalProps) => {
         if (Number(amount) > availableFunding) {
             setError(`Amount exceeds available funding (${availableFunding} USDC).`);
             return;
+        }
+        if (!publicClient) {
+            throw new Error("Blockchain client not available.");
         }
 
         setStatus('checking');
@@ -94,8 +98,17 @@ export const InvestModal = ({ project, isOpen, onClose }: InvestModalProps) => {
                 data: unsignedTx.data,
                 value: BigInt(unsignedTx.value || 0),
             });
-
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: investHash });
+            console.log('Transaction Receipt:', receipt);
             setTxHash(investHash);
+            if (receipt.status !== 'success') {
+                throw new Error("Transaction failed.");
+            }
+            await api.post('/investments/confirm', {
+                projectId: project.onchain_id,
+                transactionHash: investHash,
+            });
+            
             setStatus('success');
 
         } catch (err: any) {
@@ -156,7 +169,7 @@ export const InvestModal = ({ project, isOpen, onClose }: InvestModalProps) => {
                             <AlertTitle>Investment Successful!</AlertTitle>
                             <AlertDescription>
                                 Your transaction has been confirmed.
-                                <a href={`https://optimistic.etherscan.io/tx/${txHash}`} target="_blank" rel="noopener noreferrer" className="underline ml-1">View on Etherscan</a>
+                                <a href={`https://sepolia-optimism.etherscan.io/tx/${txHash}`} target="_blank" rel="noopener noreferrer" className="underline ml-1">View on Etherscan</a>
                             </AlertDescription>
                         </Alert>
                     )}
@@ -168,7 +181,7 @@ export const InvestModal = ({ project, isOpen, onClose }: InvestModalProps) => {
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
-                    
+
                     {status === 'idle' && amount && Number(amount) > availableFunding && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-6 w-6" />

@@ -8,7 +8,7 @@ export const createProjectSchema = Joi.object({
     location: Joi.string().required(),
     cover_image_url: Joi.string().uri().optional(),
     tags: Joi.array().items(Joi.string()).required(),
-    CO2_reduction: Joi.number().positive().optional(),
+    co2_reduction: Joi.number().positive().optional(),
     projected_roi: Joi.number().positive().required(),
     projected_payback_period_months: Joi.number().positive().optional(),
     project_plan_url: Joi.string().uri().required(),

@@ -3,6 +3,9 @@ import projectModel from '../models/projectModel.js';
 import { ethers } from 'ethers';
 import configModel from '../models/configModel.js';
 
+import transactionModel from '../models/transactionModel.js'; // For logging the transaction
+import userModel from '../models/userModel.js';
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -64,5 +67,64 @@ export const investmentCheck = async (req, res) => {
     } catch (error) {
         console.error('Prepare Investment Error:', error);
         handleResponse(res, 500, 'Server error during investment preparation.', error.message);
+    }
+};
+
+// @desc    Confirm a successful investment and update the database
+// @route   POST /api/investments/confirm
+export const confirmInvestment = async (req, res) => {
+    const { projectId, transactionHash } = req.body;
+    const userId = req.user.id;
+
+    try {
+        const provider = new ethers.JsonRpcProvider(process.env.NETWORK_RPC_URL);
+        const receipt = await provider.getTransactionReceipt(transactionHash);
+
+        if (!receipt || receipt.status !== 1) {
+            return handleResponse(res, 400, 'Transaction failed or not found on the blockchain.');
+        }
+
+        const project = await projectModel.getOnchainProjectById(projectId);
+
+        const contractInterface = new ethers.Interface(ProjectManagement.abi);
+        let decodedLog = null;
+        for (const log of receipt.logs) {
+            if (log.address.toLowerCase() === project.management_contract_address.toLowerCase()) {
+                try {
+                    decodedLog = contractInterface.parseLog(log);
+                } catch (e) {console.error('Log parsing error:', e);}
+                if (decodedLog && decodedLog.name === 'Invested') {
+                    break;
+                }
+            }
+        }
+
+        if (!decodedLog || decodedLog.name !== 'Invested') {
+            return handleResponse(res, 400, 'Investment event not found in transaction logs.');
+        }
+
+        const contract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
+        const onchainTotal = await contract.totalContributions();
+        //convert at frontend
+        // const formattedTotal = ethers.formatUnits(onchainTotal, 6);
+        // console.log('Updated total contributions from contract:', formattedTotal);
+
+        // Update the project's total contributions in your database
+        await projectModel.updateProject(projectId, { total_contributions: onchainTotal }, {});
+        
+        // (Recommended) Log the transaction in a dedicated transactions table
+        // const amountInvested = ethers.formatUnits(decodedLog.args[1], 6);
+        await transactionModel.createTransaction({
+            project_onchain_id: projectId,
+            USDC_amount: decodedLog.args[1].toString(),
+            transaction_type: 'Investment',
+            transaction_hash: transactionHash,
+        }, userId);
+
+        handleResponse(res, 200, 'Investment confirmed and recorded successfully.');
+
+    } catch (error) {
+        console.error('Confirm Investment Error:', error);
+        handleResponse(res, 500, 'Server error during investment confirmation.', error.message);
     }
 };

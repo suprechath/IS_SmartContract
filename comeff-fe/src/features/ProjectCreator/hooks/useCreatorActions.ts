@@ -248,13 +248,29 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   };
 
   useEffect(() => {
-    if (isMintConfirmed && mintReceipt) {
-      console.log("Minting Transaction Confirmed!", mintReceipt);
-      alert("✅ Token minting successful!");
-      // setIsMinting(false);
-      setMintTxHash(undefined);
-      onActionComplete(); // Refresh project data to show updated token counts
-    }
+    const recordMintTransaction = async () => {
+      if (isMintConfirmed && mintReceipt) {
+        console.log("Minting Transaction Confirmed!", mintReceipt);
+        try {
+          await api.post('/transactions/record', {
+            project_onchain_id: activeProjectId,
+            USDC_amount: 0, // Or the actual amount if applicable
+            transaction_type: 'TokenMint', // A specific type for minting
+            transaction_hash: mintReceipt.transactionHash,
+          });
+          console.log("Minting transaction successfully recorded on the backend.");
+        } catch (apiError: any) {
+          // Handle potential API errors
+          console.error("Failed to record minting transaction:", apiError);
+          // Optionally, show an error to the user
+          alert("Your token mint was successful, but there was an issue saving it to your transaction history.");
+        }
+        alert("✅ Token minting successful!");
+        setMintTxHash(undefined);
+        onActionComplete(); // Refresh project data to show updated token counts
+      }
+    };
+    recordMintTransaction();
   }, [isMintConfirmed, mintReceipt, onActionComplete]);
 
   const handleWithdrawFunds = async (projectId: string) => {

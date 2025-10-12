@@ -34,7 +34,7 @@ const formSchema = z.object({
   tags: z.string()
     .min(1, { message: "Please enter at least one tag." })
     .transform(val => val.split(',').map(tag => tag.trim())), // Transforms into array
-  CO2_reduction: z.coerce.number().positive().optional(),
+  co2_reduction: z.coerce.number().positive().optional(),
   projected_roi: z.coerce
     .number()
     .positive({ message: "Projected ROI must be a positive number." }),
@@ -76,7 +76,7 @@ export const CreateProjectDialog = ({ isOpen, setIsOpen, onProjectCreated }: Cre
       location: "",
       cover_image_url: "",
       tags: [] as any,
-      CO2_reduction: "" as any,
+      co2_reduction: "" as any,
       projected_roi: "" as any,
       projected_payback_period_months: "" as any,
       project_plan_url: "",
@@ -128,7 +128,7 @@ export const CreateProjectDialog = ({ isOpen, setIsOpen, onProjectCreated }: Cre
                 </div>
 
                 {/* --- GROUP 3: METADATA & DOCUMENTS (Changes Here) --- */}
-                <FormField control={form.control} name="CO2_reduction" render={({ field }) => (<FormItem> <FormLabel><Leaf className="h-4 w-4" /> CO2 Reduction (tons/year) *</FormLabel> <FormControl><Input placeholder="100 tCO2e" {...field} /></FormControl> <FormMessage /> </FormItem>)} />
+                <FormField control={form.control} name="co2_reduction" render={({ field }) => (<FormItem> <FormLabel><Leaf className="h-4 w-4" /> CO2 Reduction (tons/year) *</FormLabel> <FormControl><Input placeholder="100 tCO2e" {...field} /></FormControl> <FormMessage /> </FormItem>)} />
                 <FormField control={form.control} name="tags" render={({ field }) => (<FormItem> <FormLabel>Tags *</FormLabel> <FormControl><Input placeholder="Energy, HVAC, Smart Building" {...field} /></FormControl> <FormDescription>Comma-separated list of relevant tags.</FormDescription> <FormMessage /> </FormItem>)} />
                 <FormField control={form.control} name="project_plan_url" render={({ field }) => (<FormItem> <FormLabel>Project Plan URL *</FormLabel> <FormControl><Input type="url" placeholder="https://example.com/plan.pdf" {...field} /></FormControl> <FormMessage /> </FormItem>)} />
                 <FormField control={form.control} name="cover_image_url" render={({ field }) => (<FormItem> <FormLabel>Cover Image URL</FormLabel> <FormControl><Input type="url" placeholder="https://example.com/image.png" {...field} /></FormControl> <FormMessage /> </FormItem>)} />

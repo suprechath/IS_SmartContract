@@ -2,17 +2,23 @@
 'use client';
 
 import Link from 'next/link';
-import { Leaf, ShieldUser, ClipboardList, Coins} from "lucide-react";
+import { useState, useEffect } from 'react';
+
+import { ShieldUser, ClipboardList, Coins} from "lucide-react";
 import { LoginButton } from '@/components/LoginButton';
 import { useAuth } from '@/contexts/AuthProvider';
 
 
 export const Header = () => {
     const { token } = useAuth();
-    let user = null;
-    if (typeof window !== "undefined") {
-        user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null;
-    }
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const storedUser = localStorage.getItem('user');
+            setUser(storedUser ? JSON.parse(storedUser) : null);
+        }
+    }, []);
     return (
         <header className="sticky top-0 z-50 w-full shadow-lg backdrop-blur-md">
             <div className="container h-16 mx-auto px-4 py-4 sm:px-6 flex justify-between items-center">
@@ -38,12 +44,12 @@ export const Header = () => {
                         </Link>
                     )}
                     {user?.role === 'Project Creator' && (
-                        <button className='hover:bg-[hsl(45_93%_55%)] hover:text-[hsl(210_12%_8%)] hover:rounded-lg px-1 py-1 text-lg font-medium text-green-700 transition-shadow]'>
+                        <button className='hover:bg-primary/50 hover:text-gray-200 hover:rounded-lg px-1 py-1 text-lg font-medium text-green-700 transition-shadow'>
                             <Link href="/dashboard/creator" className='flex gap-2'> <ClipboardList /> Dashboard</Link>
                         </button>
                     )}
                     {user?.role === 'Investor' && (
-                        <button className='hover:bg-[hsl(45_93%_55%)] hover:text-[hsl(210_12%_8%)] hover:rounded-lg px-1 py-1 text-lg font-medium text-green-700 transition-shadow]'>
+                        <button className='hover:bg-primary/50 hover:text-gray-200 hover:rounded-lg px-1 py-1 text-lg font-medium text-green-700 transition-shadow'>
                             <Link href="/dashboard/investor" className='flex gap-2'> <Coins /> Dashboard</Link>
                         </button>
                     )}
