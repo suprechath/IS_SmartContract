@@ -25,12 +25,6 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   const [isCreating, setIsCreating] = useState(false);
   const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: deployTxHash, });
 
-  // --- Deposit Reward State ---
-  const [depositPayload, setDepositPayload] = useState(null);
-  const [approveTxHash, setApproveTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const [depositTxHash, setDepositTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const { data: depositReceipt, isSuccess: isDepositConfirmed } = useWaitForTransactionReceipt({ hash: depositTxHash });
-
   const createProject = async (projectData: any) => {
     setIsCreating(true);
     console.log("Creating project with data:", projectData);
@@ -236,14 +230,16 @@ export const useCreatorActions = (onActionComplete: () => void) => {
 
       const mintReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
       console.log("Minting Transaction Confirmed!", mintReceipt);
-
+      if (mintReceipt.status !== 'success') {
+        throw new Error("Transaction failed.");
+      }
       await api.post(`/projects/${projectId}/confirm-mint`, {
         transactionHash: mintReceipt.transactionHash,
       });
       console.log("Minting transaction successfully recorded on the backend.");
 
-      alert("✅ Token minting successful!");
       window.open(`https://sepolia-optimism.etherscan.io/tx/${mintReceipt.transactionHash}`, '_blank');
+      alert("✅ Token minting successful!");
       onActionComplete();
     } catch (error: any) {
       console.error("Token minting failed:", error);
@@ -317,8 +313,8 @@ export const useCreatorActions = (onActionComplete: () => void) => {
         platform_fee: platformFee.toString()
       });
 
-      alert(`✅ ${contractUSDCBalance} USDC have withdrawn successful!`);
       window.open(`https://sepolia-optimism.etherscan.io/tx/${withdrawReceipt.transactionHash}`, '_blank');
+      alert(`✅ ${contractUSDCBalance} USDC have withdrawn successful!`);
       onActionComplete();
     } catch (error) {
       console.error("Failed to fetch on-chain USDC balance:", error);
@@ -326,6 +322,14 @@ export const useCreatorActions = (onActionComplete: () => void) => {
   };
 
   const handleDepositReward = async (projectId: string, amount: number) => {
+    if (!walletClient) {
+      alert("Wallet not connected");
+      return;
+    }
+    if (!publicClient) {
+      alert("Blockchain client not available");
+      return;
+    }
     console.log(`Action: Depositing ${amount} USDC reward for project:`, projectId);
     if (amount <= 0 || isNaN(amount) || !projectId) {
       alert("Please enter a valid amount greater than 0.");
@@ -333,8 +337,8 @@ export const useCreatorActions = (onActionComplete: () => void) => {
     }
     const depositRes = await api.post('/deposits', { projectId, amount });
     // console.log("Deposit response:", depositRes);
-    const { management_contract_address, usdc_address } = depositRes.data.data;
-    setDepositPayload(depositRes.data.data);
+    const { unsignedTx, management_contract_address, usdc_address } = depositRes.data.data;
+    // setDepositPayload(depositRes.data.data);
     const amountInWei = parseUnits(amount.toString(), 6); // USDC uses 6 decimals
     console.log(`Depositing ${amount} USDC (${amountInWei} in wei) to management contract at ${management_contract_address}`);
     try {
@@ -350,86 +354,48 @@ export const useCreatorActions = (onActionComplete: () => void) => {
         alert("Approval transaction failed to send.");
         return;
       }
-      setApproveTxHash(approveTxHash);
+      // setApproveTxHash(approveTxHash);
+      const txHash = await walletClient.sendTransaction({
+        to: unsignedTx.to,
+        data: unsignedTx.data,
+      });
+      if (!txHash) {
+        alert("Deposit transaction failed to send.");
+        return;
+      }
+      console.log("Deposit transaction hash:", txHash);
+      const depositReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      console.log("Deposit Transaction Confirmed!", depositReceipt);
+      if (depositReceipt.status !== 'success') {
+        throw new Error("Transaction failed.");
+      }
+      const logs = parseEventLogs({
+        abi: ProjectManagementABI.abi,
+        logs: depositReceipt.logs,
+        eventName: 'RewardDeposited', // replace with your event name
+      });
+      console.log("Parsed 'RewardDeposited' Logs:", logs);
+      const totalAmount = logs[0]?.args?.totalAmount ?? 0;
+      const platformFee = logs[0]?.args?.platformFee ?? 0;
+      await api.post('/transactions/record', {
+        project_onchain_id: projectId,
+        USDC_amount: totalAmount.toString(),
+        transaction_type: "RewardDeposit",
+        transaction_hash: depositReceipt.transactionHash.toString(),
+        platform_fee: platformFee.toString()
+      });
+      window.open(`https://sepolia-optimism.etherscan.io/tx/${txHash}`, '_blank');
+      alert("✅ Reward deposit successful!");
+      onActionComplete(); // Refresh project data to show updated balances
     } catch (error: any) {
       console.error("Error during the approval step:", error);
       alert("Approval Failed: " + (error.response?.data?.message || error.message || "An unexpected error occurred."));
     }
   };
 
-  useEffect(() => {
-    const depositReward = async () => {
-      if (!depositPayload) {
-        console.error("No deposit payload available.");
-        return;
-      }
-      console.log("Deposit Payload:", depositPayload);
-      if (!walletClient) {
-        alert("Wallet not connected. Please connect your wallet.");
-        return;
-      }
-      try {
-        alert("Approval confirmed! Now sending the deposit transaction. Please confirm in your wallet.");
-        const { unsignedTx } = depositPayload;
-        // console.log("Received unsigned mint transaction:", unsignedTx);
-        const txHash = await walletClient.sendTransaction({
-          to: unsignedTx.to,
-          data: unsignedTx.data,
-        });
-        console.log("Deposit transaction hash:", txHash);
-        if (!txHash) {
-          alert("Deposit transaction failed to send.");
-          return;
-        }
-        setDepositTxHash(txHash);
-        alert("Deposit transaction sent! Please wait for confirmation.");
-      } catch (error: any) {
-        console.error("Deposit transaction failed:", error);
-        alert(`Deposit Failed: ${error.response?.data?.message || error.message || "An unexpected error occurred."}`);
-        return;
-      } finally {
-        setApproveTxHash(undefined);
-        setDepositPayload(null);
-      }
-    }
-    if (approveTxHash) {
-      depositReward();
-    }
-  }, [approveTxHash, onActionComplete]);
-
-  useEffect(() => {
-    if (isDepositConfirmed && depositReceipt) {
-      console.log("Deposit Transaction Confirmed!", depositReceipt);
-      alert("✅ Reward deposit successful!");
-      setApproveTxHash(undefined);
-      setDepositTxHash(undefined);
-      onActionComplete(); // Refresh project data to show updated balances
-    }
-  }, [isDepositConfirmed, depositReceipt, onActionComplete]);
-
-  const handlePostUpdate = async (projectId: string, updateText: string) => {
-    console.log(`Action: Posting update for project ${projectId}:`, updateText);
-    try {
-      // This is an off-chain action that calls your backend
-      // await api.post(`/projects/${projectId}/updates`, { content: updateText });
-      alert({
-        title: "Update Posted Successfully",
-        description: "Your investors have been notified.",
-      });
-    } catch (error) {
-      console.error("Failed to post update:", error);
-      alert({
-        title: "Error",
-        description: "Could not post the update. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return {
     handleWithdrawFunds,
     handleDepositReward,
-    handlePostUpdate,
     isDeploying: isDeploying || isConfirming || isOnboarding,
     isEstimating,
     estimatedCost,

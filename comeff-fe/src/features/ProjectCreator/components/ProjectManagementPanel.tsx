@@ -26,7 +26,6 @@ interface ProjectManagementPanelProps {
   onMintTokens: (projectId: string) => void;
   onWithdrawFunds: (projectId: string) => void;
   onDepositReward: (projectId: string, amount: number) => void;
-  onPostUpdate: (projectId: string, updateText: string) => void;
   transactions: any[];
 }
 
@@ -50,7 +49,7 @@ const getStatusBadgeVariant = (
 
 export const ProjectManagementPanel = ({
   project, onDeployContracts, isDeploying, estimateDeploymentCost, isEstimating, estimatedCost,
-  onMintTokens, onWithdrawFunds, onDepositReward, onPostUpdate, transactions }: ProjectManagementPanelProps
+  onMintTokens, onWithdrawFunds, onDepositReward, transactions }: ProjectManagementPanelProps
 ) => {
 
   useEffect(() => {
@@ -60,7 +59,6 @@ export const ProjectManagementPanel = ({
   }, [project.project_status]); //project.id, project.project_status
 
   const [rewardAmount, setRewardAmount] = useState("");
-  const [updateText, setUpdateText] = useState("");
 
   console.log("Rendering ProjectManagementPanel for project:", project);
 
@@ -74,13 +72,6 @@ export const ProjectManagementPanel = ({
     if (rewardAmount) {
       onDepositReward(project.id, parseFloat(rewardAmount));
       setRewardAmount("");
-    }
-  };
-
-  const handleUpdate = () => {
-    if (updateText) {
-      onPostUpdate(project.id, updateText);
-      setUpdateText("");
     }
   };
 

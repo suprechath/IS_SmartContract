@@ -20,7 +20,7 @@ export default function CreatorDashboardPage() {
     } = useCreatorData();
 
     const {
-        handleWithdrawFunds, handleDepositReward, handlePostUpdate, isDeploying,
+        handleWithdrawFunds, handleDepositReward, isDeploying,
         isEstimating, estimatedCost, handleDeployContracts, estimateDeploymentCost, 
         handleMintTokens
     } = useCreatorActions(fetchCreatorProjects);
@@ -66,7 +66,6 @@ export default function CreatorDashboardPage() {
                             onMintTokens={handleMintTokens}
                             onWithdrawFunds={handleWithdrawFunds}
                             onDepositReward={handleDepositReward}
-                            onPostUpdate={handlePostUpdate}
                             transactions={selectedProjectTX}
                         />
                     ) : (
