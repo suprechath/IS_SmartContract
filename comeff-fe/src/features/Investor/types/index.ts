@@ -31,6 +31,7 @@ export interface Transactions {
     related_transaction_hash: string;
     platform_fee: number;
     created_at: string;
+    wallet_address: string;
 }
 
 export interface Project {

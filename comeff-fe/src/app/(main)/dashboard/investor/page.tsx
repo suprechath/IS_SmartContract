@@ -3,8 +3,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 
-import { useState, useEffect } from "react";
-
 import { InvestorSummary } from '@/features/Investor/components/InvestorSummary';
 import { InvestmentTable } from '@/features/Investor/components/InvestmentTable';
 import { useInvestorData } from '@/features/Investor/hooks/useInvestorData';

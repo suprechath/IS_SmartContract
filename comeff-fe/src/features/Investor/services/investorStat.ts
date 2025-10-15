@@ -21,3 +21,11 @@ export function calculateInvestorStats (Transactions: Transactions[]) {
     return { totalInvested, totalRewardsClaimed, activeInvestments };
 }
 
+export function calculateMyRefund (walletAddress: string ,Transactions: Transactions[]) {
+    const totalMyInvested =
+        Transactions.filter(tx => tx.transaction_type === 'Investment')
+            .filter(tx => tx.wallet_address === walletAddress)
+            .reduce((acc, tx) => acc + Number(formatUnits(BigInt(tx.usdc_amount),6)), 0);
+    return totalMyInvested;
+}
+

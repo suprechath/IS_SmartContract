@@ -10,10 +10,13 @@ import { ProjectWithBalance, Project, ProjectStatus } from "@/features/Investor/
 import { getTXStatusBadge } from "@/components/StatusBadge";
 import { InvestModal } from "@/features/projects/components/InvestModal";
 import { useInvestorActions } from '../hooks/useInvestorActions';
+import { calculateMyRefund } from '../services/investorStat';
 
 
 import { formatUnits } from "viem";
+import { useAccount } from 'wagmi';
 import { useState } from "react";
+import { tr } from "date-fns/locale";
 
 
 const getStatusBadgeVariant = (
@@ -46,13 +49,15 @@ interface InvestorManagementPanelProps {
 export const InvestorManagementPanel = ({ selectedProject, project, transactions }: InvestorManagementPanelProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false); // <-- Add state for modal
 
-    const { claimRewards, isClaiming } = useInvestorActions();
+    const { claimRewards, refundInvestment, isClaiming } = useInvestorActions();
 
     if (!selectedProject || !project || !transactions) {
         return null; // Or a fallback UI
     }
 
+    const { address } = useAccount();
     const canClaim = Number(selectedProject.rewardsAvailable) > 0;
+    // console.log(transactions);
 
     return (
         <Card>
@@ -127,11 +132,11 @@ export const InvestorManagementPanel = ({ selectedProject, project, transactions
                                     <h1 className="font-bold mb-4 text-primary text-center text-xl"> Claim reward</h1>
                                     <div className="flex justify-between items-center mt-4">
                                         <span className="text-muted-foreground">My Project Tokens</span>
-                                        <span className="font-mono text-lg font-semibold">{Number(formatUnits(BigInt(selectedProject.tokenBalance),6)).toLocaleString()}</span>
+                                        <span className="font-mono text-lg font-semibold">{Number(formatUnits(BigInt(selectedProject.tokenBalance), 6)).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center mt-4">
                                         <span className="text-muted-foreground">Available Rewards (USDC)</span>
-                                        <span className="font-mono text-lg font-semibold">$ {Number(selectedProject.rewardsAvailable).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <span className="font-mono text-lg font-semibold">$ {Number(formatUnits(BigInt(selectedProject.rewardsAvailable), 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="flex justify-between items-center mt-4">
                                         <div>
@@ -139,15 +144,35 @@ export const InvestorManagementPanel = ({ selectedProject, project, transactions
                                             <p className="text-sm text-muted-foreground">Transfer your earned USDC to your wallet.</p>
                                         </div>
                                         <Button
-                                            onClick={() => claimRewards(project.management_contract_address)}
+                                            onClick={() => claimRewards(project.onchain_id, project.management_contract_address)}
                                             disabled={!canClaim || isClaiming}
                                             size="lg"
                                         >
                                             <Coins className="mr-2 h-4 w-4" />
-                                            Claim Rewards
                                             {isClaiming ? 'Claiming...' : 'Claim Rewards'}
                                         </Button>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+                        {project.project_status === "Failed" && (
+                            <div className="space-y-6">
+                                <div className="p-4 border rounded-lg bg-red-50 border-red-800 border-2">
+                                    <h3 className="text-xl text-center font-bold mb-4 text-destructive">Funding Unsuccessful</h3>
+                                    <p className="text-muted-foreground text-center mb-4">
+                                        Unfortunately, this project did not reach its funding goal. <br /> You can withdraw your investment.
+                                    </p>
+                                    <p className="text-destructive text-center mb-4">
+                                        Available to withdraw: <span className="font-bold text-lg">{calculateMyRefund(address, transactions)} USDC</span>
+                                    </p>
+                                    <Button
+                                        onClick={() => refundInvestment(project.onchain_id, project.management_contract_address)}
+                                        size="lg" 
+                                        className="w-full bg-red-600 hover:bg-red-700"
+                                        disabled={isClaiming || calculateMyRefund(address, transactions) <= 0}
+                                    >
+                                        {isClaiming ? 'Withdrawing...' : 'Withdraw Investment'}       
+                                    </Button>
                                 </div>
                             </div>
                         )}
