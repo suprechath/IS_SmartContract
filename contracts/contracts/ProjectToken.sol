@@ -25,6 +25,10 @@ contract ProjectToken is ERC20, Ownable, ERC20Capped {
     {
     }
 
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
+    }
+
     function setProjectManagement(address _managementAddress) public onlyOwner {
         projectManagement = IProjectManagement(_managementAddress);
         emit ManagementContractSet(_managementAddress);

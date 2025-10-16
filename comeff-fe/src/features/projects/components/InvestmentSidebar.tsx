@@ -18,7 +18,7 @@ interface InvestmentSidebarProps {
 export const InvestmentSidebar = ({ project }: InvestmentSidebarProps) => {
     const fundingPercentage = project.funding_usdc_goal > 0 ? (Number(formatUnits(BigInt(project.total_contributions), 6)) / project.funding_usdc_goal) * 100 : 0;
     const projectCreateAtSeconds = Math.floor(parseISO(project.updated_at).getTime() / 1000);
-    const projectEndAtSeconds = projectCreateAtSeconds + Number(project.funding_duration_second);
+    const projectEndAtSeconds = project.deadline ? project.deadline : 0;
     const projectEndAtDate = new Date(projectEndAtSeconds * 1000);
     // console.log('Project End At Date:', projectEndAtDate);
     const daysRemaining = differenceInDays(projectEndAtDate, new Date());
@@ -26,7 +26,7 @@ export const InvestmentSidebar = ({ project }: InvestmentSidebarProps) => {
     const hoursRemaining = totalHoursRemaining % 24;
 
     const [isModalOpen, setIsModalOpen] = useState(false); // <-- Add state for modal
-    // console.log('Project (Inv sidebar):', project);
+    console.log('Project (Inv sidebar):', project);
 
     const [isSyncing, setIsSyncing] = useState(false);
 

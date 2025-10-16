@@ -11,7 +11,11 @@ contract MockedUSCD is ERC20, Ownable, ERC20Permit {
         Ownable(initialOwner)
         ERC20Permit("Mocked USCD")
     {
-        _mint(recipient, 100000 * 6 ** decimals());
+        _mint(recipient, 100000 * 10**6);    
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
     }
 
     function mint(address to, uint256 amount) public onlyOwner {

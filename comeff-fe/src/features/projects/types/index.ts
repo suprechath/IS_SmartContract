@@ -32,4 +32,6 @@ export interface Project {
     updated_at: string;
     contributor_count: number;
     onchain_id: string; 
+
+    deadline: number; // Unix timestamp
 }

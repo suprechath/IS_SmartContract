@@ -53,10 +53,6 @@ services:
       - "3000:3000"
     networks:
       - comm_efficient_network
-    # volumes:
-    #   - ./comeff-fe:/app # Mounts the local directory into the container
-    #   - /app/node_modules
-    #   - /app/.next
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:5000/api
     depends_on:
