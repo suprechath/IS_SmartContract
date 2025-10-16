@@ -285,7 +285,7 @@ export const syncProjectOnchainData = async (req, res) => {
             return handleResponse(res, 404, 'Project not found or it is not yet deployed on-chain.');
         }
 
-        const provider = new ethers.JsonRpcProvider(process.env.NETWORK_RPC_URL);
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
         const contract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
 
         // Fetch the latest data directly from the smart contract
@@ -320,7 +320,7 @@ export const confirmMintTransaction = async (req, res) => {
     const { transactionHash } = req.body;
 
     try {
-        const provider = new ethers.JsonRpcProvider(process.env.NETWORK_RPC_URL);
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
         const receipt = await provider.getTransactionReceipt(transactionHash);
 
         if (!receipt || receipt.status !== 1) {

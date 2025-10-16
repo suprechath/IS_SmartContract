@@ -26,6 +26,11 @@ export function calculateMyRefund (walletAddress: string ,Transactions: Transact
         Transactions.filter(tx => tx.transaction_type === 'Investment')
             .filter(tx => tx.wallet_address === walletAddress)
             .reduce((acc, tx) => acc + Number(formatUnits(BigInt(tx.usdc_amount),6)), 0);
-    return totalMyInvested;
+    const totalMyRefunded =
+        Transactions.filter(tx => tx.transaction_type === 'Refund')
+            .filter(tx => tx.wallet_address === walletAddress)
+            .reduce((acc, tx) => acc + Number(formatUnits(BigInt(tx.usdc_amount),6)), 0);
+    const totalMyInvestedAfterRefund = totalMyInvested - totalMyRefunded;
+    return totalMyInvestedAfterRefund;
 }
 

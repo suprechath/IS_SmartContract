@@ -77,7 +77,7 @@ export const confirmInvestment = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const provider = new ethers.JsonRpcProvider(process.env.NETWORK_RPC_URL);
+        const provider = new ethers.JsonRpcProvider(process.env.network_rpc_url);
         const receipt = await provider.getTransactionReceipt(transactionHash);
 
         if (!receipt || receipt.status !== 1) {

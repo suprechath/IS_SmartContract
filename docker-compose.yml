@@ -9,8 +9,8 @@ services:
       POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "5432:5432"
-    # volumes:
-    #   - db_data:/var/lib/postgresql/data 
+    volumes:
+      - db_data:/var/lib/postgresql/data 
     networks:
       - comm_efficient_network
 
@@ -33,12 +33,11 @@ services:
     restart: always
     ports:
       - "5001:5001"
+    env_file:
+      - ./backend/.env
     environment:
       - NODE_ENV=development
       - DB_HOST=DB
-      # - network_rpc_url="https://opt-sepolia.g.alchemy.com/v2/z7a4Qm0Zx0GIoEbzW6Gag"
-    env_file:
-      - ./backend/.env
     depends_on:
       - DB
     networks:
@@ -85,11 +84,11 @@ networks:
   comm_efficient_network:
     driver: bridge
 
-# volumes:
-#   db_data:
+volumes:
+  db_data:
 #   pgadmin_data:
 
 # docker rm -f postgres-db
 # docker-compose up -d --build
 # docker-compose up -d
-
+# docker volume inspect commefficient_db_data
