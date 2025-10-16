@@ -29,22 +29,26 @@ async function checkAndProcessFailedCampaigns() {
     console.log("🔍 Checking for expired funding campaigns...");
     try {
         const projectsInFunding = await projectModel.getProjectsByStatus(['Funding']);
+        console.log(`  - Found ${projectsInFunding.length} project(s) in 'Funding' status.`);
         const now = Math.floor(Date.now() / 1000);
+        console.log(`  - Current timestamp: ${now} (${new Date(now * 1000).toISOString()})`);
 
         for (const project of projectsInFunding) {
             if (!project.management_contract_address) {
-                console.log(`  - Skipping project "${project.title}" (ID: ${project.id}) as it has no contract address.`);
+                console.log(`- Skipping project "${project.title}" (ID: ${project.id}) as it has no contract address.`);
                 continue;
             }
             try {
                 const contract = new ethers.Contract(project.management_contract_address, ProjectManagement.abi, provider);
                 const deadline = await contract.deadline();
-                if (now > deadline) {
-                    console.log(`- Project "${project.title}" (ID: ${project.id}) has passed its deadline.`);
+                const currentState = await contract.currentState();
+                console.log(`- Project "${project.title}" (ID: ${project.id}) has deadline at ${deadline}. Current time is ${now}.`);
+                console.log(`  - Current state on-chain: ${currentState}`);
+                if (now > deadline && currentState == '0') {
+                    console.log(`  - Project "${project.title}" (ID: ${project.id}) has passed its deadline.`);
                     const totalContributions = await contract.totalContributions();
                     // const fundingGoal = BigInt(ethers.parseUnits(project.funding_usdc_goal.tostring(), 18));
                     const fundingGoal = await contract.fundingGoal();
-
                     if (totalContributions < fundingGoal) {
                         console.log(`  - Funding goal not met (${ethers.formatEther(totalContributions)} / ${ethers.formatEther(fundingGoal)}). Calling checkCampaignFailed()...`);
                         const connectedContract = contract.connect(keeperWallet);
