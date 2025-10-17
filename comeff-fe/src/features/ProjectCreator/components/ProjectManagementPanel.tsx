@@ -60,7 +60,7 @@ export const ProjectManagementPanel = ({
 
   const [rewardAmount, setRewardAmount] = useState("");
 
-  console.log("Rendering ProjectManagementPanel for project:", project);
+  // console.log("Rendering ProjectManagementPanel for project:", project);
 
   const handleMintTokens = () => {
     onMintTokens(project.id);

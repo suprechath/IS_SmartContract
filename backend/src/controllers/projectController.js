@@ -344,7 +344,7 @@ export const confirmMintTransaction = async (req, res) => {
             .find(parsedLog => parsedLog && parsedLog.name === 'TokensMinted');
 
         if (!mintEvent) {
-            return handleResponse(res, 400, 'TokensMinted event not found in transaction logs.');
+            return handleResponse(res, 400, 'Project Token Minted has not been finished yet, please redo the minting transaction for more participants.');
         }
 
         // For maximum data integrity, get the total supply directly from the token contract
