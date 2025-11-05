@@ -102,12 +102,12 @@ const getOnchainProjectById = async (projectId) => {
 
 const getProjectsByCreatorId = async (creatorId) => {
     const query = `
-        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url, COUNT(DISTINCT tx.user_onchain_id) AS contributor_count
+        SELECT pon.*, poff.title, poff.tags, poff.location, poff.cover_image_url, poff.project_overview, poff.proposed_solution,COUNT(DISTINCT tx.user_onchain_id) AS contributor_count
         FROM project_onchain pon
         JOIN project_offchain poff ON pon.project_offchain_id = poff.id
         LEFT JOIN transactions tx ON tx.project_onchain_id = pon.id AND tx.transaction_type = 'Investment'
         WHERE pon.user_onchain_id = $1
-        GROUP BY pon.id, poff.title, poff.tags, poff.location, poff.cover_image_url
+        GROUP BY pon.id, poff.title, poff.tags, poff.location, poff.cover_image_url, poff.project_overview, poff.proposed_solution
     `;
     const result = await pool.query(query, [creatorId]);
     return result.rows;
