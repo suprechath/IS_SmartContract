@@ -5,7 +5,8 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 describe("ProjectManagement", function () {
     let ProjectManagement, projectManagement, ProjectToken, projectToken, USDC, usdc, owner, creator, investor1, investor2, platformOwner;
     
-    const fundingGoal = ethers.parseUnits("100", 6);
+    // Using 6 decimals as per your contract
+    const fundingGoal = ethers.parseUnits("100", 6); 
     const fundingDuration = 60 * 60 * 24 * 7; // 7 days
     const platformFeePercentage = 1000; // 10%
     const rewardFeePercentage = 500; // 5%
@@ -15,7 +16,6 @@ describe("ProjectManagement", function () {
 
         // Deploy a mock USDC token (using ProjectToken contract as it's a standard ERC20 with 6 decimals)
         USDC = await ethers.getContractFactory("ProjectToken");
-        // Deploy with a large cap for a mock token
         usdc = await USDC.deploy("MockUSDC", "mUSDC", ethers.parseUnits("10000000", 6)); 
 
         // Deploy the ProjectToken
@@ -36,9 +36,7 @@ describe("ProjectManagement", function () {
         );
 
         // --- Setup ---
-        // Set the ProjectManagement contract as the minter for the ProjectToken
         await projectToken.connect(owner).setMinter(projectManagement.target);
-        // Link the ProjectToken to the ProjectManagement contract for reward updates
         await projectToken.connect(owner).setProjectManagement(projectManagement.target);
 
         // Mint and distribute mock USDC
@@ -120,7 +118,6 @@ describe("ProjectManagement", function () {
         });
 
         it("Should fail if trying to invest when not in 'Funding' state", async function () {
-            // Meet goal to change state to Succeeded
             await projectManagement.connect(investor1).invest(fundingGoal);
             expect(await projectManagement.currentState()).to.equal(1); // State.Succeeded
             await expect(projectManagement.connect(investor2).invest(ethers.parseUnits("1", 6)))
@@ -135,7 +132,6 @@ describe("ProjectManagement", function () {
 
     describe("Succeeded Phase: mintTokens()", function () {
         beforeEach(async function () {
-            // Reach the funding goal to enter the Succeeded state
             await projectManagement.connect(investor1).invest(ethers.parseUnits("60", 6));
             await projectManagement.connect(investor2).invest(ethers.parseUnits("40", 6));
         });
@@ -145,7 +141,6 @@ describe("ProjectManagement", function () {
         });
 
         it("Should only be callable in the 'Succeeded' state", async function () {
-            // Create a new instance that is still in Funding state
             const newPM = await (await ethers.getContractFactory("ProjectManagement")).deploy(
                 creator.address, fundingGoal, fundingDuration, projectToken.target, 
                 usdc.target, platformOwner.address, platformFeePercentage, rewardFeePercentage
@@ -154,34 +149,34 @@ describe("ProjectManagement", function () {
         });
         
         it("Should mint tokens in batches and skip already minted contributors", async function () {
-            // Mint for the first contributor
             await projectManagement.connect(creator).mintTokens(1);
             expect(await projectToken.balanceOf(investor1.address)).to.equal(ethers.parseUnits("60", 6));
             expect(await projectToken.balanceOf(investor2.address)).to.equal(0);
             expect(await projectManagement.mintedContributorCount()).to.equal(1);
             expect(await projectManagement.areTokensMinted()).to.be.false;
 
-            // Mint again with a limit of 2. It should skip investor1 (index 0) and mint for investor2 (index 1)
-            await projectManagement.connect(creator).mintTokens(2); // This will process i=1 (investor2)
+            // Mint again. It should skip investor1 (index 0) and mint for investor2 (index 1)
+            await projectManagement.connect(creator).mintTokens(2); 
             expect(await projectToken.balanceOf(investor1.address)).to.equal(ethers.parseUnits("60", 6)); // Unchanged
             expect(await projectToken.balanceOf(investor2.address)).to.equal(ethers.parseUnits("40", 6)); // Newly minted
             expect(await projectManagement.mintedContributorCount()).to.equal(2);
-            expect(await projectManagement.areTokensMinted()).to.be.true; // Now true
+            expect(await projectManagement.areTokensMinted()).to.be.true; 
         });
 
         it("Should transition to 'Active' state and handle limit > contributors", async function () {
-            // Mint for all contributors with a limit (5) larger than total contributors (2)
-            // This forces the `if (end > totalContributors)` branch (line 108-109) to execute
-            await projectManagement.connect(creator).mintTokens(5); 
+            await projectManagement.connect(creator).mintTokens(5); // Limit 5 > 2 contributors
             expect(await projectManagement.currentState()).to.equal(3); // State.Active
             expect(await projectManagement.areTokensMinted()).to.be.true;
-            
-            // Check balances
             expect(await projectToken.balanceOf(investor1.address)).to.equal(ethers.parseUnits("60", 6));
             expect(await projectToken.balanceOf(investor2.address)).to.equal(ethers.parseUnits("40", 6));
+        });
 
-            // Now that the state is Active, calling mintTokens again should fail with 'Invalid state'
-            await expect(projectManagement.connect(creator).mintTokens(1)).to.be.revertedWith("Invalid state");
+        it("Should fail to mint tokens if already minted", async function () {
+            await projectManagement.connect(creator).mintTokens(2); // Mint all
+            expect(await projectManagement.areTokensMinted()).to.be.true;
+            // Try to mint again
+            await expect(projectManagement.connect(creator).mintTokens(1))
+                .to.be.revertedWith("Invalid state");
         });
 
         it("Should emit TokensMinted event when all tokens are minted", async function () {
@@ -190,13 +185,21 @@ describe("ProjectManagement", function () {
                 .withArgs(fundingGoal);
         });
 
-        it("Should fail to deposit rewards if tokens have not been minted", async function () {
-            // We are in 'Succeeded' state, but tokens are not minted yet
-            expect(await projectToken.totalSupply()).to.equal(0);
+        it("Should fail to deposit rewards if tokens not minted yet (totalSupply is 0)", async function () {
+            // State is 'Succeeded', but mintTokens has not been called
+            expect(await projectManagement.currentState()).to.equal(1); // State.Succeeded
+            expect(await projectToken.totalSupply()).to.equal(0);           
             const rewardAmount = ethers.parseUnits("10", 6);
             await usdc.connect(creator).approve(projectManagement.target, rewardAmount);
 
             await expect(projectManagement.connect(creator).depositReward(rewardAmount))
+                .to.be.revertedWith("Invalid state");
+        });
+
+        it("Should fail to withdraw fund if tokens not minted yet", async function () {
+            // State is 'Succeeded', but mintTokens has not been called
+            expect(await projectManagement.currentState()).to.equal(1);
+            await expect(projectManagement.connect(creator).withdrawFunds())
                 .to.be.revertedWith("Invalid state");
         });
     });
@@ -227,11 +230,9 @@ describe("ProjectManagement", function () {
         });
 
         it("Should fail to withdraw funds if balance is zero", async function () {
-            // Withdraw first time
             await projectManagement.connect(creator).withdrawFunds();
             expect(await usdc.balanceOf(projectManagement.target)).to.equal(0);
             
-            // Attempt to withdraw again
             await expect(projectManagement.connect(creator).withdrawFunds())
                 .to.be.revertedWith("No funds to withdraw");
         });
@@ -253,18 +254,22 @@ describe("ProjectManagement", function () {
             const expectedRewardPerToken = (netRewardAmount * BigInt(1e18)) / fundingGoal;
             expect(await projectManagement.rewardPerTokenStored()).to.equal(expectedRewardPerToken);
         });
+        
+        it("Should prevent non-creators from depositing rewards", async function () {
+            const rewardAmount = ethers.parseUnits("10", 6);
+            await usdc.connect(investor1).approve(projectManagement.target, rewardAmount); // Investor approves
+            await expect(projectManagement.connect(investor1).depositReward(rewardAmount)) // Investor calls
+                .to.be.revertedWith("Not the creator");
+        });
 
         it("Should calculate and allow claiming of rewards", async function () {
-            // Deposit rewards
             const rewardAmount = ethers.parseUnits("10", 6);
             await usdc.connect(creator).approve(projectManagement.target, rewardAmount);
             await projectManagement.connect(creator).depositReward(rewardAmount);
 
-            // Check earned amount for investor1 (60% contribution)
             const expectedReward1 = (ethers.parseUnits("60", 6) * (await projectManagement.rewardPerTokenStored())) / BigInt(1e18);
             expect(await projectManagement.earned(investor1.address)).to.be.closeTo(expectedReward1, 1);
 
-            // Investor1 claims reward
             const investor1InitialBalance = await usdc.balanceOf(investor1.address);
             await expect(projectManagement.connect(investor1).claimReward())
                 .to.emit(projectManagement, "RewardClaimed");
@@ -280,23 +285,19 @@ describe("ProjectManagement", function () {
                 .to.emit(projectManagement, "RewardDeposited")
                 .withArgs(0, 0);
             
-            // Reward per token should not change
             const rewardPerTokenAfter = await projectManagement.rewardPerTokenStored();
             expect(rewardPerTokenAfter).to.equal(rewardPerTokenBefore);
         });
 
         it("Should fail to claim rewards if there are no rewards", async function () {
-            // No rewards have been deposited
             await expect(projectManagement.connect(investor1).claimReward())
                 .to.be.revertedWith("No rewards to claim");
 
-            // Deposit and claim once
             const rewardAmount = ethers.parseUnits("10", 6);
             await usdc.connect(creator).approve(projectManagement.target, rewardAmount);
             await projectManagement.connect(creator).depositReward(rewardAmount);
             await projectManagement.connect(investor1).claimReward();
 
-            // Try to claim a second time
             await expect(projectManagement.connect(investor1).claimReward())
                 .to.be.revertedWith("No rewards to claim");
         });
@@ -304,7 +305,6 @@ describe("ProjectManagement", function () {
 
     describe("Failed Phase: checkCampaignFailed() & claimRefund()", function () {
         beforeEach(async function () {
-            // Investor contributes, but not enough to meet the goal
             await projectManagement.connect(investor1).invest(ethers.parseUnits("10", 6));
         });
 
@@ -315,7 +315,7 @@ describe("ProjectManagement", function () {
         it("Should not transition to Failed if goal was met", async function () {
             await projectManagement.connect(investor2).invest(fundingGoal - (ethers.parseUnits("10", 6)));
             await time.increase(fundingDuration + 1);
-            // The state is now 'Succeeded', so checkCampaignFailed (which requires 'Funding') should fail.
+            // State is 'Succeeded', so checkCampaignFailed (which requires 'Funding') will fail
             await expect(projectManagement.checkCampaignFailed()).to.be.revertedWith("Invalid state");
         });
 
@@ -347,14 +347,113 @@ describe("ProjectManagement", function () {
         it("Should prevent an investor from claiming a refund twice", async function () {
             await time.increase(fundingDuration + 1);
             await projectManagement.checkCampaignFailed();
-
-            // First claim
             await projectManagement.connect(investor1).claimRefund();
-
-            // Second attempt should fail
             await expect(projectManagement.connect(investor1).claimRefund())
                 .to.be.revertedWith("No contribution to refund");
         });
     });
 
+    describe("Zero Fee Scenarios", function () {
+        
+        beforeEach(async function () {
+            // Deploy a new contract with 0% fees
+            const ProjectManagementFactory = await ethers.getContractFactory("ProjectManagement");
+            projectManagement = await ProjectManagementFactory.deploy(
+                creator.address,
+                fundingGoal,
+                fundingDuration,
+                projectToken.target,
+                usdc.target,
+                platformOwner.address,
+                0, // 0% platform fee
+                0  // 0% reward fee
+            );
+
+            // Re-link tokens
+            await projectToken.connect(owner).setMinter(projectManagement.target);
+            await projectToken.connect(owner).setProjectManagement(projectManagement.target);
+
+            // Re-approve
+            await usdc.connect(investor1).approve(projectManagement.target, ethers.parseUnits("1000", 6));
+            await usdc.connect(creator).approve(projectManagement.target, ethers.parseUnits("1000", 6));
+        });
+
+        it("Should transfer 100% of funds to creator when platformFee is 0", async function () {
+            await projectManagement.connect(investor1).invest(fundingGoal);
+            await projectManagement.connect(creator).mintTokens(1);
+            
+            const creatorInitialBalance = await usdc.balanceOf(creator.address);
+            const platformOwnerInitialBalance = await usdc.balanceOf(platformOwner.address);
+
+            await projectManagement.connect(creator).withdrawFunds();
+
+            // Creator gets 100%
+            expect(await usdc.balanceOf(creator.address)).to.equal(creatorInitialBalance + fundingGoal);
+            // Platform owner gets 0
+            expect(await usdc.balanceOf(platformOwner.address)).to.equal(platformOwnerInitialBalance);
+        });
+
+        it("Should use 100% of deposited reward when rewardFee is 0", async function () {
+            await projectManagement.connect(investor1).invest(fundingGoal);
+            await projectManagement.connect(creator).mintTokens(1);
+
+            const rewardAmount = ethers.parseUnits("10", 6);
+            await usdc.connect(creator).approve(projectManagement.target, rewardAmount);
+            
+            await projectManagement.connect(creator).depositReward(rewardAmount);
+
+            // rewardPerTokenStored should be calculated based on the full rewardAmount
+            const expectedRewardPerToken = (rewardAmount * BigInt(1e18)) / fundingGoal;
+            expect(await projectManagement.rewardPerTokenStored()).to.equal(expectedRewardPerToken);
+        });
+    });
+
+    // describe("Re-entrancy Protection", function () {
+    //     let attacker;
+
+    //     beforeEach(async function () {
+    //         // Deploy an attacker contract
+    //         const AttackerFactory = await ethers.getContractFactory("MockReentrancyAttacker");
+    //         attacker = await AttackerFactory.deploy(projectManagement.target);
+
+    //         // Fund the attacker contract with USDC
+    //         await usdc.connect(owner).transfer(attacker.target, ethers.parseUnits("50", 6));
+    //         await attacker.approveUSDCTransfer();
+
+    //         // Attacker invests to become a contributor
+    //         await attacker.invest(ethers.parseUnits("50", 6));
+    //     });
+
+    //     it("Should prevent re-entrancy in invest()", async function () {
+    //         // This is hard to test without a re-entrant token, but we can test other functions.
+    //     });
+
+    //     it("Should prevent re-entrancy in withdrawFunds()", async function () {
+    //         // This function is not re-entrant by default as it's not called by investors.
+    //         // But we test claimReward and claimRefund.
+    //     });
+
+    //     it("Should prevent re-entrancy in claimReward()", async function () {
+    //         // Fund the project fully
+    //         await projectManagement.connect(investor1).invest(ethers.parseUnits("50", 6));
+    //         await projectManagement.connect(creator).mintTokens(2);
+            
+    //         // Deposit rewards
+    //         const rewardAmount = ethers.parseUnits("10", 6);
+    //         await usdc.connect(creator).approve(projectManagement.target, rewardAmount);
+    //         await projectManagement.connect(creator).depositReward(rewardAmount);
+
+    //         // Attacker tries to claim and re-enter
+    //         await expect(attacker.attackClaimReward()).to.be.revertedWith("ReentrancyGuard: reentrant call");
+    //     });
+
+    //     it("Should prevent re-entrancy in claimRefund()", async function () {
+    //         // Fail the campaign
+    //         await time.increase(fundingDuration + 1);
+    //         await projectManagement.checkCampaignFailed();
+
+    //         // Attacker tries to claim refund and re-enter
+    //         await expect(attacker.attackClaimRefund()).to.be.revertedWith("ReentrancyGuard: reentrant call");
+    //     });
+    // });
 });

@@ -99,7 +99,6 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
 
     // mintTokens() Function with Batching
     function mintTokens(uint256 _limit) public onlyCreator inState(State.Succeeded) {
-        require(!areTokensMinted, "All tokens have already been minted");
 
         uint256 totalContributors = contributors.length;
         uint256 offset = mintedContributorCount; 
@@ -145,7 +144,6 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
 
     function depositReward(uint256 usdcAmount) public onlyCreator inState(State.Active) {
         uint256 totalSupply = projectToken.totalSupply();
-        require(totalSupply > 0, "Cannot deposit with zero supply");
         usdcToken.transferFrom(msg.sender, address(this), usdcAmount);
 
         uint256 platformFee = (usdcAmount * rewardFeePercentage) / 10000;
@@ -188,7 +186,6 @@ contract ProjectManagement is ReentrancyGuard, Ownable {
 
     function checkCampaignFailed() public inState(State.Funding) {
         require(block.timestamp >= deadline, "Campaign deadline has not passed yet");
-        require(totalContributions < fundingGoal, "Campaign succeeded, not failed");
         currentState = State.Failed;
     }
 
