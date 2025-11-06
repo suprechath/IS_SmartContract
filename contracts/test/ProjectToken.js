@@ -180,7 +180,7 @@ describe("ProjectToken", function () {
         const rewardAmount = ethers.parseEther("10");
         await usdc.connect(owner).approve(projectManagement.target, rewardAmount);
         await projectManagement.connect(owner).depositReward(rewardAmount);
-        console.log("1st Reward deposited:", ethers.formatEther(rewardAmount));
+        // console.log("1st Reward deposited:", ethers.formatEther(rewardAmount));
 
         // Before transfer, check initial earned amount for add1
         const initialEarned = await projectManagement.earned(add1.address);
@@ -197,7 +197,7 @@ describe("ProjectToken", function () {
         // After the transfer, the `updateReward` hook for add1 has been called.
         // Let's capture the new state.
         const add1RewardsAfterTransfer = await projectManagement.rewards(add1.address);
-        console.log("1st Add1 Rewards after transfer:", ethers.formatEther(add1RewardsAfterTransfer));
+        // console.log("1st Add1 Rewards after transfer:", ethers.formatEther(add1RewardsAfterTransfer));
         const add1EarnedAfterTransfer = await projectManagement.earned(add1.address);
 
 
@@ -206,18 +206,18 @@ describe("ProjectToken", function () {
         
         // Add2 should have no rewards initially, as they just received tokens.
         expect(await projectManagement.rewards(add2.address)).to.equal(0);
-        console.log("1st Add2 Rewards after transfer:", ethers.formatEther(await projectManagement.rewards(add2.address)));
+        // console.log("1st Add2 Rewards after transfer:", ethers.formatEther(await projectManagement.rewards(add2.address)));
 
         // Deposit another reward to see new earnings accrue
         await usdc.connect(owner).approve(projectManagement.target, rewardAmount);
         await projectManagement.connect(owner).depositReward(rewardAmount);
-        console.log("2nd Reward deposited:", ethers.formatEther(rewardAmount));
+        // console.log("2nd Reward deposited:", ethers.formatEther(rewardAmount));
 
         // Now both add1 and add2 should have new earned rewards, proportional to their new balances.
         expect(await projectManagement.earned(add1.address)).to.equal(ethers.parseEther("16.625"));
-        console.log("2nd Add1 Earned after transfer:", ethers.formatEther(await projectManagement.earned(add1.address)));
+        // console.log("2nd Add1 Earned after transfer:", ethers.formatEther(await projectManagement.earned(add1.address)));
         expect(await projectManagement.earned(add2.address)).to.equal(ethers.parseEther("2.375"));
-        console.log("2nd Add2 Earned after transfer:", ethers.formatEther(await projectManagement.earned(add2.address)));
+        // console.log("2nd Add2 Earned after transfer:", ethers.formatEther(await projectManagement.earned(add2.address)));
     });
   });
 });

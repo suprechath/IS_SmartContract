@@ -12,6 +12,7 @@ backend/.env
 contracts/cache
 contracts/artifacts
 contracts/node_modules
+contracts/coverage
 
 
 # TypeChain files
