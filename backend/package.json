@@ -10,7 +10,7 @@
     "start:listener": "node ./src/services/eventListener.js",
     "dev:keeper": "nodemon ./src/services/keeper.js",
     "start:keeper": "node ./src/services/keeper.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +27,13 @@
     "pg": "^8.16.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@jest/globals": "^30.2.0",
+    "babel-jest": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-html-reporters": "^3.1.7",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
   }
 }

@@ -1,6 +1,10 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import pg from 'pg';
+import dotenv from 'dotenv';
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test' });
+} else {
+  dotenv.config();
+}
 const { Pool } = pg;
 
 const pool = new Pool({

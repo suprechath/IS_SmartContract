@@ -1,0 +1,2 @@
+docker run -d --name postgres_test -e POSTGRES_PASSWORD=mytestpassword -p 5433:5432 postgres
+docker exec -it postgres_test createdb -U postgres crowdfund_test
