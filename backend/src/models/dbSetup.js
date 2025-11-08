@@ -167,10 +167,19 @@ const initializeDatabase = async () => {
   try {
     const client = await pool.connect();
     console.log("Successfully connected to PostgreSQL.");
-    
+
     await client.query(setupQueries);
     console.log("Database tables checked/created successfully.");
-    
+
+    const { rows } = await client.query(
+      `SELECT * FROM users_onchain WHERE wallet_address = '0xa4759E5f5a7B95B347e6d542427982c4DbA34ED1'`
+    );
+    if (rows.length > 0) {
+      console.log("Platform Operator user_onchain constructed:", rows[0]);
+    } else {
+      console.log("Platform Operator user_onchain NOT constructed.");
+    }
+
     client.release();
   } catch (err) {
     console.error("Error initializing database:", err.stack);

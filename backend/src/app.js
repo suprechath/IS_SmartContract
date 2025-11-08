@@ -30,10 +30,7 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-// We initialize the DB separately in tests
-if (process.env.NODE_ENV !== 'test') {
-  await initializeDatabase();
-}
+await initializeDatabase();
 
 app.get('/', async (req, res) => {
   try {

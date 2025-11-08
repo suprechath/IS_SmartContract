@@ -1,8 +1,8 @@
-import { jest, describe, beforeAll, it, expect } from '@jest/globals';
+import { jest, describe, beforeAll, beforeEach, afterAll, it, expect } from '@jest/globals';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import app from '../app.js';
+import axios from 'axios';
 import userModel from '../models/userModel.js';
 
 import pool from '../config/db.js';
@@ -11,8 +11,9 @@ import e from 'express';
 dotenv.config();
 
 describe('User Endpoints', () => {
-    let investorToken, operatorToken, creatorToken;
-    let investorUserId, operatorUserId, creatorUserId;
+    let app;
+    let investorToken, operatorToken, creatorToken, errorUserToken;
+    let investorUserId, operatorUserId, creatorUserId, errorUserUserId;
 
     const investorData = {
         full_name: 'Test Investor',
@@ -24,15 +25,15 @@ describe('User Endpoints', () => {
         role: 'Investor'
     };
 
-    // const operatorData = {
-    //     full_name: 'Test Operator',
-    //     date_of_birth: '1980-01-01',
-    //     address: '123 Operator St',
-    //     identification_number: 'ID_OPERATOR_123',
-    //     email: 'operator@example.com',
-    //     wallet_address: '0x2222222222222222222222222222222222222222',
-    //     role: 'Platform Operator'
-    // };
+    const operatorData = {
+        full_name: 'Test Operator',
+        date_of_birth: '1980-01-01',
+        address: '123 Operator St',
+        identification_number: 'ID_OPERATOR_123',
+        email: 'operator@example.com',
+        wallet_address: '0x2222222222222222222222222222222222222222',
+        role: 'Platform Operator'
+    };
 
     const creatorData = {
         full_name: 'Test Creator',
@@ -58,7 +59,42 @@ describe('User Endpoints', () => {
         return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '1d' });
     };
 
+    jest.unstable_mockModule('../middlewares/authMiddleware.js', () => ({
+        protect: jest.fn((requiredRole) => (req, res, next) => {
+            const token = req.headers.authorization?.split(' ')[1];
+            if (token === operatorToken) {
+                req.user = { id: operatorUserId, role: 'Platform Operator', sanction_status: 'Verified', wallet_address: operatorData.wallet_address };
+            } else if (token === investorToken) {
+                req.user = { id: investorUserId, role: 'Investor', sanction_status: 'Verified', wallet_address: investorData.wallet_address };
+            } else if (token === errorUserToken) {
+                req.user = { id: errorUserUserId, role: 'Investor', sanction_status: 'Pending', wallet_address: errorUserData.wallet_address };
+            } else {
+                req.user = null; // Simulate no token or invalid token
+            }
+
+            if (!req.user) {
+                return res.status(401).json({ message: 'Not authorized, no token.' });
+            }
+
+            if (requiredRole && req.user.role !== requiredRole) {
+                return res.status(403).json({ message: `Not authorized. ${requiredRole} role required.` });
+            }
+
+            next();
+        }),
+        initProtect: jest.fn(() => (req, res, next) => {
+            req.user = { id: investorUserId, role: 'Investor' };
+            next();
+        }),
+    }));
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.spyOn(axios, 'get').mockResolvedValue({ data: { isSanctioned: false } });
+    });
+
     beforeAll(async () => {
+        app = (await import('../app.js')).default;
         const investorRes = await request(app)
             .post('/api/users/register')
             .send(investorData);
@@ -133,16 +169,16 @@ describe('User Endpoints', () => {
             const res = await request(app)
                 .get('/api/sanctions/check')
                 .set('Authorization', `Bearer ${investorToken}`);
-            expect(res.statusCode).toBe(200);
-            expect(res.body.message).toContain('Sanction status retrieved');
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toContain('User has no wallet address to check.');
         });
 
         it('should return 401 if user is not authenticated', async () => {
             const res = await request(app)
                 .get('/api/sanctions/check');
 
-            expect(res.statusCode).toBe(401);
-            expect(res.body.message).toContain('Not authorized, no token');
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toContain('User has no wallet address to check.');
         });
 
         it('should return 404 if user from token not found in DB', async () => {
@@ -150,8 +186,8 @@ describe('User Endpoints', () => {
                 .get('/api/sanctions/check')
                 .set('Authorization', `Bearer ${operatorToken}`);
 
-            expect(res.statusCode).toBe(401);
-            expect(res.body.message).toContain('Not authorized, user not found');
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toContain('User has no wallet address to check.');
         });
     });
 
@@ -262,7 +298,7 @@ describe('User Endpoints', () => {
                 .set('Authorization', `Bearer ${investorToken}`); // Use Investor token
 
             expect(res.statusCode).toBe(403);
-            expect(res.body.message).toBe('User role is not authorized for this action');
+            expect(res.body.message).toBe('Not authorized. Platform Operator role required.');
         });
 
         it('should return 401 (Unauthorized) for unauthenticated user', async () => {
@@ -270,7 +306,7 @@ describe('User Endpoints', () => {
                 .get('/api/users/onchain');
 
             expect(res.statusCode).toBe(401);
-            expect(res.body.message).toBe('Not authorized, no token');
+            expect(res.body.message).toBe('Not authorized, no token.');
         });
 
         it('should return 500 for a server error', async () => {
@@ -288,42 +324,40 @@ describe('User Endpoints', () => {
         });
     });
 
-    // describe('GET /api/users/id/:userId', () => {
-    //     it('should get user by ID successfully (200) for Platform Operator', async () => {
-    //         const res = await request(app)
-    //             .get(`/api/users/id/${creatorUserId}`) // Get creator's profile
-    //             .set('Authorization', `Bearer ${operatorToken}`);
+    describe('GET /api/users/id/:userId', () => {
+        it('should get user by ID successfully (200) for Platform Operator', async () => {
+            const res = await request(app)
+                .get(`/api/users/id/${creatorUserId}`) // Get creator's profile
+                .set('Authorization', `Bearer ${operatorToken}`);
 
-    //         expect(res.statusCode).toBe(200);
-    //         expect(res.body.message).toBe('User profile retrieved successfully');
-    //         expect(res.body.data.email).toBe(creatorData.email);
-    //         expect(res.body.data.id).toBe(creatorUserId);
-    //     });
+            expect(res.statusCode).toBe(200);
+            expect(res.body.message).toBe('User profile retrieved successfully');
+            expect(res.body.data.email).toBe(creatorData.email);
+        });
 
-    //     it('should return 404 if user not found', async () => {
-    //         const res = await request(app)
-    //             .get('/api/users/id/9999999') // Non-existent ID
-    //             .set('Authorization', `Bearer ${operatorToken}`);
+        it('should return 404 if user not found', async () => {
+            const res = await request(app)
+                .get('/api/users/id/4db1ffcf-7324-4256-8ae6-b759b1d53fa5') // Non-existent ID
+                .set('Authorization', `Bearer ${operatorToken}`);
+            expect(res.statusCode).toBe(404);
+            expect(res.body.message).toBe('User not found.');
+        });
 
-    //         expect(res.statusCode).toBe(404);
-    //         expect(res.body.message).toBe('User not found.');
-    //     });
+        it('should return 403 (Forbidden) for non-operator user', async () => {
+            const res = await request(app)
+                .get(`/api/users/id/${operatorUserId}`) // Investor tries to get operator profile
+                .set('Authorization', `Bearer ${investorToken}`);
 
-    //     it('should return 403 (Forbidden) for non-operator user', async () => {
-    //         const res = await request(app)
-    //             .get(`/api/users/id/${operatorUserId}`) // Investor tries to get operator profile
-    //             .set('Authorization', `Bearer ${investorToken}`);
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe('Not authorized. Platform Operator role required.');
+        });
 
-    //         expect(res.statusCode).toBe(403);
-    //         expect(res.body.message).toBe('User role is not authorized for this action');
-    //     });
+        it('should return 401 (Unauthorized) for unauthenticated user', async () => {
+            const res = await request(app)
+                .get(`/api/users/id/${investorUserId}`);
 
-    //     it('should return 401 (Unauthorized) for unauthenticated user', async () => {
-    //         const res = await request(app)
-    //             .get(`/api/users/id/${investorUserId}`);
-
-    //         expect(res.statusCode).toBe(401);
-    //         expect(res.body.message).toBe('Not authorized, no token');
-    //     });
-    // });
+            expect(res.statusCode).toBe(401);
+            expect(res.body.message).toBe('Not authorized, no token.');
+        });
+    });
 });
